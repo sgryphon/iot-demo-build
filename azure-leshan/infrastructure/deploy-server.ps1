@@ -275,3 +275,4 @@ $vm = (az vm show --name $vmName -g $rgName -d) | ConvertFrom-Json
 $vm | Format-List name, fqdns, publicIps, privateIps, location, hardwareProfile
 
 Write-Verbose "Deployment Complete"
+# ssh iotadmin@lwm2m-0xacc5-dev.australiaeast.cloudapp.azure.com
