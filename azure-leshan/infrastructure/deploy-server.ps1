@@ -34,7 +34,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-devdirectory.ps1 -AddPublcIpv4
+   ./deploy-server.ps1 -AddPublicIpv4
 #>
 [CmdletBinding()]
 param (
@@ -134,7 +134,7 @@ az group create --name $rgName -l $Location --tags $tags
 Write-Verbose "Creating Network security group $nsgName"
 az network nsg create --name $nsgName -g $rgName -l $Location --tags $tags
 
-Write-Verbose "Adding Network security group rule 'AllowRDP' for port 3389 to $nsgName"
+Write-Verbose "Adding Network security group rule 'AllowSSH' for port 22 to $nsgName"
 az network nsg rule create --name AllowRDP `
                            --nsg-name $nsgName `
                            --priority 1000 `
@@ -143,7 +143,7 @@ az network nsg rule create --name AllowRDP `
                            --source-address-prefixes "*" `
                            --source-port-ranges "*" `
                            --direction Inbound `
-                           --destination-port-ranges 3389
+                           --destination-port-ranges 22
 
 Write-Verbose "Adding Network security group rule 'AllowICMP' for ICMP to $nsgName"
 az network nsg rule create --name AllowICMP `
@@ -156,7 +156,7 @@ az network nsg rule create --name AllowICMP `
                            --destination-port-ranges "*" `
                            --protocol Icmp
 
-Write-Verbose "Adding Network security group rule 'AllowLDAP' for port 389, 636 to $nsgName"
+Write-Verbose "Adding Network security group rule 'AllowHTTP' for port 80, 443 to $nsgName"
 az network nsg rule create --name AllowLDAP `
                            --nsg-name $nsgName `
                            --priority 1002 `
@@ -165,7 +165,7 @@ az network nsg rule create --name AllowLDAP `
                            --source-address-prefixes "*" `
                            --source-port-ranges "*" `
                            --direction Inbound `
-                           --destination-port-ranges 389 636
+                           --destination-port-ranges 80 443
 
 Write-Verbose "Creating Virtual network $vnetName ($vnetIpPrefix, $vnetIPv4)"
 az network vnet create --name $vnetName `

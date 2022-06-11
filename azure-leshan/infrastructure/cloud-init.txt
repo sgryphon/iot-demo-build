@@ -1,4 +1,8 @@
 #cloud-config
+apt:
+  conf: |
+    Acquire::Retries "60";
+    DPkg::Lock::Timeout "60";
 package_upgrade: true
 packages:
   - nginx
@@ -9,6 +13,7 @@ write_files:
     path: /etc/nginx/sites-available/default
     content: |
       server {
+        listen [::]:80;
         listen 80;
         location / {
           proxy_pass http://localhost:3000;
