@@ -167,6 +167,19 @@ az network nsg rule create --name AllowLDAP `
                            --direction Inbound `
                            --destination-port-ranges 80 443
 
+
+Write-Verbose "Adding Network security group rule 'AllowLwM2M' for port 5683, 5684 to $nsgName"
+az network nsg rule create --name AllowLwM2M `
+                           --nsg-name $nsgName `
+                           --priority 1003 `
+                           --resource-group $rgName `
+                           --access Allow `
+                           --source-address-prefixes "*" `
+                           --source-port-ranges "*" `
+                           --direction Inbound `
+                           --protocol Udp `
+                           --destination-port-ranges 5683 5684
+
 # Check rules
 # az network nsg rule list --nsg-name $nsgName --resource-group $rgName
 
