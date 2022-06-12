@@ -77,23 +77,21 @@ package_upgrade: true
 packages:
   - caddy
   - default-jre
-#  - openjdk-8-jdk
-#  - maven
-#  - git-core
 write_files:
   - owner: www-data:www-data
     path: /etc/caddy/Caddyfile
     content: |
-      lwm2m-0xacc5-dev.australiaeast.cloudapp.azure.com {
+      INIT_HOST_NAME {
+        basicauth {
+          iotadmin hashed_password_base64
+        }
         reverse_proxy localhost:8080
       }
 runcmd:
+  - HASHED_PASSWORD=$(caddy hash-password --plaintext 'INIT_PASSWORD_INPUT')
+  - sed -i s/hashed_password_base64/$HASHED_PASSWORD/g /etc/caddy/Caddyfile
   - service caddy restart
   - mkdir /home/iotadmin/leshan-server
   - cd /home/iotadmin/leshan-server
   - wget https://ci.eclipse.org/leshan/job/leshan-1.x/lastSuccessfulBuild/artifact/leshan-server-demo.jar 
   - java -jar leshan-server-demo.jar
- # - git clone https://github.com/eclipse/leshan.git /home/iotadmin/leshan
- # - cd /home/iotadmin/leshan
- # - mvn install
- # - java -jar leshan-standalone/target/leshan-standalone-*-SNAPSHOT-jar-with-dependencies.jar

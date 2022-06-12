@@ -34,10 +34,12 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-server.ps1 -AddPublicIpv4
+   ./deploy-server.ps1 -WebPassword YourSecretPassword
 #>
 [CmdletBinding()]
 param (
+    ## Basic authentication password for web access
+    [string]$WebPassword = $ENV:DEPLOY_WEB_PASSWORD,
     ## Deployment environment, e.g. Prod, Dev, QA, Stage, Test.
     [string]$Environment = $ENV:DEPLOY_ENVIRONMENT ?? 'Dev',
     ## The Azure region where the resource is deployed.
@@ -46,8 +48,8 @@ param (
     [string]$OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))",
     ## VM size, default is Standard_B1s
     [string]$VmSize = $ENV:DEPLOY_VM_SIZE ?? 'Standard_B2s',
+    ## Linux admin account name (authentication via SSH)
     [string]$AdminUsername = $ENV:DEPLOY_ADMIN_USERNAME ?? 'iotadmin',
-    #[string]$AdminPassword = $ENV:DEPLOY_ADMIN_PASSWORD ?? 'iotPassword01',
     ## IPv6 Unique Local Address GlobalID to use (default random)
     [string]$UlaGlobalId = $ENV:DEPLOY_GLOBAL_D ?? ("{0:x2}{1:x8}" -f (Get-Random -Max 0xFF), (Get-Random)),
     ## IPv6 Unique Local Address SubnetID to use (default random)
@@ -57,8 +59,10 @@ param (
     ## Email to send auto-shutdown notification to (optional)
     [string]$ShutdownEmail = $ENV:DEPLOY_SHUTDOWN_EMAIL ?? '',
     ## Add a public IPv4 (if needed)
-    [switch]$AddPublicIpv4
+    [switch]$AddPublicIpv4 = $true
 )
+
+if (!$WebPassword) { throw 'You must supply a value for -WebPassword or set environment variable DEPLOY_WEB_PASSWORD' }
 
 <#
 To run interactively, start with:
@@ -79,7 +83,7 @@ $AddPublicIpv4 = $true
 $ErrorActionPreference="Stop"
 
 $SubscriptionId = $(az account show --query id --output tsv)
-Write-Verbose "Deploying scripts for environment '$Environment' in subscription '$SubscriptionId'"
+Write-Verbose "Deploying scripts for environment '$Environment' in subscription '$SubscriptionId'$($AddPublicIpv4 ? ' with IPv4' : '')"
 
 # Following standard naming conventions from Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
@@ -105,6 +109,7 @@ $pipName = "pip-$vmName-$Environment-$Location-001".ToLowerInvariant()
 $nicName = "nic-01-$vmName-$Environment-001".ToLowerInvariant()
 $ipcName = "ipc-01-$vmName-$Environment-001".ToLowerInvariant()
 #$dataDiskSize = 20
+$fullHostName = "$pipDnsName.$Location.cloudapp.azure.com".ToLowerInvariant()
 
 $vmImage = 'UbuntuLTS'
 $vmIpAddress = "$($subnetAddress)d"
@@ -123,10 +128,10 @@ $vmIPv4 = "10.$($subnet -shr 8).$($subnet -bAnd 0xFF).13"
 $TagDictionary = @{ WorkloadName = 'iot'; DataClassification = 'Non-business'; Criticality = 'Low';
   BusinessUnit = 'Dev'; ApplicationName = $appName; Env = $Environment }
 
-# Create
-
 # Convert dictionary to tags format used by Azure CLI create command
 $tags = $TagDictionary.Keys | ForEach-Object { $key = $_; "$key=$($TagDictionary[$key])" }
+
+# Create
 
 Write-Verbose "Creating resource group $rgName"
 az group create --name $rgName -l $Location --tags $tags
@@ -236,6 +241,12 @@ az network nic ip-config create `
   --private-ip-address-version IPv6 `
   --public-ip-address $pipName
 
+Write-Verbose "Configurating cloud-init.txt~ file with host $fullHostName"
+(((Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
+  -replace 'INIT_HOST_NAME',$fullHostName) `
+  -replace 'INIT_PASSWORD_INPUT',$WebPassword) `
+  | Set-Content -Path (Join-Path $PSScriptRoot cloud-init.txt~)
+
 Write-Verbose "Creating Virtual machine $vmName (size $vmSize)"
 az vm create `
     --resource-group $rgName `
@@ -247,7 +258,7 @@ az vm create `
     --generate-ssh-keys `
     --nics $nicName `
     --public-ip-sku Standard `
-    --custom-data cloud-init.txt `
+    --custom-data cloud-init.txt~ `
     --tags $tags
 
 #    --data-disk-caching None `
