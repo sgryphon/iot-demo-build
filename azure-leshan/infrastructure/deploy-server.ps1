@@ -167,6 +167,9 @@ az network nsg rule create --name AllowLDAP `
                            --direction Inbound `
                            --destination-port-ranges 80 443
 
+# Check rules
+# az network nsg rule list --nsg-name $nsgName --resource-group $rgName
+
 Write-Verbose "Creating Virtual network $vnetName ($vnetIpPrefix, $vnetIPv4)"
 az network vnet create --name $vnetName `
                        --resource-group $rgName `
