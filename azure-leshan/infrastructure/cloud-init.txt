@@ -81,7 +81,7 @@ write_files:
   - owner: www-data:www-data
     path: /etc/caddy/Caddyfile
     content: |
-      INIT_HOST_NAME {
+      INIT_HOST_NAMES {
         basicauth {
           iotadmin hashed_password_base64
         }

@@ -109,7 +109,6 @@ $pipName = "pip-$vmName-$Environment-$Location-001".ToLowerInvariant()
 $nicName = "nic-01-$vmName-$Environment-001".ToLowerInvariant()
 $ipcName = "ipc-01-$vmName-$Environment-001".ToLowerInvariant()
 #$dataDiskSize = 20
-$fullHostName = "$pipDnsName.$Location.cloudapp.azure.com".ToLowerInvariant()
 
 $vmImage = 'UbuntuLTS'
 $vmIpAddress = "$($subnetAddress)d"
@@ -213,9 +212,6 @@ az network public-ip create `
   --version IPv6 `
   --tags $tags
 
-<#
-#>
-
 # Azure only supports dual stack; primary NIC IP config must be IPv4
 
 Write-Verbose "Creating Network interface controller $nicName (required IPv4 $vmIPv4)"
@@ -228,8 +224,6 @@ az network nic create `
   --private-ip-address $vmIPv4 `
   --tags $tags
 
-#--public-ip-address $pipv4Name `
-
 Write-Verbose "Adding NIC IP Config $ipcName ($vmIpAddress, $pipName) to $nicName"
 az network nic ip-config create `
   --name $ipcName `
@@ -240,10 +234,37 @@ az network nic ip-config create `
   --private-ip-address $vmIpAddress `
   --private-ip-address-version IPv6 `
   --public-ip-address $pipName
+  
+$hostNames = $(az network public-ip show --name $pipName --resource-group $rgName --query dnsSettings.fqdn --output tsv)
 
-Write-Verbose "Configurating cloud-init.txt~ file with host $fullHostName"
+if ($AddPublicIpv4) {
+  $pipv4Name = "pipv4-$vmName-$Environment-$Location-001".ToLowerInvariant()
+  $pipv4DnsName = "lwm2m-$OrgId-$Environment-ipv4".ToLowerInvariant()
+
+  Write-Verbose "Creating Public IPv4 addresses $pipv4Name (DNS $pipv4DnsName)"
+  az network public-ip create `
+    --name $pipv4Name  `
+    --dns-name $pipv4DnsName `
+    --resource-group $rgName `
+    --location $Location  `
+    --sku Standard  `
+    --allocation-method static  `
+    --version IPv4 `
+    --tags $tags
+
+  # the auto-created config name is ipconfig1
+  az network nic ip-config update `
+    --name 'ipconfig1' `
+    --nic-name $nicName `
+    -g $rgName `
+    --public-ip-address $pipv4Name
+
+  $hostNames = "$hostNames, $(az network public-ip show --name $pipv4Name --resource-group $rgName --query dnsSettings.fqdn --output tsv)"
+}
+   
+Write-Verbose "Configurating cloud-init.txt~ file with host names: $hostNames"
 (((Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
-  -replace 'INIT_HOST_NAME',$fullHostName) `
+  -replace 'INIT_HOST_NAMES',$hostNames) `
   -replace 'INIT_PASSWORD_INPUT',$WebPassword) `
   | Set-Content -Path (Join-Path $PSScriptRoot cloud-init.txt~)
 
@@ -271,30 +292,6 @@ if ($ShutdownUtc) {
     az vm auto-shutdown -g $rgName -n $vmName --time $ShutdownUtc
   }
 }
-
-if ($AddPublicIpv4) {
-  $pipv4Name = "pipv4-$vmName-$Environment-$Location-001".ToLowerInvariant()
-  Write-Verbose "Creating Public IPv4 addresses $pipv4Name (DNS $pipDnsName)"
-  az network public-ip create `
-    --name $pipv4Name  `
-    --dns-name $pipDnsName `
-    --resource-group $rgName  `
-    --location $Location  `
-    --sku Standard  `
-    --allocation-method static  `
-    --version IPv4 `
-    --tags $tags
-
-  # the auto-created config name is ipconfig1
-  az network nic ip-config update `
-    --name 'ipconfig1' `
-    --nic-name $nicName `
-    -g $rgName `
-    --public-ip-address $pipv4Name
-}
-
-Write-Verbose "Opening port 80 for $vmName"
-az vm open-port --port 80 -g $rgName --name $vmName
 
 Write-Verbose "Virtual machine created"
 

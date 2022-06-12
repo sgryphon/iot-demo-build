@@ -52,6 +52,7 @@ There are script to stop (to save money) and restart (e.g. each day after the au
 ./start-server.ps1
 ```
 
+After restarting you need to log on and run the Leshan server (`java -jar ~/leshan-server/leshan-server-demo.jar`)
 
 ### Cleanup
 
