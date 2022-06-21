@@ -1,19 +1,12 @@
 #!/usr/bin/env pwsh
 
 <# .SYNOPSIS
-  Deploy server into Azure for.
+  Deploy landing zone shared services into Azure.
 
 .NOTES
-  This creates a server in your Azure subscription.
+  This creates shared services in your Azure subscription.
 
-  By default it has a public IPv6 and a DNS entry with a unique identifier based on
-  your subscription prefix: "lwm2m-<prefix>-dev.australiaeast.cloudapp.azure.com"
-
-  The internal network will have a randomly allocation IPv6 Unique Local Address
-  dual stack network (or you can pass in -UlaGlobalId or -UlaSubnetId for specific values).
-  For more information on ULAs see https://en.wikipedia.org/wiki/Unique_local_address
-
-  You can also add a public IPv4 if needed via the flag -AddPublicIpv4
+  This includes Azure KeyVault, Azure Monitor, and App Insights.
 
   Running these scripts requires the following to be installed:
   * PowerShell, https://github.com/PowerShell/PowerShell
@@ -34,7 +27,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-server.ps1 -WebPassword YourSecretPassword
+   ./deploy-shared.ps1
 #>
 [CmdletBinding()]
 param (

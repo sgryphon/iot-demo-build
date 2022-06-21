@@ -63,3 +63,9 @@ The landing zone template has shared (spoke) network and services.
   - Azure Monitor (log-shared-dev)
     - Application Insights (appi-shared-dev)
   - KeyVault (kv-shared-<OrgId>-dev)
+
+
+To Do
+-----
+
+* Apply resource locks to landing zone groups to prevent direct delete.

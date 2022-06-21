@@ -33,7 +33,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-network.ps1 -WebPassword YourSecretPassword
+   ./deploy-network.ps1
 #>
 [CmdletBinding()]
 param (
@@ -43,9 +43,9 @@ param (
     [string]$Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast',
     ## IPv6 Unique Local Address GlobalID to use (default hash of subscription ID)
     [string]$UlaGlobalId = $ENV:DEPLOY_GLOBAL_ID ?? (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes((az account show --query id --output tsv))))).Hash.Substring(0, 10),
-    ## IPv6 Unique Local Address SubnetID to use (default 101)
+    ## IPv6 Unique Local Address SubnetID to use for core subnet (default 101)
     [string]$UlaCoreSubnetId = $ENV:DEPLOY_CORE_SUBNET_ID ?? ("0101"),
-    ## IPv6 Unique Local Address SubnetID to use (default 102)
+    ## IPv6 Unique Local Address SubnetID to use for DMZ subnet (default 102)
     [string]$UlaDmzSubnetId = $ENV:DEPLOY_DMZ_SUBNET_ID ?? ("0102")
 )
 
