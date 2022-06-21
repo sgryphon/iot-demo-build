@@ -65,14 +65,15 @@ $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 
 # Landing zone templates have Azure Monitor (but not app insights), KeyVault, and a diagnostics storage account
 
-$iotName = "iot-$appName-$Environment".ToLowerInvariant()
-$dpsName = "dps-$appName-$Environment".ToLowerInvariant()
+$iotName = "iot-$appName-$OrgId-$Environment".ToLowerInvariant()
+$dpsName = "dps-$appName-$OrgId-$Environment".ToLowerInvariant()
 
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
 
-$TagDictionary = @{ DataClassification = 'Non-business'; Criticality = 'Low';
-  BusinessUnit = 'IoT'; Env = $Environment }
+$TagDictionary = @{ WorkloadName = 'iot'; DataClassification = 'Non-business'; Criticality = 'Low';
+  BusinessUnit = 'IoT'; ApplicationName = $appName; Env = $Environment }
+
 
 # Create
 
@@ -89,6 +90,16 @@ $rg = az group create -g $rgName -l $location --tags $tags | ConvertFrom-Json
 # IoT Central has: IoT Hub, DPS, Stream Analytics, Data Explorer, SQL DB, Cosmos DB (https://docs.microsoft.com/en-us/azure/iot-central/core/concepts-architecture)
 # az iot central app create -n $iotcName -g $rgName -s $iotcSubdomain --sku ST0 --display-name $iotcDisplayName
 
+Write-Verbose "Creating Device Provisioning Service $dpsName"
+
+az iot dps create `
+  --resource-group $rgName `
+  -l $rg.location `
+  --name $dpsName `
+  --sku  $dpsSku `
+  --tags $tags
+
+
 Write-Verbose "Creating IoT hub $iotName"
 
 az iot hub create `
@@ -99,14 +110,13 @@ az iot hub create `
   --partition-count 2 `
   --tags $tags
 
-Write-Verbose "Creating Device Provisiong Service $dpsName"
+Write-Verbose "Linking IoT hub $iotName to DPS $dpsName"
 
-az iot dps create `
-  --resource-group $rgName `
-  -l $rg.location `
-  --name $dpsName `
-  --sku  $dpsSku `
-  --tags $tags
+az iot dps linked-hub create `
+  -g $rgName `
+  --dps-name $dpsName `
+  --hub-name $iotName
+
 
 # Azure Digital Twins
 
