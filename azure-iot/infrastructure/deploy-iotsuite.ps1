@@ -89,6 +89,7 @@ $rg = az group create -g $rgName -l $location --tags $tags | ConvertFrom-Json
 
 # IoT Central has: IoT Hub, DPS, Stream Analytics, Data Explorer, SQL DB, Cosmos DB (https://docs.microsoft.com/en-us/azure/iot-central/core/concepts-architecture)
 # az iot central app create -n $iotcName -g $rgName -s $iotcSubdomain --sku ST0 --display-name $iotcDisplayName
+# TTN integration uses Event Hub, App Service Plan, and Storage (function app)
 
 Write-Verbose "Creating Device Provisioning Service $dpsName"
 
