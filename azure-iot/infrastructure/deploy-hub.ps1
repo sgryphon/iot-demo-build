@@ -60,10 +60,8 @@ Write-Verbose "Deploying scripts for environment '$Environment' in subscription 
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 # With an additional organisation or subscription identifier (after app name) in global names to make them unique 
 
-$appName = 'iotsuite'
+$appName = 'hub'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
-
-# Landing zone templates have Azure Monitor (but not app insights), KeyVault, and a diagnostics storage account
 
 $iotName = "iot-$appName-$OrgId-$Environment".ToLowerInvariant()
 $dpsName = "dps-$appName-$OrgId-$Environment".ToLowerInvariant()
