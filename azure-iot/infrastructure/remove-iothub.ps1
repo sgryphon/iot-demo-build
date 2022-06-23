@@ -13,7 +13,7 @@ $ErrorActionPreference="Stop"
 $SubscriptionId = $(az account show --query id --output tsv)
 Write-Verbose "Removing from context subscription ID $SubscriptionId"
 
-$appName = 'hub'
+$appName = 'iothub'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 
 az group delete --name $rgName

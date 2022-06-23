@@ -60,11 +60,14 @@ Write-Verbose "Deploying scripts for environment '$Environment' in subscription 
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 # With an additional organisation or subscription identifier (after app name) in global names to make them unique 
 
-$appName = 'hub'
+$appName = 'iothub'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 
-$iotName = "iot-$appName-$OrgId-$Environment".ToLowerInvariant()
+$iotName = "iot-hub001-$OrgId-$Environment".ToLowerInvariant()
 $dpsName = "dps-$appName-$OrgId-$Environment".ToLowerInvariant()
+
+$sharedRgName = "rg-shared-$Environment-001".ToLowerInvariant()
+$logName = "log-shared-$Environment".ToLowerInvariant()
 
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
@@ -98,7 +101,6 @@ az iot dps create `
   --sku  $dpsSku `
   --tags $tags
 
-
 Write-Verbose "Creating IoT hub $iotName"
 
 az iot hub create `
@@ -108,6 +110,24 @@ az iot hub create `
   --sku $iotHubSku `
   --partition-count 2 `
   --tags $tags
+
+$iotHub = az iot hub show --name $iotName | ConvertFrom-Json
+
+Write-Verbose "Forwarding IoT Hub $iotName diagnostics to Azure Monitor $dpsName"
+# https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings?tabs=cli
+
+$categoriesList = az monitor diagnostic-settings categories list --resource $iotHub.id | ConvertFrom-Json
+$allLogsCategories = $categoriesList.value | Where-Object { $_.categoryType -eq 'Logs' } `
+  | Select-Object @{label="category"; expression={$_.name}}, @{label="enabled"; expression={$true}}
+
+$log = az monitor log-analytics workspace show -g $sharedRgName --workspace-name $logName | ConvertFrom-Json -AsHashtable
+
+az monitor diagnostic-settings create  `
+--name IotHub-Diagnostics `
+--resource $iotHub.id `
+--logs    (($allLogsCategories | ConvertTo-Json -Compress) -replace '"', '""' -replace ':', ': ') `
+--metrics '[{""category"": ""AllMetrics"",""enabled"": true}]' `
+--workspace $log.id
 
 Write-Verbose "Linking IoT hub $iotName to DPS $dpsName"
 
@@ -121,6 +141,9 @@ az iot dps linked-hub create `
 
 # Output
 
-#Write-Verbose "Client App Instrumentation Key: $aiKey"
+$iotHubOwner = az iot hub policy show --hub-name $iotName --name iothubowner | ConvertFrom-Json
+
+Write-Verbose "IoT Hub hostname: $($iotHub.properties.hostName)"
+Write-Verbose "IoT Hub access key (iothubowner): $($iotHubOwner.primaryKey)"
 
 Write-Verbose "Deployment Complete"
