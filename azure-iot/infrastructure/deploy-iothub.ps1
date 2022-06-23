@@ -140,7 +140,7 @@ az monitor diagnostic-settings create  `
 --metrics '[{""category"": ""AllMetrics"",""enabled"": true}]' `
 --workspace $log.id
 
-Write-Verbose "Linking IoT hub $iotName to DPS $dpsName"
+Write-Verbose "Linking IoT Hub $iotName to DPS $dpsName"
 
 az iot dps linked-hub create `
   -g $rgName `
@@ -163,6 +163,51 @@ az kusto database create `
   --database-name $dedbName `
   --resource-group $rgName `
   --read-write-database soft-delete-period=P365D hot-cache-period=P31D location=$($rg.location)
+
+# Following Microsoft Iot Architecture recommendations:  
+# Ingest the raw data into a source table (then use ADX update policy to split and parse)
+Write-Verbose "Create IoT Hub raw ingestion tables in Data Explorer"
+
+# az kusto script list --cluster-name $decName --database-name $dedbName -g $rgName
+# az kusto script show -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
+# .show table ['IotHub001-raw'] ingestion mappings 
+
+$rawTableName = 'IotHub001-raw'
+$createTable = ".create table ['$rawTableName'] (rawevent: dynamic)"
+az kusto script create --cluster-name $decName `
+                       --database-name $dedbName `
+                       --name CreateIotHubRawTable `
+                       --resource-group $rgName `
+                       --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
+                       --script-content $createTable
+
+$rawMappingName = 'IotHub001-raw-mapping'
+$createMapping = ".create table ['$rawTableName'] ingestion json mapping '$rawMappingName' '[{ """"column"""": """"rawevent"""", """"path"""": """"`$"""", """"datatype"""": """"dynamic"""" }]'"
+az kusto script create --cluster-name $decName `
+                       --database-name $dedbName `
+                       --name CreateIotHubRawMapping `
+                       --resource-group $rgName `
+                       --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
+                       --script-content $createMapping
+
+Write-Verbose "Create consumer grop in IoT Hub $iotName for Data Explorer"
+
+$consumerGroup = 'DataExplorer'
+az iot hub consumer-group create --hub-name $iotName --name $consumerGroup
+
+Write-Verbose "Connect IoT Hub $iotName to Data Explorer $decName"
+
+az kusto data-connection iot-hub create --cluster-name $decName `
+  --data-connection-name IotHub001 `
+  --database-name $dedbName `
+  --resource-group $rgName `
+  --iot-hub-resource-id $iotHub.id `
+  --consumer-group $consumerGroup `
+  --shared-access-policy-name iothubowner `
+  --data-format JSON `
+  --table-name $rawTableName `
+  --mapping-rule-name $rawMappingName
+
 
 # Azure Digital Twins
 
