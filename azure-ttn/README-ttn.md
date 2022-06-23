@@ -35,6 +35,12 @@ In the case of the Dragino LDDS75, I also had to update the Payload Formatter, a
 
 Turn your device on to start sending data.
 
+To see the data (you may need to wait, e.g. the Dragino only sends every 20 minutes), you can monitor the events. Note that this uses the default consumer group, so if you get an error, make sure there are no other consumers.
+
+```powershell
+$iotName = "iot-hub001-0x$((az account show --query id --output tsv).Substring(0,4))-dev"
+az iot hub monitor-events -n $iotName --timeout 0
+```
 
 ### Data explorer
 

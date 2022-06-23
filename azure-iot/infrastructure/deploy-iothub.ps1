@@ -170,7 +170,7 @@ Write-Verbose "Create IoT Hub raw ingestion tables in Data Explorer"
 
 # az kusto script list --cluster-name $decName --database-name $dedbName -g $rgName
 # az kusto script show -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
-# .show table ['IotHub001-raw'] ingestion mappings 
+# az kusto script delete -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
 
 $rawTableName = 'IotHub001-raw'
 $createTable = ".create table ['$rawTableName'] (rawevent: dynamic)"
@@ -189,6 +189,8 @@ az kusto script create --cluster-name $decName `
                        --resource-group $rgName `
                        --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
                        --script-content $createMapping
+
+# To see the config in ADX: .show table ['IotHub001-raw'] ingestion mappings 
 
 Write-Verbose "Create consumer grop in IoT Hub $iotName for Data Explorer"
 
