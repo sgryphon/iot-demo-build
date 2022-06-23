@@ -38,7 +38,11 @@ param (
     ## IoT Hub SKU, default is F1
     [string]$IoTHubSku = $ENV:DEPLOY_IOTHUB_SKU ?? 'F1',
     ## DPS SKU (currently only value is S1)
-    [string]$DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1'
+    [string]$DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1',
+    ## Data Explorer cluster SKU name (default 'Dev(No SLA)_Standard_E2a_v4')
+    [string]$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4",
+    ## Data Explorer cluster SKU name (default 'Developer')
+    [string]$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic"
 )
 
 <#
@@ -49,6 +53,10 @@ $VerbosePreference = 'Continue'
 $Environment = $ENV:DEPLOY_ENVIRONMENT ?? 'Dev'
 $Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast'
 $OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))"
+$IoTHubSku = $ENV:DEPLOY_IOTHUB_SKU ?? 'F1'
+$DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1'
+$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4"
+$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic"
 #>
 
 $ErrorActionPreference="Stop"
@@ -65,6 +73,9 @@ $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 
 $iotName = "iot-hub001-$OrgId-$Environment".ToLowerInvariant()
 $dpsName = "dps-$appName-$OrgId-$Environment".ToLowerInvariant()
+
+$decName = "dec$OrgId$Environment".ToLowerInvariant()
+$dedbName = "dedb-$appName-$Environment-001".ToLowerInvariant()
 
 $sharedRgName = "rg-shared-$Environment-001".ToLowerInvariant()
 $logName = "log-shared-$Environment".ToLowerInvariant()
@@ -136,6 +147,22 @@ az iot dps linked-hub create `
   --dps-name $dpsName `
   --hub-name $iotName
 
+
+Write-Verbose "Deploy Azure Data Explorer $decName"
+
+az extension add -n kusto
+
+az kusto cluster create `
+  --resource-group $rgName `
+  -l $rg.location `
+  --name $decName `
+  --sku name=$DecSkuName tier=$DecSkuTier
+
+az kusto database create `
+  --cluster-name $decName `
+  --database-name $dedbName `
+  --resource-group $rgName `
+  --read-write-database soft-delete-period=P365D hot-cache-period=P31D location=$($rg.location)
 
 # Azure Digital Twins
 

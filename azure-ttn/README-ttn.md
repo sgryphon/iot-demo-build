@@ -35,6 +35,14 @@ In the case of the Dragino LDDS75, I also had to update the Payload Formatter, a
 
 Turn your device on to start sending data.
 
+
+### Data explorer
+
+Open Data Explorer, and log in. https://dataexplorer.azure.com/
+
+Connect to your cluster, created by the azure-iothub deployment script, e.g. https://dec0xacc5dev.australiaeast.kusto.windows.net
+
+
 ### Troubleshooting
 
 If there are issues, you can check diagnostic logs in IoT Hub on the left hand menu go to Monitoring > Logs. To see recent diagnostics you can use a query like `AzureDiagnostics | order by TimeGenerated desc`.
