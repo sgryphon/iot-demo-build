@@ -59,3 +59,9 @@ This will remove the resource groups, deleting all resources in them.
 ```powershell
 ./remove-iot.ps1
 ```
+
+Ideas
+-----
+
+Would Synapse be an alternative to ADX?  i.e. Send IoT events to blob storage, then query them later?
+
