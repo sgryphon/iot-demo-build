@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 
 <# .SYNOPSIS
-  Remove the Azure development infrastructure resource group. #>
+  Starts the data explorer.
+#>
 [CmdletBinding()]
 param (
     ## Deployment environment, e.g. Prod, Dev, QA, Stage, Test.
@@ -11,9 +12,10 @@ param (
 $ErrorActionPreference="Stop"
 
 $SubscriptionId = $(az account show --query id --output tsv)
-Write-Verbose "Removing from context subscription ID $SubscriptionId"
+Write-Verbose "Using subscription ID $SubscriptionId"
 
-$appName = 'iotsuite'
+$appName = 'iothub'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
+$decName = "dec$OrgId$Environment".ToLowerInvariant()
 
-az group delete --name $rgName
+az kusto cluster start --name $decName -g $rgName
