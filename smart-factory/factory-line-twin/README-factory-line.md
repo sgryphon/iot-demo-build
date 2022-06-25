@@ -24,6 +24,14 @@ Ideas:
   - devices with sensors pointed at model
   - model (lego) is independent, e.g. speed control, and sensor takes actual reading.
 
+Plan:
+
+1. Get temperature value from M5Stack to IoT Hub using UI Flow - at least to see what capabilities are / messages look like.
+2. ?? Enhance UI flow with simulated 4dF measurements (or maybe better to switch to a language)
+3. Arduino probably first (has Azure support); capture temperature; just wifi.
+4. Arduino simulated factory machine (speed, vibration, etc).
+5. Build twins model.
+
 
 SAREF Manufacturing
 -------------------
