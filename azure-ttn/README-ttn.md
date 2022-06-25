@@ -45,9 +45,11 @@ In the case of the Dragino LDDS75, I also had to update the Payload Formatter, a
 
 The raw values are integers, representing millivolts, millimeters, and decidegrees Celsius. These are converted to SI base units (the same used in SenML) as volts, metres, and degrees Celsius.
 
-The decoder output is rendered as a dictionary, so we use simple named values. To remove ambiguity the units have been specified in the field name, e.g. "distance_m", rather than just "distance".
+The decoder output is rendered as a dictionary, so we use simple named values. To remove ambiguity the units have been specified in the field name, e.g. "distance_metres", rather than just "distance".
 
 Alternatively the semantic interpretation could either be implicit (e.g. we agree to use SI), or we could use a reference schema that supports unit definition (e.g. DTDL) to define the units, but having explicit units is good practice that can help avoid mistakes.
+
+There are also several options for choice of naming; the formatter below avoids abbreviations and uses snake casing (underscore), which is consistent with the rest of the uplink data message as formatted by TTN. The international (SI) spelling is used for "metre", which is consistent with both SenML and DTDL.
 
 Note that arrays are not supported, so we cannot use formats such as SenML [RFC 8428](https://datatracker.ietf.org/doc/html/rfc8428), which supports explict units.
 
@@ -57,32 +59,36 @@ function decodeUplink(input) {
   // Decode an uplink message from a buffer
   // (array) of bytes to an object of fields.
   var value = (input.bytes[0]<<8 | input.bytes[1]) & 0x3FFF;
-  var battery_V = value/1000; // Battery, units: mV -> V
+  var battery_volts = value/1000; // Battery, units: mV -> V
 
   value = input.bytes[2]<<8 | input.bytes[3];
-  var distance_m = value/1000; // Distance, units: mm -> m
+  var distance_metres = value/1000; // Distance, units: mm -> m
 
-  var wasInterrupt = !!input.bytes[4]; 
+  var was_interrupt = !!input.bytes[4]; 
 
   value=input.bytes[5]<<8 | input.bytes[6];
   if(input.bytes[5] & 0x80) { value |= 0xFFFF0000; }
-  var temperature_Cel = (value/10); // DS18B20 temperature, units: dCel -> Cel
+  var temperature_celsius = (value/10); // DS18B20 temperature, units: dCel -> Cel
 
-  var sensorDetected = !!input.bytes[7];
+  var sensor_detected = !!input.bytes[7];
 
   return {
     data: {
-      battery_V: battery_V,
-      distance_m: distance_m,
-      interrupt: wasInterrupt,
-      temperature_Cel: temperature_Cel,
-      sensor: sensorDetected
+      battery_volts: battery_volts,
+      distance_metres: distance_metres,
+      interrupt: was_interrupt,
+      temperature_celsius: temperature_celsius,
+      sensor: sensor_detected
     },
     warnings: [],
     errors: []
   };
 }
 ```
+
+Also see:
+- "To camelcase or under_score", Binkley et al, 2009, https://ieeexplore.ieee.org/document/5090039
+- "An Eye Tracking Study on camelCase and under_score Identifier Styles", Sharif, 2010, https://ieeexplore.ieee.org/document/5521745
 
 
 ### Data explorer (ADX)
@@ -109,8 +115,8 @@ You can also query the raw data directly:
     DeviceId = tostring(rawevent.end_device_ids.device_id),
     TtnApplication = tostring(rawevent.end_device_ids.application_ids.application_id),
     ModelId = tostring(rawevent.uplink_message.version_ids.model_id),
-    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_m),
-    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_V),
+    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_metres),
+    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_volts),
     RawData = base64_decode_toarray(tostring(rawevent.uplink_message.frm_payload))
 | take 10
 ```
@@ -131,8 +137,8 @@ A production system would use ADX update policy to split and parse the data, and
 | project
     ReceivedAt = todatetime(rawevent.uplink_message.received_at),
     DeviceId = tostring(rawevent.end_device_ids.device_id),
-    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_m),
-    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_V)
+    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_metres),
+    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_volts)
 | take 720
 ```
 
@@ -148,7 +154,7 @@ TODO : table schema, update policy, materialised view (average distance)
 
 ### Azure Synapse
 
-TODO: iot core - provision storage, iot hub routing (all) to storage, deploy synapse engine
+TODO: iot core - provision storage (Azure Data Lake Storage Gen2), iot hub routing (all) to storage, deploy synapse engine
 
 
 
@@ -195,4 +201,3 @@ Trying to fully clear (delete the integration and device from TTN and recreate),
 It could be related to the DPS, or other internals of IoT Central, being hidden and not accessible.
 
 
-HostName=iot-hub-0xacc5-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=XpKoZdbg86ryN9Cq9oqIlxQEphsph8AhWhDsl+Y1O7o=
