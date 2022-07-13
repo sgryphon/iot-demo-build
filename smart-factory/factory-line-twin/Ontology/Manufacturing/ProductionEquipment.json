@@ -27,7 +27,7 @@
     }
   ],
   "description": {
-    "en": "A production equipment is a specialization of a saref:Device and s4bldg:PhysicalObject that can produce items in a manufacturing process. This class represents an individual production equipment machine and includes their specification in terms of functions, states and services. Different types of machines can be defined under this class as needed, for example, LaserCuttingMachine (i.e. a type of production equipment to cut steel material), MillingMachine (i.e. to drill holes in steel material), MouldingMachine (i.e. to mould liquid material, such as iron or plastic, and let it harden in a certain shape), WeldingMachine (i.e. to join together parts of material, such as steel), etc."
+    "en": "A production equipment is a specialization of a saref:Device and s4bldg:PhysicalObject that can produce items in a manufacturing process. This class represents an individual production equipment machine and includes their specification in terms of functions, states and services. Different types of machines can be defined under this class as needed, for example, LaserCuttingMachine, MillingMachine, MouldingMachine, WeldingMachine, etc."
   },
   "displayName": {
     "en": "Production equipment"

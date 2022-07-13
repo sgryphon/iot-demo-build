@@ -43,7 +43,6 @@
       "displayName": {
         "en": "has function"
       },
-      "minMultiplicity": 1,
       "name": "hasFunction",
       "target": "dtmi:digitaltwins:saref:Function;1"
     },
