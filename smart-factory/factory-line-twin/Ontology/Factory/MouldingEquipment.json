@@ -1,0 +1,21 @@
+{
+  "@id": "dtmi:digitaltwins:factory:MoldingEquipment;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": [ "Property", "Temperature" ],
+      "name": "ChasisTemperature",
+      "schema": "double",
+      "unit": "degreeCelsius",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": ""
+  },
+  "displayName": {
+    "en": "Molding equipment"
+  },
+  "extends": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
+  "@context": "dtmi:dtdl:context;2"
+}

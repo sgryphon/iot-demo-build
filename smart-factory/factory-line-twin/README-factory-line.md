@@ -70,8 +70,13 @@ let it harden in a certain shape), WeldingMachine (i.e. to join together parts
 of material, such as steel), etc.
 
 
+https://github.com/Azure-Samples/digital-twins-samples/tree/main/HandsOnLab
 
+Answer questions such as:
 
+* Find all time windows when temperature during roasting is >65°C in the previous 24 hours and trace back events in ADT leading to that.
+* Calculate the average Grinding vibration in the last 2 minutes to ensure the process meets manufacturing quality standards.
+* Find all incidents with unusually higher than normal molding temperature in the previous 5 days.
 
 
 Alignment to W3C Building Topology Ontology

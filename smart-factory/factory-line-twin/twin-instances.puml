@@ -22,18 +22,18 @@ area1 --> line2 : s4blg:contains
 area1 --> store1 : s4blg:contains
 
 ' s4inma:ProductionEquipment
-object "__:FanningProductionEquipment__" as fan1
+object "__:RoastingProductionEquipment__" as roaster1
 object "__:GrindingProductionEquipment__" as grinder1
 object "__:MouldingProductionEquipment__" as mould1
-object "__:FanningProductionEquipment__" as fan2
+object "__:RoastingProductionEquipment__" as roaster2
 object "__:GrindingProductionEquipment__" as grinder2
 object "__:MouldingProductionEquipment__" as mould2
 
-line1 --> fan1 : saref:consistsOf
+line1 --> roaster1 : saref:consistsOf
 line1 --> grinder1 : saref:consistsOf
 line1 --> mould1 : saref:consistsOf
 
-line2 --> fan2 : saref:consistsOf
+line2 --> roaster2 : saref:consistsOf
 line2 --> grinder2 : saref:consistsOf
 line2 --> mould2 : saref:consistsOf
 
