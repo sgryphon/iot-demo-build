@@ -69,3 +69,20 @@ MouldingMachine (i.e. to mould liquid material, such as iron or plastic, and
 let it harden in a certain shape), WeldingMachine (i.e. to join together parts
 of material, such as steel), etc.
 
+
+
+
+
+
+Alignment to W3C Building Topology Ontology
+-------------------------------------------
+
+BOT is used in the Microsoft SmartBuildings DTDL based on RealEstateCore.
+
+| Subject | Predicate | Object |
+| ------- | --------- | ------ |
+| bot:Building | owl:equivalentClass | saref4bldg:Building |
+| bot:Element | owl:equivalentClass | saref4bldg:PhysicalObject |
+| bot:Space | owl:equivalentClass | saref4bldg:BuildingSpace |
+| bot:hasSpace | rdfs:subPropertyOf | saref4bldg:hasSpace |
+| bot:containsElement | owl:equivalentProperty | saref4bldg:contains |
