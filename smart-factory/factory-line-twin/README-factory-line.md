@@ -81,7 +81,6 @@ $VerbosePreference = 'Continue'
 
 Once loaded you can see the model in the Digital Twins Explorer.
 
-
 To replace an individual model manually, e.g. if you are making changes:
 
 ```
@@ -98,6 +97,8 @@ There is also a script to load some sample twin instances, with one factory area
 $VerbosePreference = 'Continue'
 ./add-twins.ps1
 ```
+
+Once loaded you can see the twins in the Digital Twins Explorer.
 
 ### Alignment to W3C Building Topology Ontology
 
