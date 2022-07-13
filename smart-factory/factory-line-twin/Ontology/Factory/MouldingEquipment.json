@@ -1,5 +1,5 @@
 {
-  "@id": "dtmi:digitaltwins:factory:MoldingEquipment;1",
+  "@id": "dtmi:digitaltwins:factory:MouldingEquipment;1",
   "@type": "Interface",
   "contents": [
     {
@@ -14,7 +14,7 @@
     "en": ""
   },
   "displayName": {
-    "en": "Molding equipment"
+    "en": "Moulding equipment"
   },
   "extends": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
   "@context": "dtmi:dtdl:context;2"
