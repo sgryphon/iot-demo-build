@@ -1,0 +1,12 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:Factory;1",
+  "@type": "Interface",
+  "description": {
+    "en": "A subclass of s4bldg:Building specialized for the purpose of SAREF4INMA, a factory represents one or more organizations sharing a definite mission, goals and objectives which provides an output such as a product (definition taken from IEC 62264 [i.11]). A factory can be divided in one or multiple sites."
+  },
+  "displayName": {
+    "en": "Factory"
+  },
+  "extends": "dtmi:digitaltwins:s4bldg:Building;1",
+  "@context": "dtmi:dtdl:context;2"
+}

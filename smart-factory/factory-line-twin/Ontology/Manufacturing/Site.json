@@ -1,0 +1,12 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:Site;1",
+  "@type": "Interface",
+  "description": {
+    "en": "A subclass of s4bldg:BuildingSpace used to define the physical spaces of the building. According to IEC 62264 [i.111], sites are identified physical, geographical, and/or logical component groupings of a manufacturing enterprise. A factory can be divided in sites, whereas sites can be divided areas."
+  },
+  "displayName": {
+    "en": "Site"
+  },
+  "extends": "dtmi:digitaltwins:s4bldg:BuildingSpace;1",
+  "@context": "dtmi:dtdl:context;2"
+}
