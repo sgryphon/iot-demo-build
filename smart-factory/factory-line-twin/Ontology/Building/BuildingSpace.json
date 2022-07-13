@@ -3,6 +3,30 @@
   "@type": "Interface",
   "contents": [
     {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
       "@type": "Relationship",
       "displayName": {
         "en": "has space"
@@ -17,15 +41,6 @@
       },
       "name": "contains",
       "target": "dtmi:digitaltwins:s4bldg:PhysicalObject;1"
-    },
-    {
-      "@type": "Property",
-      "displayName": {
-        "en": "name"
-      },
-      "name": "name",
-      "schema": "string",
-      "writable": true
     }
   ],
   "description": {

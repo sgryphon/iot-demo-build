@@ -19,7 +19,7 @@ Write-Verbose "Using subscription ID $SubscriptionId"
 $appName = 'iotcore'
 $dtName = "dt-$appName-$OrgId-$Environment".ToLowerInvariant()
 
-Write-Verbose "Loading factory ontology models to $dtName"
+Write-Verbose "Importing factory ontology models to $dtName"
 
 Write-Verbose "Geo ontology models"
 
