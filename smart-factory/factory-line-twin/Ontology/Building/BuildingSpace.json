@@ -1,5 +1,5 @@
 {
-  "@id": "dtmi:digitaltwins:s4bldg:Building;1",
+  "@id": "dtmi:digitaltwins:s4bldg:BuildingSpace;1",
   "@type": "Interface",
   "contents": [
     {
@@ -9,6 +9,14 @@
       },
       "name": "hasSpace",
       "target": "dtmi:digitaltwins:s4bldg:BuildingSpace;1"
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "contains"
+      },
+      "name": "contains",
+      "target": "dtmi:digitaltwins:s4bldg:PhysicalObject;1"
     },
     {
       "@type": "Property",
@@ -21,10 +29,10 @@
     }
   ],
   "description": {
-    "en": "A building represents a structure that provides shelter for its occupants or contents and stands in one place. The building is also used to provide a basic element within the spatial structure hierarchy for the components of a building project (together with site, storey, and space)."
+    "en": "An entity used to define the physical spaces of the building. A building space contains devices or building objects."
   },
   "displayName": {
-    "en": "Building"
+    "en": "Building space"
   },
   "@context": "dtmi:dtdl:context;2"
 }
