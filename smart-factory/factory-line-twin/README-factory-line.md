@@ -100,6 +100,16 @@ $VerbosePreference = 'Continue'
 
 Once loaded you can see the twins in the Digital Twins Explorer.
 
+### Clean up
+
+To delete all twins and models:
+
+```powershell
+$dtName = "dt-iotcore-0x$((az account show --query id --output tsv).Substring(0,4))-dev"
+az dt twin delete-all --dt-name $dtName
+az dt model delete-all --dt-name $dtName
+```
+
 ### Alignment to W3C Building Topology Ontology
 
 The W3C Building Topology Ontology (BOT) is used in other ontologies such as the Microsoft SmartBuildings DTDL based on RealEstateCore,
