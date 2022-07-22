@@ -40,23 +40,23 @@ PlatformIO is a plugin for popular editors, including VS Code, that supports the
 
 Follow the PlatformIO instructions for installion, for example in VS Code it is available as an extension that you can add to your editor (you may also need to install Python3).
 
-With PlatformIO installed you can create a new project, using a custom location if you want, called m5core2_demo (or whatever your version is).
+With PlatformIO installed you can create a new project, using a custom location if you want, called m5core2_hello (or whatever your version is).
 
 Select Board = M5Stack Core2, and Framework = Arduino, then click Create.
 
 You can also do this using the PlatformIO CLI tool, e.g. from the PlatformIO Core CLI console within the VS Code plugin (or outside it, if you have installed PlatformIO Core on your base machine).
 
-```powershell
-mkdir m5core2_demo
-cd m5core2_demo
+```shell
+mkdir m5core2_hello
+cd m5core2_hello
 pio project init --board m5stack-core2
 ```
 
 PlatformIO will install all the toolchains needed for you.
 
-You can also initialise a Git repository in the folder, to keep a track of changes:
+You can also initialise a Git repository in the folder (if you don't already have one), to keep a track of changes:
 
-```powershell
+```shell
 git init
 git add .
 git commit -m "Initial PlatformIO M5Core2 empty project"
@@ -66,7 +66,7 @@ You then need to go to PlatformIO > Libraries and install the M5Core2 library fr
 
 Or from the CLI:
 
-```powershell
+```shell
 pio pkg install --library M5Core2
 ```
 
