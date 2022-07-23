@@ -26,5 +26,6 @@
   "displayName": {
     "en": "Physical object"
   },
+  "extends": "dtmi:digitaltwins:geo:SpatialThing;1",
   "@context": "dtmi:dtdl:context;2"
 }

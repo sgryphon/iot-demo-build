@@ -1,0 +1,9 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:ProductionEquipmentFunction;1",
+  "@type": "Interface",
+  "displayName": {
+    "en": "Production equipment function"
+  },
+  "extends": "dtmi:digitaltwins:saref:Function;1",
+  "@context": "dtmi:dtdl:context;2"
+}

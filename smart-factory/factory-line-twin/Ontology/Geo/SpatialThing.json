@@ -1,0 +1,48 @@
+{
+  "@id": "dtmi:digitaltwins:geo:SpatialThing;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "location"
+      },
+      "name": "location",
+      "target": "dtmi:digitaltwins:geo:SpatialThing;1"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Altitude"
+      },
+      "name": "altitude",
+      "schema": "double",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Latitude"
+      },
+      "name": "latitude",
+      "schema": "double",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Longitude"
+      },
+      "name": "longitude",
+      "schema": "double",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": "Anything with spatial extent, i.e. size, shape, or position. e.g. people, places, bowling balls, as well as abstract areas like cubes."
+  },
+  "displayName": {
+    "en": "Spatial thing"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

@@ -47,6 +47,7 @@ class "s4bldg:BuildingSpace" as space
 class "s4bldg:Building" as building
 
 building --> space : s4bldg:hasSpace
+space --> space : s4bldg:hasSpace
 
 building --> physicalObject : s4bldg:contains
 

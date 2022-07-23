@@ -1,0 +1,12 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:Area;1",
+  "@type": "Interface",
+  "description": {
+    "en": "A subclass of s4bldg:BuildingSpace used to define the physical spaces of the building. According to IEC 62264 [i.11], areas are physical, geographical or logical groupings of resources determined by the site. A site can be divided in areas, whereas areas contain work centers."
+  },
+  "displayName": {
+    "en": "Area"
+  },
+  "extends": "dtmi:digitaltwins:s4bldg:BuildingSpace;1",
+  "@context": "dtmi:dtdl:context;2"
+}

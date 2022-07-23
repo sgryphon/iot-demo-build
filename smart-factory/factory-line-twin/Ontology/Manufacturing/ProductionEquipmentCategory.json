@@ -1,0 +1,37 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:ProductionEquipmentCategory;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A ProductionEquipmentCategory can be described using a name."
+      },
+      "displayName": {
+        "en": "Name"
+      },
+      "name": "hasName",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "description": {
+        "en": "A ProductionEquipmentCategory can have an additional textual description."
+      },
+      "@type": "Property",
+      "displayName": {
+        "en": "Description"
+      },
+      "name": "hasDescription",
+      "schema": "string",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": "A ProductionEquipmentCategory represents a certain category of production equipment in terms of its static properties (e.g. a certain model and brand). Each ProductionEquipmentCategory can have multiple related ProductionEquipment, which represent the actual individual machines. Moreover, each ItemCategory can be produced by multiple ProductionEquipmentCategories."
+  },
+  "displayName": {
+    "en": "Production equipment category"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

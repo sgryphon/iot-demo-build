@@ -5,6 +5,24 @@
     {
       "@type": "Property",
       "displayName": {
+        "en": "Name"
+      },
+      "name": "hasName",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Description"
+      },
+      "name": "hasDescription",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
         "en": "Manufacturer"
       },
       "name": "hasManufacturer",
@@ -26,7 +44,6 @@
         "en": "has function"
       },
       "minMultiplicity": 1,
-      "maxMultiplicity": 1,
       "name": "hasFunction",
       "target": "dtmi:digitaltwins:saref:Function;1"
     },
@@ -55,15 +72,6 @@
           "schema": "string"
         }
       },
-      "writable": true
-    },
-    {
-      "@type": "Property",
-      "displayName": {
-        "en": "name"
-      },
-      "name": "name",
-      "schema": "string",
       "writable": true
     }
   ],
