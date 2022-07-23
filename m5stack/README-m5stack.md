@@ -100,8 +100,24 @@ pio run --target upload
 In Git you can see the changes to the libraries and configuration changes that you have made. Slightly more complicated than the Arduino IDE as there are ~5 project files (instead of one) and a few extra directories and instructions. This is to support different libraries per project, as well as multi-board targetting, and other features.
 
 
-Azure (via WiFi)
-----------------
+M5Stack Core2 to Azure (via WiFi)
+---------------------------------
+
+Create a basic M5Core2 project in PlatformIO:
+
+```shell
+mkdir m5core2_azureiot
+cd m5core2_azureiot
+pio project init --board m5stack-core2
+pio pkg install --library M5Core2
+```
+
+
+
+
+
+TODO
+----
 
 core2_azure_simfactory
 
