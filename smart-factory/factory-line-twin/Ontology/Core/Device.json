@@ -1,0 +1,77 @@
+{
+  "@id": "dtmi:digitaltwins:saref:Device;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Manufacturer"
+      },
+      "name": "hasManufacturer",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Model"
+      },
+      "name": "hasModel",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "has function"
+      },
+      "minMultiplicity": 1,
+      "maxMultiplicity": 1,
+      "name": "hasFunction",
+      "target": "dtmi:digitaltwins:saref:Function;1"
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "consists of"
+      },
+      "name": "consistsOf",
+      "target": "dtmi:digitaltwins:saref:Device;1"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Custom Tags"
+      },
+      "name": "customTags",
+      "dtmi:dtdl:property:schema;2": {
+        "@type": "Map",
+        "dtmi:dtdl:property:mapKey;2": {
+          "name": "tagName",
+          "schema": "string"
+        },
+        "dtmi:dtdl:property:mapValue;2": {
+          "name": "tagValue",
+          "schema": "string"
+        }
+      },
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "name"
+      },
+      "name": "name",
+      "schema": "string",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": "A tangible object designed to accomplish a particular task in households, common public buildings or offices. In order to accomplish this task, the device performs one or more functions."
+  },
+  "displayName": {
+    "en": "Device"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

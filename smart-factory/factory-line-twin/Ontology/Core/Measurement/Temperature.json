@@ -1,0 +1,9 @@
+{
+  "@id": "dtmi:saref:Temperature;1",
+  "@type": "Interface",
+  "displayName": {
+    "en": "Temperature"
+  },
+  "extends": "dtmi:saref:Property;1",
+  "@context": "dtmi:dtdl:context;2"
+}

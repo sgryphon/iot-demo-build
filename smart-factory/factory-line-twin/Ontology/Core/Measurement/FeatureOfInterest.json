@@ -1,0 +1,30 @@
+{
+  "@id": "dtmi:saref:FeatureOfInterest;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "has property"
+      },
+      "name": "hasProperty",
+      "target": "dtmi:saref:Property;1"
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Name"
+      },
+      "name": "name",
+      "schema": "string",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": "A feature of interest represents any real world entity from which a property is measured. It is linked to the different properties it has and to its measurements."
+  },
+  "displayName": {
+    "en": "Feature of Interest"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

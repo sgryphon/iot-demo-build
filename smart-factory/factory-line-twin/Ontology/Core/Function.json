@@ -1,0 +1,22 @@
+{
+  "@id": "dtmi:digitaltwins:saref:Function;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Name"
+      },
+      "name": "name",
+      "schema": "string",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": "The functionality necessary to accomplish the task for which a device is designed. A device can be designed to perform more than one function. Functions can be structured in categories (subclasses) that reflect different points of view, for example, considering the specific application area for which a function can be used (e.g. light, temperature, motion, heat, power, etc.), or the capability that a function can support (e.g. receive, reply, notify, etc.) and so forth."
+  },
+  "displayName": {
+    "en": "Function"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}
