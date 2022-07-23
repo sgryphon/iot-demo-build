@@ -4,24 +4,33 @@
   "contents": [
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Name"
+      "description": {
+        "en": "A human-readable name for the subject."
       },
-      "name": "hasName",
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
       "schema": "string",
       "writable": true
     },
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Description"
+      "description": {
+        "en": "A description of the subject resource. A relationship providing a description of an entity (e.g., device). The value is expected to be a string or a string with language tag."
       },
-      "name": "hasDescription",
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
       "schema": "string",
       "writable": true
     },
     {
       "@type": "Property",
+      "description": {
+        "en": "A relationship identifying the manufacturer of an entity (e.g., device). The value is expected to be a string or a string with language tag."
+      },
       "displayName": {
         "en": "Manufacturer"
       },
@@ -31,6 +40,9 @@
     },
     {
       "@type": "Property",
+      "description": {
+        "en": "A relationship identifying the model of an entity (e.g., device). The value is expected to be a string or a string with language tag."
+      },
       "displayName": {
         "en": "Model"
       },
@@ -40,6 +52,9 @@
     },
     {
       "@type": "Relationship",
+      "description": {
+        "en": "A relationship identifying the function of a device"
+      },
       "displayName": {
         "en": "has function"
       },
@@ -48,6 +63,9 @@
     },
     {
       "@type": "Relationship",
+      "description": {
+        "en": "A relationship indicating a composite entity that consists of other entities (e.g., a temperature/humidity sensor that consists of a temperature sensor and a humidity sensor)"
+      },
       "displayName": {
         "en": "consists of"
       },
@@ -56,6 +74,9 @@
     },
     {
       "@type": "Property",
+      "description": {
+        "en": ""
+      },
       "displayName": {
         "en": "Custom Tags"
       },

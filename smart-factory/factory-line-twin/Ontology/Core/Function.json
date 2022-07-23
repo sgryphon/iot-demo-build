@@ -4,10 +4,25 @@
   "contents": [
     {
       "@type": "Property",
-      "displayName": {
-        "en": "Name"
+      "description": {
+        "en": "A human-readable name for the subject."
       },
-      "name": "name",
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
       "schema": "string",
       "writable": true
     }

@@ -5,24 +5,24 @@
     {
       "@type": "Property",
       "description": {
-        "en": "A ProductionEquipmentCategory can be described using a name."
+        "en": "A human-readable name for the subject."
       },
       "displayName": {
-        "en": "Name"
+        "en": "Label"
       },
-      "name": "hasName",
+      "name": "label",
       "schema": "string",
       "writable": true
     },
     {
-      "description": {
-        "en": "A ProductionEquipmentCategory can have an additional textual description."
-      },
       "@type": "Property",
-      "displayName": {
-        "en": "Description"
+      "description": {
+        "en": "A description of the subject resource."
       },
-      "name": "hasDescription",
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
       "schema": "string",
       "writable": true
     }

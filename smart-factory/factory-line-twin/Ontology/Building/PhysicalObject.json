@@ -9,15 +9,6 @@
       },
       "name": "contains",
       "target": "dtmi:digitaltwins:s4bldg:PhysicalObject;1"
-    },
-    {
-      "@type": "Property",
-      "displayName": {
-        "en": "name"
-      },
-      "name": "name",
-      "schema": "string",
-      "writable": true
     }
   ],
   "description": {

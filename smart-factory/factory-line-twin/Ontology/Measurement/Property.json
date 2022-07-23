@@ -3,6 +3,30 @@
   "@type": "Interface",
   "contents": [
     {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
       "@type": "Relationship",
       "displayName": {
         "en": "controlled by"
@@ -17,15 +41,6 @@
       },
       "name": "isMeasuredByDevice",
       "target": "dtmi:digitaltwins:saref:Device;1"
-    },
-    {
-      "@type": "Property",
-      "displayName": {
-        "en": "Name"
-      },
-      "name": "name",
-      "schema": "string",
-      "writable": true
     }
   ],
   "description": {
