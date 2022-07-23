@@ -8,7 +8,7 @@
         "en": "A Batch can have a unique identifier."
       },
       "displayName": {
-        "en": "ID"
+        "en": "Identifier"
       },
       "name": "hasIdentifier",
       "schema": "string",

@@ -99,20 +99,20 @@ class "StorageRoomWorkCenter" as store
 workCenter <|-- line
 workCenter <|-- store
 
-class "FanningProductionEquipment" as fan
+class "RoastingProductionEquipment" as roaster
 class "GrindingProductionEquipment" as grinder
 class "MouldingProductionEquipment" as mould
 
-productionEquipment <|-- fan
+productionEquipment <|-- roaster
 productionEquipment <|-- grinder
 productionEquipment <|-- mould
 
 class FormingFunction
-class GridingFunction
+class GrindingFunction
 class RoastingFunction
 
 productionEquipmentFunction <|-- FormingFunction
-productionEquipmentFunction <|-- GridingFunction
+productionEquipmentFunction <|-- GrindingFunction
 productionEquipmentFunction <|-- RoastingFunction
 
 class "RoastingTemperature" as roastingTemperatureProperty

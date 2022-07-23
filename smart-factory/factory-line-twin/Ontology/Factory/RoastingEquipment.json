@@ -1,0 +1,28 @@
+{
+  "@id": "dtmi:digitaltwins:factory:RoastingEquipment;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": ["Property", "Temperature"],
+      "name": "ChasisTemperature",
+      "schema": "double",
+      "unit": "degreeCelsius",
+      "writable": true
+    },
+    {
+      "@type": ["Property", "AngularVelocity"],
+      "name": "FanSpeed",
+      "schema": "double",
+      "unit": "revolutionPerSecond",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": ""
+  },
+  "displayName": {
+    "en": "Roasting equipment"
+  },
+  "extends": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
+  "@context": "dtmi:dtdl:context;2"
+}
