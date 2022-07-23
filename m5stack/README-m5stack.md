@@ -110,6 +110,7 @@ mkdir m5core2_azureiot
 cd m5core2_azureiot
 pio project init --board m5stack-core2
 pio pkg install --library M5Core2
+pio pkg install --library "azure/Azure SDK for C"
 ```
 
 
