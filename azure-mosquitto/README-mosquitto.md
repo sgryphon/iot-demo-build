@@ -88,3 +88,10 @@ Run the demo client, passing in the address of the Azure Leshan server.
 java -jar ./leshan-client-demo.jar -u lwm2m-0xacc5-dev.australiaeast.cloudapp.azure.com
 ```
 
+References
+----------
+
+* https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-the-mosquitto-mqtt-messaging-broker-on-ubuntu-18-04-quickstart
+* https://github.com/eclipse/mosquitto/blob/master/README-letsencrypt.md
+
+
