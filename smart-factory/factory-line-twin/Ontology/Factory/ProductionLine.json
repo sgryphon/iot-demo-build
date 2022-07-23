@@ -1,5 +1,5 @@
 {
-  "@id": "dtmi:digitaltwins:s4inma:ProductionLine;1",
+  "@id": "dtmi:digitaltwins:factory:ProductionLine;1",
   "@type": "Interface",
   "contents": [
     {
