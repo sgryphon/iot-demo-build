@@ -1,5 +1,7 @@
 @startuml 
 
+title Chocolate factory model
+
 hide circle
 skinparam handwritten true
 skinparam useBetaStyle true
@@ -19,9 +21,17 @@ space <|-- area
 
 building --> physicalObject : s4bldg:contains
 
-class "saref:Device" as device
+class "saref:Device" as device {
+    manufacturer
+    model
+}
 class "saref:Function" as function
 device --> function : saref:hasFunction
+
+class "saref:Sensor" as sensor
+class "saref:TemperatureSensor" as temperatureSensor
+device <|-- sensor
+sensor <|-- temperatureSensor
 
 class "s4inma:WorkCenter" as workCenter
 class "ProductionLineWorkCenter" as line
@@ -57,5 +67,35 @@ class RoastingFunction
 productionEquipmentFunction <|-- FormingFunction
 productionEquipmentFunction <|-- GridingFunction
 productionEquipmentFunction <|-- RoastingFunction
+
+class "saref:FeatureOfInterest" as feature
+class "s4inma:Batch" as batch {
+    identifier
+    beginning
+    end
+}
+class "s4inma:MaterialBatch" as materialBatch
+feature <|-- batch
+batch <|-- materialBatch
+batch --> productionEquipment : s4inma:needsEquipment
+
+class "saref:Property" as property
+class "saref:Temperature" as temperature
+class "RoastingTemperature" as roastingTemperature
+property <|-- temperature
+temperature <|-- roastingTemperature
+feature --> property : saref:hasProperty
+property --> device : saref:isMeasuredByDevice
+
+class "saref:Measurement" as measurement {
+    measuredIn
+    timestamp
+    value
+}
+class "s4inma:Measurement" as inmaMeasurement
+class "s4inma:ActualMeasurement" as actualMeasurement
+measurement <|-- inmaMeasurement
+inmaMeasurement <|-- actualMeasurement
+measurement --> property : saref:relatesToProperty
 
 @enduml
