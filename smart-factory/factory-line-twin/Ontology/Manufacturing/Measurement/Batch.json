@@ -48,7 +48,7 @@
       },
       "name": "needsEquipment",
       "target": "dtmi:digitaltwins:s4inma:ProductionEquipment;1"
-    }
+    },
     {
       "@type": "Relationship",
       "description": {
