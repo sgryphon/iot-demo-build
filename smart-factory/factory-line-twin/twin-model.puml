@@ -1,0 +1,61 @@
+@startuml 
+
+hide circle
+skinparam handwritten true
+skinparam useBetaStyle true
+
+class "s4bldg:PhysicalObject" as physicalObject
+class "s4bldg:BuildingSpace" as space
+class "s4bldg:Building" as building
+
+class "s4inma:Factory" as factory
+building <|-- factory
+building --> space : s4bldg:hasSpace
+
+class "s4inma:Site" as site
+class "s4inma:Area" as area
+space <|-- site
+space <|-- area
+
+building --> physicalObject : s4bldg:contains
+
+class "saref:Device" as device
+class "saref:Function" as function
+device --> function : saref:hasFunction
+
+class "s4inma:WorkCenter" as workCenter
+class "ProductionLineWorkCenter" as line
+class "StorageRoomWorkCenter" as store
+
+physicalObject <|-- productionEquipment
+device <|-- productionEquipment
+productionEquipment <|-- workCenter
+workCenter <|-- line
+workCenter <|-- store
+
+class "s4inma:ProductionEquipment" as productionEquipment
+class "FanningProductionEquipment" as fan
+class "GrindingProductionEquipment" as grinder
+class "MouldingProductionEquipment" as mould
+
+productionEquipment <|-- fan
+productionEquipment <|-- grinder
+productionEquipment <|-- mould
+
+class "s4inma:ProductionEquipmentFunction" as productionEquipmentFunction
+function <|-- productionEquipmentFunction
+
+class "s4inma:ProductionEquipmentCategory" as productionEquipmentCategory
+productionEquipment --> productionEquipmentCategory : s4inma:belongsToCategory
+
+' actual features of interest (that have measurements) are batches
+
+class FormingFunction
+class GridingFunction
+class RoastingFunction
+
+productionEquipmentFunction <|-- FormingFunction
+productionEquipmentFunction <|-- GridingFunction
+productionEquipmentFunction <|-- RoastingFunction
+
+@enduml

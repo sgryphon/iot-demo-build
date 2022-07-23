@@ -1,0 +1,38 @@
+@startuml 
+
+skinparam handwritten true
+skinparam useBetaStyle true
+
+object "__:s4inma:Factory__" as factory1
+object "__:s4inma:Site__" as site1
+object "__:s4inma:Area__" as area1
+
+factory1 --> site1
+site1 --> area1
+
+' s4inma:WorkCenter
+object "__:ProductionLineWorkCenter__" as line1
+object "__:ProductionLineWorkCenter__" as line2
+object "__:StorageRoomWorkCenter__" as store1
+
+area1 --> line1
+area1 --> line2
+area1 --> store1
+
+' s4inma:ProductionEquipment
+object "__:FanningProductionEquipment__" as fan1
+object "__:GrindingProductionEquipment__" as grinder1
+object "__:MouldingProductionEquipment__" as mould1
+object "__:FanningProductionEquipment__" as fan2
+object "__:GrindingProductionEquipment__" as grinder2
+object "__:MouldingProductionEquipment__" as mould2
+
+line1 --> fan1
+line1 --> grinder1
+line1 --> mould1
+
+line2 --> fan2
+line2 --> grinder2
+line2 --> mould2
+
+@enduml
