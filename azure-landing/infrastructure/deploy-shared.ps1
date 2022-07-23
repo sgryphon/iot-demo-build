@@ -65,6 +65,7 @@ $rgName = "rg-shared-$Environment-001".ToLowerInvariant()
 $logName = "log-shared-$Environment".ToLowerInvariant()
 $appiName = "appi-shared-$Environment".ToLowerInvariant()
 $kvName = "kv-shared-$OrgId-$Environment".ToLowerInvariant()
+$stfuncName = "stfunc$OrgId$Environment".ToLowerInvariant()
 
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
@@ -113,6 +114,14 @@ az keyvault create `
   --resource-group $rgName `
   -l $rg.location `
   --name $kvName `
+  --tags $tags
+
+Write-Verbose "Creating storage account"
+
+az storage account create --name $stfuncName `
+  --sku Standard_LRS `
+  --resource-group $rgName `
+  -l $rg.location `
   --tags $tags
 
 # Output
