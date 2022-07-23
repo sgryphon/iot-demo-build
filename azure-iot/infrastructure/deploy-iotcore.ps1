@@ -80,6 +80,9 @@ $dpsName = "provs-$appName-$OrgId-$Environment".ToLowerInvariant()
 $dtName = "dt-$appName-$OrgId-$Environment".ToLowerInvariant()
 $dtUser = $(az account show --query user.name --output tsv)
 
+$stName = "st$appName$OrgId$Environment".ToLowerInvariant()
+$funcName = "func-$appName-$OrgId-$Environment-001".ToLowerInvariant()
+
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
 $dedbName = "dedb-$appName-$Environment-001".ToLowerInvariant()
 
@@ -98,7 +101,7 @@ $tags = $TagDictionary.Keys | ForEach-Object { $key = $_; "$key=$($TagDictionary
 if (-not $SkipGroup) {
   Write-Verbose "Creating group $rgName"
 
-  $rg = az group create -g $rgName -l $location --tags $tags | ConvertFrom-Json
+  $rg = az group create -g $rgName -l $Location --tags $tags | ConvertFrom-Json
 } else {
   $rg = az group show --name $rgName | ConvertFrom-Json 
 }
@@ -182,6 +185,23 @@ az monitor diagnostic-settings create  `
 --logs    (($dtLogsCategories | ConvertTo-Json -Compress) -replace '"', '""' -replace ':', ': ') `
 --metrics '[{""category"": ""AllMetrics"",""enabled"": true}]' `
 --workspace $log.id
+
+
+Write-Verbose "Create function app $funcName, with storage $stName"
+
+az storage account create --name $stName `
+  --sku Standard_LRS `
+  --resource-group $rgName `
+  -l $Location `
+  --tags $tags
+
+az functionapp create --name $funcName `
+  --storage-account $stName `
+  --consumption-plan-location $Location `
+  --runtime dotnet `
+  --functions-version 3 `
+  --resource-group $rgName `
+  --tags $tags
 
 
 Write-Verbose "Deploy Azure Data Explorer $decName"
