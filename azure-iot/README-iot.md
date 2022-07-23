@@ -1,17 +1,18 @@
 Azure IoT
 =========
 
-Creates the following Azure resources:
+Creates the following Azure resources (in resource group `rg-iotcore-dev-001`):
 
 * IoT Hub, `iot-hub001-<OrgId>-dev`
-* Device Provisioning Service, `dps-iothub-<OrgId>-dev`
+* Device Provisioning Service, `dps-iotcore-<OrgId>-dev`
+* Digital Twins, `dt-iotcore-<OrgId>-dev`
 * Data Explorer Cluster, `dec<OrgId>dev`
 
 IoT Hub diagnostics are sent to Azure Monitor from the `azure-landing` shared services.
 
 The IoT Hub is configured as a linked hub with DPS.
 
-Azure Data Explorer (ADX) is configured with a database `dedb-iothub-<OrgId>-dev`, with raw ingestion table `IotHub001-raw`, and a data connection configured to a consumer group on the hub.
+Azure Data Explorer (ADX) is configured with a database `dedb-iotcore-<OrgId>-dev`, with raw ingestion table `IotHub001-raw`, and a data connection configured to a consumer group on the hub.
 
 All messages from the hub are ingested into the table as raw JSON.
 
@@ -33,7 +34,7 @@ Deploy via PowerShell:
 az login
 az account set --subscription <subscription id>
 $VerbosePreference = 'Continue'
-./infrastructure/deploy-iot.ps1
+./infrastructure/deploy-iotcore.ps1
 ```
 
 ### Azure Data Explorer cost management
@@ -57,5 +58,19 @@ To restart when needed:
 This will remove the resource groups, deleting all resources in them.
 
 ```powershell
-./remove-iot.ps1
+./remove-iotcore.ps1
 ```
+
+Events
+------
+
+Event Grid vs Event Hubs vs Service Bus
+
+https://docs.microsoft.com/en-us/azure/event-grid/compare-messaging-services
+
+
+Ideas
+-----
+
+Would Synapse be an alternative to ADX?  i.e. Send IoT events to blob storage, then query them later?
+

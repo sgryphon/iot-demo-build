@@ -24,14 +24,11 @@ Open The Things Network console, then open up (or create) your demo application,
 
 Copy in the Azure IoT Hub hostname and Azure IoT Hub access key, and then click Enable Azure IoT Hub integration.
 
-
 ### Add devices
 
 From the left hand menu select End devices, then click Add end device.
 
 Enter the details, e.g. I have a Dragino LDDS75, along with the DEV EUI identifier and the APP KEY shared secret, and your local region and frequency plan, and click Register end device
-
-In the case of the Dragino LDDS75, I also had to update the Payload Formatter, as the default Device Repository formatter was for an older 6-byte message, not the 8-byte message from my update firmware.
 
 Turn your device on to start sending data.
 
@@ -42,7 +39,59 @@ $iotName = "iot-hub001-0x$((az account show --query id --output tsv).Substring(0
 az iot hub monitor-events -n $iotName --timeout 0
 ```
 
-### Data explorer
+#### TTN data formatter
+
+In the case of the Dragino LDDS75, I also had to update the Payload Formatter, as the default Device Repository formatter was for an older 6-byte message, not the 8-byte message from my update firmware.
+
+The raw values are integers, representing millivolts, millimeters, and decidegrees Celsius. These are converted to SI base units (the same used in SenML) as volts, metres, and degrees Celsius.
+
+The decoder output is rendered as a dictionary, so we use simple named values. To remove ambiguity the units have been specified in the field name, e.g. "distance_metres", rather than just "distance".
+
+Alternatively the semantic interpretation could either be implicit (e.g. we agree to use SI), or we could use a reference schema that supports unit definition (e.g. DTDL) to define the units, but having explicit units is good practice that can help avoid mistakes.
+
+There are also several options for choice of naming; the formatter below avoids abbreviations and uses snake casing (underscore), which is consistent with the rest of the uplink data message as formatted by TTN. The international (SI) spelling is used for "metre", which is consistent with both SenML and DTDL.
+
+Note that arrays are not supported, so we cannot use formats such as SenML [RFC 8428](https://datatracker.ietf.org/doc/html/rfc8428), which supports explict units.
+
+
+```javascript
+function decodeUplink(input) {
+  // Decode an uplink message from a buffer
+  // (array) of bytes to an object of fields.
+  var value = (input.bytes[0]<<8 | input.bytes[1]) & 0x3FFF;
+  var battery_volts = value/1000; // Battery, units: mV -> V
+
+  value = input.bytes[2]<<8 | input.bytes[3];
+  var distance_metres = value/1000; // Distance, units: mm -> m
+
+  var was_interrupt = !!input.bytes[4]; 
+
+  value=input.bytes[5]<<8 | input.bytes[6];
+  if(input.bytes[5] & 0x80) { value |= 0xFFFF0000; }
+  var temperature_celsius = (value/10); // DS18B20 temperature, units: dCel -> Cel
+
+  var sensor_detected = !!input.bytes[7];
+
+  return {
+    data: {
+      battery_volts: battery_volts,
+      distance_metres: distance_metres,
+      interrupt: was_interrupt,
+      temperature_celsius: temperature_celsius,
+      sensor: sensor_detected
+    },
+    warnings: [],
+    errors: []
+  };
+}
+```
+
+Also see:
+- "To camelcase or under_score", Binkley et al, 2009, https://ieeexplore.ieee.org/document/5090039
+- "An Eye Tracking Study on camelCase and under_score Identifier Styles", Sharif, 2010, https://ieeexplore.ieee.org/document/5521745
+
+
+### Data explorer (ADX)
 
 Open Azure Data Explorer (ADX), and log in. https://dataexplorer.azure.com/
 
@@ -66,13 +115,13 @@ You can also query the raw data directly:
     DeviceId = tostring(rawevent.end_device_ids.device_id),
     TtnApplication = tostring(rawevent.end_device_ids.application_ids.application_id),
     ModelId = tostring(rawevent.uplink_message.version_ids.model_id),
-    DistanceM = toreal(rawevent.uplink_message.decoded_payload.Distance_m),
-    BatteryV = toreal(rawevent.uplink_message.decoded_payload.Battery_V),
+    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_metres),
+    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_volts),
     RawData = base64_decode_toarray(tostring(rawevent.uplink_message.frm_payload))
 | take 10
 ```
 
-### Dashboard visualisation
+### ADX Dashboard visualisation
 
 In ADX, you can create a basic dashboard, direct from this raw data.
 
@@ -88,8 +137,8 @@ A production system would use ADX update policy to split and parse the data, and
 | project
     ReceivedAt = todatetime(rawevent.uplink_message.received_at),
     DeviceId = tostring(rawevent.end_device_ids.device_id),
-    DistanceM = toreal(rawevent.uplink_message.decoded_payload.Distance_m),
-    BatteryV = toreal(rawevent.uplink_message.decoded_payload.Battery_V)
+    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_metres),
+    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_volts)
 | take 720
 ```
 
@@ -101,6 +150,13 @@ Enter Tile name 'LDDS75' and Visual type Line chart. It should infer reasonable 
 ### ADX update policy
 
 TODO : table schema, update policy, materialised view (average distance)
+
+
+### Azure Synapse
+
+TODO: iot core - provision storage (Azure Data Lake Storage Gen2), iot hub routing (all) to storage, deploy synapse engine
+
+
 
 
 ### Troubleshooting
@@ -145,4 +201,3 @@ Trying to fully clear (delete the integration and device from TTN and recreate),
 It could be related to the DPS, or other internals of IoT Central, being hidden and not accessible.
 
 
-HostName=iot-hub-0xacc5-dev.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=XpKoZdbg86ryN9Cq9oqIlxQEphsph8AhWhDsl+Y1O7o=

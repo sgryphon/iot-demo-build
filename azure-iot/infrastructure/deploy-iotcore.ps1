@@ -4,7 +4,7 @@
   Deploy IoT into Azure.
 
 .NOTES
-  This creates IoT Hub, and Device Provisioning Services.
+  This creates IoT Hub, Device Provisioning Services, Digital Twin, and Azure Data Explorer.
 
   Running these scripts requires the following to be installed:
   * PowerShell, https://github.com/PowerShell/PowerShell
@@ -25,7 +25,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-iot.ps1
+   ./deploy-iotcore.ps1
 #>
 [CmdletBinding()]
 param (
@@ -68,11 +68,14 @@ Write-Verbose "Deploying scripts for environment '$Environment' in subscription 
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 # With an additional organisation or subscription identifier (after app name) in global names to make them unique 
 
-$appName = 'iothub'
+$appName = 'iotcore'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 
 $iotName = "iot-hub001-$OrgId-$Environment".ToLowerInvariant()
-$dpsName = "dps-$appName-$OrgId-$Environment".ToLowerInvariant()
+$dpsName = "provs-$appName-$OrgId-$Environment".ToLowerInvariant()
+
+$dtName = "dt-$appName-$OrgId-$Environment".ToLowerInvariant()
+$dtUser = $(az account show --query user.name --output tsv)
 
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
 $dedbName = "dedb-$appName-$Environment-001".ToLowerInvariant()
@@ -89,7 +92,7 @@ $TagDictionary = @{ WorkloadName = 'iot'; DataClassification = 'Non-business'; C
 
 # Create
 
-Write-Host "Creating group $rgName"
+Write-Verbose "Creating group $rgName"
 
 # Convert dictionary to tags format used by Azure CLI create command
 $tags = $TagDictionary.Keys | ForEach-Object { $key = $_; "$key=$($TagDictionary[$key])" }
@@ -98,10 +101,6 @@ $rg = az group create -g $rgName -l $location --tags $tags | ConvertFrom-Json
 # Convert tags returned from JSON result to the format used by Azure CLI create command
 #$rg = az group show --name $rgName | ConvertFrom-Json
 #$rgTags = $rg.tags | Get-Member -MemberType NoteProperty | ForEach-Object { "$($_.Name)=$($rg.tags.$($_.Name))" }
-
-# IoT Central has: IoT Hub, DPS, Stream Analytics, Data Explorer, SQL DB, Cosmos DB (https://docs.microsoft.com/en-us/azure/iot-central/core/concepts-architecture)
-# az iot central app create -n $iotcName -g $rgName -s $iotcSubdomain --sku ST0 --display-name $iotcDisplayName
-# TTN integration uses Event Hub, App Service Plan, and Storage (function app)
 
 Write-Verbose "Creating Device Provisioning Service $dpsName"
 
@@ -146,6 +145,21 @@ az iot dps linked-hub create `
   -g $rgName `
   --dps-name $dpsName `
   --hub-name $iotName
+
+
+Write-Verbose "Deploy Azure Digital Twins $dtName"
+
+#az extension add --upgrade --name azure-iot
+
+az dt create --dt-name $dtName `
+  --resource-group $rgName `
+  --tags $tags
+
+az dt role-assignment create --dt-name $dtName `
+--role "Azure Digital Twins Data Owner" `
+--assignee $dtUser
+
+# TODO: Use --assign-identity and --scopes to assign scopes, e.g. event hub
 
 
 Write-Verbose "Deploy Azure Data Explorer $decName"
@@ -210,8 +224,6 @@ az kusto data-connection iot-hub create --cluster-name $decName `
   --table-name $rawTableName `
   --mapping-rule-name $rawMappingName
 
-
-# Azure Digital Twins
 
 # Output
 
