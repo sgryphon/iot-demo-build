@@ -42,7 +42,10 @@ param (
     ## Data Explorer cluster SKU name (default 'Dev(No SLA)_Standard_E2a_v4')
     [string]$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4",
     ## Data Explorer cluster SKU name (default 'Developer')
-    [string]$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic"
+    [string]$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic",
+    [switch]$SkipGroup,
+    [switch]$SkipDps,
+    [switch]$SkipIotHub
 )
 
 <#
@@ -77,6 +80,9 @@ $dpsName = "provs-$appName-$OrgId-$Environment".ToLowerInvariant()
 $dtName = "dt-$appName-$OrgId-$Environment".ToLowerInvariant()
 $dtUser = $(az account show --query user.name --output tsv)
 
+$stName = "st$appName$OrgId$Environment".ToLowerInvariant()
+$funcName = "func-$appName-$OrgId-$Environment-001".ToLowerInvariant()
+
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
 $dedbName = "dedb-$appName-$Environment-001".ToLowerInvariant()
 
@@ -89,63 +95,67 @@ $logName = "log-shared-$Environment".ToLowerInvariant()
 $TagDictionary = @{ WorkloadName = 'iot'; DataClassification = 'Non-business'; Criticality = 'Low';
   BusinessUnit = 'IoT'; ApplicationName = $appName; Env = $Environment }
 
-
-# Create
-
-Write-Verbose "Creating group $rgName"
-
 # Convert dictionary to tags format used by Azure CLI create command
 $tags = $TagDictionary.Keys | ForEach-Object { $key = $_; "$key=$($TagDictionary[$key])" }
-$rg = az group create -g $rgName -l $location --tags $tags | ConvertFrom-Json
+
+if (-not $SkipGroup) {
+  Write-Verbose "Creating group $rgName"
+
+  $rg = az group create -g $rgName -l $Location --tags $tags | ConvertFrom-Json
+} else {
+  $rg = az group show --name $rgName | ConvertFrom-Json 
+}
 
 # Convert tags returned from JSON result to the format used by Azure CLI create command
-#$rg = az group show --name $rgName | ConvertFrom-Json
 #$rgTags = $rg.tags | Get-Member -MemberType NoteProperty | ForEach-Object { "$($_.Name)=$($rg.tags.$($_.Name))" }
 
-Write-Verbose "Creating Device Provisioning Service $dpsName"
+if (-not $SkipDps) {
+  Write-Verbose "Creating Device Provisioning Service $dpsName"
 
-az iot dps create `
-  --resource-group $rgName `
-  -l $rg.location `
-  --name $dpsName `
-  --sku  $dpsSku `
-  --tags $tags
-
-Write-Verbose "Creating IoT hub $iotName"
-
-az iot hub create `
-  --resource-group $rgName `
-  -l $rg.location `
-  --name $iotName `
-  --sku $iotHubSku `
-  --partition-count 2 `
-  --tags $tags
-
-$iotHub = az iot hub show --name $iotName | ConvertFrom-Json
-
-Write-Verbose "Forwarding IoT Hub $iotName diagnostics to Azure Monitor $dpsName"
-# https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings?tabs=cli
-
-$categoriesList = az monitor diagnostic-settings categories list --resource $iotHub.id | ConvertFrom-Json
-$allLogsCategories = $categoriesList.value | Where-Object { $_.categoryType -eq 'Logs' } `
-  | Select-Object @{label="category"; expression={$_.name}}, @{label="enabled"; expression={$true}}
+  az iot dps create `
+   --resource-group $rgName `
+   -l $rg.location `
+   --name $dpsName `
+   --sku  $dpsSku `
+   --tags $tags
+}
 
 $log = az monitor log-analytics workspace show -g $sharedRgName --workspace-name $logName | ConvertFrom-Json -AsHashtable
 
-az monitor diagnostic-settings create  `
---name IotHub-Diagnostics `
---resource $iotHub.id `
---logs    (($allLogsCategories | ConvertTo-Json -Compress) -replace '"', '""' -replace ':', ': ') `
---metrics '[{""category"": ""AllMetrics"",""enabled"": true}]' `
---workspace $log.id
+if (-not $SkipIotHub) {
+  Write-Verbose "Creating IoT hub $iotName"
 
-Write-Verbose "Linking IoT Hub $iotName to DPS $dpsName"
+  az iot hub create `
+    --resource-group $rgName `
+    -l $rg.location `
+    --name $iotName `
+    --sku $iotHubSku `
+    --partition-count 2 `
+    --tags $tags
 
-az iot dps linked-hub create `
-  -g $rgName `
-  --dps-name $dpsName `
-  --hub-name $iotName
+  $iotHub = az iot hub show --name $iotName | ConvertFrom-Json
 
+  Write-Verbose "Forwarding IoT Hub $iotName diagnostics to Azure Monitor $logName"
+  # https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings?tabs=cli
+
+  $categoriesList = az monitor diagnostic-settings categories list --resource $iotHub.id | ConvertFrom-Json
+  $allLogsCategories = $categoriesList.value | Where-Object { $_.categoryType -eq 'Logs' } `
+    | Select-Object @{label="category"; expression={$_.name}}, @{label="enabled"; expression={$true}}
+
+  az monitor diagnostic-settings create  `
+  --name IotHub-Diagnostics `
+  --resource $iotHub.id `
+  --logs    (($allLogsCategories | ConvertTo-Json -Compress) -replace '"', '""' -replace ':', ': ') `
+  --metrics '[{""category"": ""AllMetrics"",""enabled"": true}]' `
+  --workspace $log.id
+
+  Write-Verbose "Linking IoT Hub $iotName to DPS $dpsName"
+
+  az iot dps linked-hub create `
+    -g $rgName `
+    --dps-name $dpsName `
+    --hub-name $iotName
+}
 
 Write-Verbose "Deploy Azure Digital Twins $dtName"
 
@@ -160,6 +170,38 @@ az dt role-assignment create --dt-name $dtName `
 --assignee $dtUser
 
 # TODO: Use --assign-identity and --scopes to assign scopes, e.g. event hub
+
+$digitalTwins = az dt show --dt-name $dtName | ConvertFrom-Json
+
+Write-Verbose "Forwarding Digital Twins $dtName diagnostics to Azure Monitor $logName"
+
+$dtCategoriesList = az monitor diagnostic-settings categories list --resource $digitalTwins.id | ConvertFrom-Json
+$dtLogsCategories = $dtCategoriesList.value | Where-Object { $_.categoryType -eq 'Logs' } `
+  | Select-Object @{label="category"; expression={$_.name}}, @{label="enabled"; expression={$true}}
+
+az monitor diagnostic-settings create  `
+--name DigitalTwins-Diagnostics `
+--resource $digitalTwins.id `
+--logs    (($dtLogsCategories | ConvertTo-Json -Compress) -replace '"', '""' -replace ':', ': ') `
+--metrics '[{""category"": ""AllMetrics"",""enabled"": true}]' `
+--workspace $log.id
+
+
+Write-Verbose "Create function app $funcName, with storage $stName"
+
+az storage account create --name $stName `
+  --sku Standard_LRS `
+  --resource-group $rgName `
+  -l $Location `
+  --tags $tags
+
+az functionapp create --name $funcName `
+  --storage-account $stName `
+  --consumption-plan-location $Location `
+  --runtime dotnet `
+  --functions-version 3 `
+  --resource-group $rgName `
+  --tags $tags
 
 
 Write-Verbose "Deploy Azure Data Explorer $decName"

@@ -1,0 +1,9 @@
+{
+  "@id": "dtmi:digitaltwins:saref:TemperatureSensor;1",
+  "@type": "Interface",
+  "displayName": {
+    "en": "Temperature Sensor"
+  },
+  "extends": "dtmi:digitaltwins:saref:Sensor;1",
+  "@context": "dtmi:dtdl:context;2"
+}

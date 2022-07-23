@@ -1,0 +1,72 @@
+{
+  "@id": "dtmi:s4inma:Batch;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A Batch can have a unique identifier."
+      },
+      "displayName": {
+        "en": "Identifier"
+      },
+      "name": "hasIdentifier",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "The production of the Batch started at a certain point in time (if recorded)."
+      },
+      "displayName": {
+        "en": "Beginning"
+      },
+      "name": "hasBeginning",
+      "schema": "dateTime",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "The production of the Batch finished at a certain point in time (if recorded)."
+      },
+      "displayName": {
+        "en": "End"
+      },
+      "name": "hasEnd",
+      "schema": "dateTime",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "description": {
+        "en": "ProductionEquipment belongs to a certain category. There can be multiple individual ProductionEquipment per category."
+      },
+      "displayName": {
+        "en": "belongs to"
+      },
+      "name": "needsEquipment",
+      "target": "dtmi:digitaltwins:s4inma:ProductionEquipment;1"
+    },
+    {
+      "@type": "Relationship",
+      "description": {
+        "en": "A Batch can recursively consist of other batches."
+      },
+      "displayName": {
+        "en": "consists of"
+      },
+      "name": "consistsOfBatch",
+      "target": "dtmi:s4inma:Batch;1"
+    }
+  ],
+  "description": {
+    "en": "A uniform collection of tangible objects or Lot. This can either be a collection of produced items (i.e. the outflow of products) or a collection of raw material or required material (i.e. the inflow of products). It is assumed that the objects in a batch are similar and thus have shared attributes. Note that this definition is broader than the definition in IEC 61512 [i.8], which defines a batch as the material that is being produced (whereas in SAREF4INMA a batch can be items or materials)."
+  },
+  "displayName": {
+    "en": "Batch"
+  },
+  "extends": "dtmi:saref:FeatureOfInterest;1",
+  "@context": "dtmi:dtdl:context;2"
+}

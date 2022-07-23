@@ -1,0 +1,46 @@
+{
+  "@id": "dtmi:digitaltwins:s4bldg:Building;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "has space"
+      },
+      "name": "hasSpace",
+      "target": "dtmi:digitaltwins:s4bldg:BuildingSpace;1"
+    }
+  ],
+  "description": {
+    "en": "A building represents a structure that provides shelter for its occupants or contents and stands in one place. The building is also used to provide a basic element within the spatial structure hierarchy for the components of a building project (together with site, storey, and space)."
+  },
+  "displayName": {
+    "en": "Building"
+  },
+  "extends": "dtmi:digitaltwins:geo:SpatialThing;1",
+  "@context": "dtmi:dtdl:context;2"
+}

@@ -1,0 +1,40 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "Alternative relation to the s4inma:hasIdentifier object property above, in case it is preferred to attach the ID as a string directly to the ProductionEquipment."
+      },
+      "displayName": {
+        "en": "ID"
+      },
+      "name": "hasIDValue",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "description": {
+        "en": "ProductionEquipment belongs to a certain category. There can be multiple individual ProductionEquipment per category."
+      },
+      "displayName": {
+        "en": "belongs to"
+      },
+      "name": "belongsToCategory",
+      "target": "dtmi:digitaltwins:s4inma:ProductionEquipmentCategory;1"
+    }
+  ],
+  "description": {
+    "en": "A production equipment is a specialization of a saref:Device and s4bldg:PhysicalObject that can produce items in a manufacturing process. This class represents an individual production equipment machine and includes their specification in terms of functions, states and services. Different types of machines can be defined under this class as needed, for example, LaserCuttingMachine, MillingMachine, MouldingMachine, WeldingMachine, etc."
+  },
+  "displayName": {
+    "en": "Production equipment"
+  },
+  "extends": [
+    "dtmi:digitaltwins:s4bldg:PhysicalObject;1",
+    "dtmi:digitaltwins:saref:Device;1"
+  ],
+  "@context": "dtmi:dtdl:context;2"
+}

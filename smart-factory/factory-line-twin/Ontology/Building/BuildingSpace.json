@@ -1,0 +1,54 @@
+{
+  "@id": "dtmi:digitaltwins:s4bldg:BuildingSpace;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "has space"
+      },
+      "name": "hasSpace",
+      "target": "dtmi:digitaltwins:s4bldg:BuildingSpace;1"
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "contains"
+      },
+      "name": "contains",
+      "target": "dtmi:digitaltwins:s4bldg:PhysicalObject;1"
+    }
+  ],
+  "description": {
+    "en": "An entity used to define the physical spaces of the building. A building space contains devices or building objects."
+  },
+  "displayName": {
+    "en": "Building space"
+  },
+  "extends": "dtmi:digitaltwins:geo:SpatialThing;1",
+  "@context": "dtmi:dtdl:context;2"
+}

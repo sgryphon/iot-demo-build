@@ -1,0 +1,27 @@
+{
+  "@id": "dtmi:digitaltwins:factory:ProductionLine;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "name": "ProductBatchIdentifier",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": [ "Property", "Velocity" ],
+      "name": "ConveyorSpeed",
+      "schema": "double",
+      "unit": "metrePerSecond",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": ""
+  },
+  "displayName": {
+    "en": "Production line"
+  },
+  "extends": "dtmi:digitaltwins:s4inma:WorkCenter;1",
+  "@context": "dtmi:dtdl:context;2"
+}

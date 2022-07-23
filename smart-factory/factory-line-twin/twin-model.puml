@@ -1,0 +1,121 @@
+@startuml 
+
+title Chocolate factory model
+
+hide circle
+skinparam handwritten true
+skinparam useBetaStyle true
+
+' SAREF core
+
+class "saref:Device" as device {
+    hasManufacturer
+    hasModel
+}
+class "saref:Function" as function
+device --> function : saref:hasFunction
+device --> device : saref:consistsOf
+
+class "saref:Sensor" as sensor
+class "saref:TemperatureSensor" as temperatureSensor
+device <|-- sensor
+sensor <|-- temperatureSensor
+
+class "saref:FeatureOfInterest" as feature
+
+class "saref:Property" as property
+class "saref:Temperature" as temperatureProperty
+property <|-- temperatureProperty
+
+feature --> property : saref:hasProperty
+property --> device : saref:isMeasuredByDevice
+'property --> device : saref:isControlledByDevice
+
+class "saref:Measurement" as measurement {
+    isMeasuredIn
+    hasTimestamp
+    hasValue
+}
+
+measurement --> property : saref:relatesToProperty
+
+
+' SAREF Building
+
+class "s4bldg:PhysicalObject" as physicalObject
+class "s4bldg:BuildingSpace" as space
+class "s4bldg:Building" as building
+
+building --> space : s4bldg:hasSpace
+space --> space : s4bldg:hasSpace
+
+building --> physicalObject : s4bldg:contains
+
+
+' SAREF Manufacturing
+
+class "s4inma:Factory" as factory
+building <|-- factory
+
+class "s4inma:Site" as site
+class "s4inma:Area" as area
+space <|-- site
+space <|-- area
+
+class "s4inma:ProductionEquipment" as productionEquipment
+class "s4inma:WorkCenter" as workCenter
+
+physicalObject <|-- productionEquipment
+device <|-- productionEquipment
+productionEquipment <|-- workCenter
+
+class "s4inma:ProductionEquipmentFunction" as productionEquipmentFunction
+function <|-- productionEquipmentFunction
+
+class "s4inma:ProductionEquipmentCategory" as productionEquipmentCategory
+productionEquipment --> productionEquipmentCategory : s4inma:belongsToCategory
+
+class "s4inma:Batch" as batch {
+    identifier
+    beginning
+    end
+}
+class "s4inma:MaterialBatch" as materialBatch
+feature <|-- batch
+batch <|-- materialBatch
+batch --> productionEquipment : s4inma:needsEquipment
+
+class "s4inma:Measurement" as inmaMeasurement
+class "s4inma:ActualMeasurement" as actualMeasurement
+measurement <|-- inmaMeasurement
+inmaMeasurement <|-- actualMeasurement
+
+
+' Factory specific
+
+class "ProductionLineWorkCenter" as line
+class "StorageRoomWorkCenter" as store
+
+workCenter <|-- line
+workCenter <|-- store
+
+class "RoastingProductionEquipment" as roaster
+class "GrindingProductionEquipment" as grinder
+class "MouldingProductionEquipment" as mould
+
+productionEquipment <|-- roaster
+productionEquipment <|-- grinder
+productionEquipment <|-- mould
+
+class FormingFunction
+class GrindingFunction
+class RoastingFunction
+
+productionEquipmentFunction <|-- FormingFunction
+productionEquipmentFunction <|-- GrindingFunction
+productionEquipmentFunction <|-- RoastingFunction
+
+class "RoastingTemperature" as roastingTemperatureProperty
+temperatureProperty <|-- roastingTemperatureProperty
+
+@enduml

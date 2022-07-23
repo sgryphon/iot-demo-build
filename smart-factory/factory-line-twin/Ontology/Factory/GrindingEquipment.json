@@ -1,0 +1,28 @@
+{
+  "@id": "dtmi:digitaltwins:factory:GrindingEquipment;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": ["Property", "Force"],
+      "name": "Force",
+      "schema": "double",
+      "unit": "newton",
+      "writable": true
+    },
+    {
+      "@type": ["Property", "Frequency"],
+      "name": "Vibration",
+      "schema": "double",
+      "unit": "hertz",
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": ""
+  },
+  "displayName": {
+    "en": "Grinding equipment"
+  },
+  "extends": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
+  "@context": "dtmi:dtdl:context;2"
+}

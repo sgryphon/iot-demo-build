@@ -1,0 +1,105 @@
+{
+  "@id": "dtmi:digitaltwins:saref:Device;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource. A relationship providing a description of an entity (e.g., device). The value is expected to be a string or a string with language tag."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A relationship identifying the manufacturer of an entity (e.g., device). The value is expected to be a string or a string with language tag."
+      },
+      "displayName": {
+        "en": "Manufacturer"
+      },
+      "name": "hasManufacturer",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A relationship identifying the model of an entity (e.g., device). The value is expected to be a string or a string with language tag."
+      },
+      "displayName": {
+        "en": "Model"
+      },
+      "name": "hasModel",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "description": {
+        "en": "A relationship identifying the function of a device"
+      },
+      "displayName": {
+        "en": "has function"
+      },
+      "name": "hasFunction",
+      "target": "dtmi:digitaltwins:saref:Function;1"
+    },
+    {
+      "@type": "Relationship",
+      "description": {
+        "en": "A relationship indicating a composite entity that consists of other entities (e.g., a temperature/humidity sensor that consists of a temperature sensor and a humidity sensor)"
+      },
+      "displayName": {
+        "en": "consists of"
+      },
+      "name": "consistsOf",
+      "target": "dtmi:digitaltwins:saref:Device;1"
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": ""
+      },
+      "displayName": {
+        "en": "Custom Tags"
+      },
+      "name": "customTags",
+      "dtmi:dtdl:property:schema;2": {
+        "@type": "Map",
+        "dtmi:dtdl:property:mapKey;2": {
+          "name": "tagName",
+          "schema": "string"
+        },
+        "dtmi:dtdl:property:mapValue;2": {
+          "name": "tagValue",
+          "schema": "string"
+        }
+      },
+      "writable": true
+    }
+  ],
+  "description": {
+    "en": "A tangible object designed to accomplish a particular task in households, common public buildings or offices. In order to accomplish this task, the device performs one or more functions."
+  },
+  "displayName": {
+    "en": "Device"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

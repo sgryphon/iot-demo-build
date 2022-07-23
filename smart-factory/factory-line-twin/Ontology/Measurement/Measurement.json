@@ -1,0 +1,65 @@
+{
+  "_note": "This is part of the SAREF ontology, but not part of the Twin model, as it describes telemetry (or maybe properties), not an entity.",
+  "@id": "dtmi:saref:Measurement;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Timestamp"
+      },
+      "name": "hasTimestamp",
+      "schema": "dateTime",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Value"
+      },
+      "name": "hasValue",
+      "schema": "double",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "displayName": {
+        "en": "Units"
+      },
+      "name": "isMeasuredIn",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "measurement of"
+      },
+      "name": "isMeasurementOf",
+      "target": "dtmi:saref:FeatureOfInterest;1"
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "relates to"
+      },
+      "name": "relatesToProperty",
+      "target": "dtmi:saref:Property;1"
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "made by"
+      },
+      "name": "measurementMadeBy",
+      "target": "dtmi:digitaltwins:saref:Device;1"
+    }
+  ],
+  "description": {
+    "en": "The measured value made over a property. It is also linked to the unit of measure in which the value is expressed and to the timestamp of the measurement."
+  },
+  "displayName": {
+    "en": "Measurement"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

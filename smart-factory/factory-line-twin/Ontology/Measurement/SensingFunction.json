@@ -1,0 +1,9 @@
+{
+  "@id": "dtmi:digitaltwins:saref:SensingFunction;1",
+  "@type": "Interface",
+  "displayName": {
+    "en": "Sensing Function"
+  },
+  "extends": "dtmi:digitaltwins:saref:Function;1",
+  "@context": "dtmi:dtdl:context;2"
+}

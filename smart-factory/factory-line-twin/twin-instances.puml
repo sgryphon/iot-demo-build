@@ -1,0 +1,61 @@
+@startuml 
+
+skinparam handwritten true
+skinparam useBetaStyle true
+
+title Chocolate factory object diagram
+
+object "__:s4inma:Factory__" as factory1
+object "__:s4inma:Site__" as site1
+object "__:s4inma:Area__" as area1
+
+factory1 --> site1 : s4bldg:hasSpace
+site1 --> area1 : s4blg:hasSpace
+
+' s4inma:WorkCenter
+object "__line1 : ProductionLineWorkCenter__" as line1
+object "__:ProductionLineWorkCenter__" as line2
+object "__:StorageRoomWorkCenter__" as store1
+
+area1 --> line1 : s4blg:contains
+area1 --> line2 : s4blg:contains
+area1 --> store1 : s4blg:contains
+
+' s4inma:ProductionEquipment
+object "__:RoastingProductionEquipment__" as roaster1
+object "__:GrindingProductionEquipment__" as grinder1
+object "__:MouldingProductionEquipment__" as mould1
+object "__:RoastingProductionEquipment__" as roaster2
+object "__:GrindingProductionEquipment__" as grinder2
+object "__:MouldingProductionEquipment__" as mould2
+
+line1 --> roaster1 : saref:consistsOf
+line1 --> grinder1 : saref:consistsOf
+line1 --> mould1 : saref:consistsOf
+
+line2 --> roaster2 : saref:consistsOf
+line2 --> grinder2 : saref:consistsOf
+line2 --> mould2 : saref:consistsOf
+
+object "__batch1 : s4inma:MaterialBatch__" as batch1 #white {
+    identifier = "1043f615a2e5"
+    beginning = "20220713T140000+1000"
+    end = "20220713T180000+1000"
+}
+object "__conveyorSpeed : saref:Property__" as conveyorSpeedProperty #white {    
+}
+object "__s4inma:ActualMeasurement__" as conveyorSpeedMeasurement #white {
+    timestamp = "20220713T172315+1000"
+    value = 0.1
+    measuredIn = "m/s"
+}
+
+object "__line1SpeedSensor : saref:Sensor__" as conveyorSpeedSensor #white
+
+batch1 --> conveyorSpeedProperty : saref:hasProperty
+conveyorSpeedProperty --> conveyorSpeedSensor : saref:isMeasuredByDevice
+conveyorSpeedProperty --> line1 : saref:isControlledByDevice
+conveyorSpeedMeasurement --> conveyorSpeedProperty : saref:relatesToProperty
+conveyorSpeedMeasurement --> batch1 : saref:hasFeatureOfInterest
+
+@enduml

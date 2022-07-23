@@ -1,0 +1,9 @@
+{
+  "@id": "dtmi:digitaltwins:saref:Sensor;1",
+  "@type": "Interface",
+  "displayName": {
+    "en": "Sensor"
+  },
+  "extends": "dtmi:digitaltwins:saref:Device;1",
+  "@context": "dtmi:dtdl:context;2"
+}

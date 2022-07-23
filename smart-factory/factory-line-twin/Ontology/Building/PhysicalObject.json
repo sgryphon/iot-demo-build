@@ -1,0 +1,22 @@
+{
+  "@id": "dtmi:digitaltwins:s4bldg:PhysicalObject;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "contains"
+      },
+      "name": "contains",
+      "target": "dtmi:digitaltwins:s4bldg:PhysicalObject;1"
+    }
+  ],
+  "description": {
+    "en": "Any Object that has a proper space region.  (Definition extracted from DUL ontology)"
+  },
+  "displayName": {
+    "en": "Physical object"
+  },
+  "extends": "dtmi:digitaltwins:geo:SpatialThing;1",
+  "@context": "dtmi:dtdl:context;2"
+}

@@ -1,0 +1,63 @@
+{
+  "@id": "dtmi:digitaltwins:geo:SpatialThing;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": ["Property", "Distance"],
+      "description": {
+        "en": "The WGS84 altitude of a SpatialThing (decimal meters above the local reference ellipsoid)."
+      },
+      "displayName": {
+        "en": "Altitude"
+      },
+      "name": "altitude",
+      "schema": "double",
+      "unit": "metre",
+      "writable": true
+    },
+    {
+      "@type": ["Property", "Latitude"],
+      "description": {
+        "en": "The WGS84 latitude of a SpatialThing (decimal degrees)."
+      },
+      "displayName": {
+        "en": "Latitude"
+      },
+      "name": "latitude",
+      "schema": "double",
+      "unit": "degreeOfArc",
+      "writable": true
+    },
+    {
+      "@type": ["Property", "Longitude"],
+      "description": {
+        "en": "The WGS84 longitude of a SpatialThing (decimal degrees)."
+      },
+      "displayName": {
+        "en": "Longitude"
+      },
+      "name": "longitude",
+      "schema": "double",
+      "unit": "degreeOfArc",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "description": {
+        "en": "The relation between something and the point, or other geometrical thing in space, where it is.  For example, the relationship between a radio tower and a Point with a given lat and long. Or a relationship between a park and its outline as a closed arc of points, or a road and its location as a arc (a sequence of points). Clearly in practice there will be limit to the accuracy of any such statement, but one would expect an accuracy appropriate for the size of the object and uses such as mapping."
+      },
+      "displayName": {
+        "en": "location"
+      },
+      "name": "location",
+      "target": "dtmi:digitaltwins:geo:SpatialThing;1"
+    }
+  ],
+  "description": {
+    "en": "Anything with spatial extent, i.e. size, shape, or position. e.g. people, places, bowling balls, as well as abstract areas like cubes."
+  },
+  "displayName": {
+    "en": "Spatial thing"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

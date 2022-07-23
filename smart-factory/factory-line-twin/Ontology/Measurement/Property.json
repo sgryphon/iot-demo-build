@@ -1,0 +1,53 @@
+{
+  "@id": "dtmi:saref:Property;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "controlled by"
+      },
+      "name": "isControlledByDevice",
+      "target": "dtmi:digitaltwins:saref:Device;1"
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "measured by"
+      },
+      "name": "isMeasuredByDevice",
+      "target": "dtmi:digitaltwins:saref:Device;1"
+    }
+  ],
+  "description": {
+    "en": "Anything that can be sensed, measured or controlled in households, common public buildings or offices. A list of properties that are relevant for the purpose of SAREF is proposed, but this list can be extended."
+  },
+  "displayName": {
+    "en": "Property"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}

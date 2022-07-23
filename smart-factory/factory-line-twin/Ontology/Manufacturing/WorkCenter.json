@@ -1,0 +1,12 @@
+{
+  "@id": "dtmi:digitaltwins:s4inma:WorkCenter;1",
+  "@type": "Interface",
+  "description": {
+    "en": "A subclass of s4inma:ProductionEquipment (and therefore of s4bld:PhysicalObject). It is an equipment element under an area in a role-based equipment hierarchy that performs production, storage or material movement (definition taken from IEC 62264 [i.11]). An Area contains work centers."
+  },
+  "displayName": {
+    "en": "Work center"
+  },
+  "extends": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
+  "@context": "dtmi:dtdl:context;2"
+}

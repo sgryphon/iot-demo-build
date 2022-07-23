@@ -1,0 +1,45 @@
+{
+  "@id": "dtmi:saref:FeatureOfInterest;1",
+  "@type": "Interface",
+  "contents": [
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A human-readable name for the subject."
+      },
+      "displayName": {
+        "en": "Label"
+      },
+      "name": "label",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Property",
+      "description": {
+        "en": "A description of the subject resource."
+      },
+      "displayName": {
+        "en": "Comment"
+      },
+      "name": "comment",
+      "schema": "string",
+      "writable": true
+    },
+    {
+      "@type": "Relationship",
+      "displayName": {
+        "en": "has property"
+      },
+      "name": "hasProperty",
+      "target": "dtmi:saref:Property;1"
+    }
+  ],
+  "description": {
+    "en": "A feature of interest represents any real world entity from which a property is measured. It is linked to the different properties it has and to its measurements."
+  },
+  "displayName": {
+    "en": "Feature of Interest"
+  },
+  "@context": "dtmi:dtdl:context;2"
+}
