@@ -23,7 +23,7 @@
         "en": "belongs to"
       },
       "name": "belongsToCategory",
-      "target": "dtmi:digitaltwins:s4bldg:ProductionEquipmentCategory;1"
+      "target": "dtmi:digitaltwins:s4inma:ProductionEquipmentCategory;1"
     }
   ],
   "description": {
