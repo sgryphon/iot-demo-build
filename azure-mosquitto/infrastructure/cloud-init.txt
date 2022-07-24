@@ -3,6 +3,10 @@ apt:
   conf: |
     Acquire::Retries "60";
     DPkg::Lock::Timeout "60";
+  sources:
+    mosquitto-ppa:
+      # 2.3 PPA shortcut
+      source: "ppa:mosquitto-dev/mosquitto-ppa"
 package_upgrade: true
 packages:
   - certbot
