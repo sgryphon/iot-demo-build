@@ -103,6 +103,9 @@ Connect (SSH) to the server and check the cloud init logs:
 
 ```
 more /var/log/cloud-init-output.log
+
+sudo systemctl status mosquitto
+sudo tail -f /var/log/mosquitto/mosquitto.log
 ```
 
 Also see: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloud-init-troubleshooting

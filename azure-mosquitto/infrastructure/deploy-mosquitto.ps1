@@ -144,7 +144,6 @@ az network nsg rule create --name AllowMQTT `
                            --source-address-prefixes "*" `
                            --source-port-ranges "*" `
                            --direction Inbound `
-                           --protocol Udp `
                            --destination-port-ranges 8883 8083
 
 Write-Verbose "Creating resource group $rgName"
@@ -206,7 +205,7 @@ if ($AddPublicIpv4) {
     -g $rgName `
     --public-ip-address $pipv4Name
 
-    $hostNames = "$hostNames, $(az network public-ip show --name $pipv4Name --resource-group $rgName --query dnsSettings.fqdn --output tsv)"
+    $hostNames = "$hostNames,$(az network public-ip show --name $pipv4Name --resource-group $rgName --query dnsSettings.fqdn --output tsv)"
 }
    
 # See: https://docs.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-string-substitutions?view=powershell-7.2#find-and-replace-tokens

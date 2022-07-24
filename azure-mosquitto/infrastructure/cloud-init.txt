@@ -9,6 +9,26 @@ packages:
   - mosquitto
   - mosquitto-clients
 write_files:
+  - path: /etc/letsencrypt/renewal-hooks/deploy/10-mosquitto-copy.sh
+    content: |
+      #!/bin/sh
+      SOURCE_DIR=/etc/letsencrypt/live/mosquitto-mqtt-cert
+      CERTIFICATE_DIR=/etc/mosquitto/certs
+      echo "Renew ${RENEWED_LINEAGE}"
+      if [ "${RENEWED_LINEAGE}" = "${SOURCE_DIR}" ]; then
+        # Copy new certificate to Mosquitto directory
+        cp ${RENEWED_LINEAGE}/fullchain.pem ${CERTIFICATE_DIR}/server.pem
+        cp ${RENEWED_LINEAGE}/privkey.pem ${CERTIFICATE_DIR}/server.key
+
+        # Set ownership to Mosquitto
+        chown mosquitto: ${CERTIFICATE_DIR}/server.pem ${CERTIFICATE_DIR}/server.key
+
+        # Ensure permissions are restrictive
+        chmod 0600 ${CERTIFICATE_DIR}/server.pem ${CERTIFICATE_DIR}/server.key
+
+        # Tell Mosquitto to reload certificates and configuration
+        pkill -HUP -x mosquitto
+      fi
   - path: /etc/mosquitto/conf.d/default.conf
     content: |
       allow_anonymous false
@@ -17,15 +37,11 @@ write_files:
       listener 1883 localhost
 
       listener 8883
-      certfile /etc/letsencrypt/live/mosquitto-mqtt-certcert.pem
-      cafile /etc/letsencrypt/live/mosquitto-mqtt-cert/chain.pem
-      keyfile /etc/letsencrypt/live/mosquitto-mqtt-cert/privkey.pem
-
-      listener 8083
-      protocol websockets
-      certfile /etc/letsencrypt/live/mosquitto-mqtt-cert/cert.pem
-      cafile /etc/letsencrypt/live/mosquitto-mqtt-cert/chain.pem
-      keyfile /etc/letsencrypt/live/mosquitto-mqtt-cert/privkey.pem
+      certfile /etc/mosquitto/certs/server.pem
+      keyfile /etc/mosquitto/certs/server.key
+  - path: /etc/mosquitto/passwd
+    content: |
+      mqttuser:#INIT_PASSWORD_INPUT#
 runcmd:
   - ufw allow ssh
   - ufw allow http
@@ -33,6 +49,8 @@ runcmd:
   - ufw allow 8883
   - ufw allow 8083
   - ufw enable
+  - systemctl stop mosquitto
+  - mosquitto_passwd -U /etc/mosquitto/passwd
   - certbot certonly --standalone --preferred-challenges http --cert-name mosquitto-mqtt-cert -d #INIT_HOST_NAMES# -n --agree-tos -m #INIT_CERT_EMAIL#
-  - mosquitto_passwd -b /etc/mosquitto/passwd mqttuser #INIT_PASSWORD_INPUT#
-  - echo "renew_hook = systemctl restart mosquitto" | tee -a /etc/letsencrypt/renewal/mosquitto-mqtt-cert.conf
+  - RENEWED_LINEAGE=/etc/letsencrypt/live/mosquitto-mqtt-cert sh /etc/letsencrypt/renewal-hooks/deploy/10-mosquitto-copy.sh
+  - systemctl start mosquitto
