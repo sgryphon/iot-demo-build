@@ -99,9 +99,38 @@ pio run --target upload
 
 In Git you can see the changes to the libraries and configuration changes that you have made. Slightly more complicated than the Arduino IDE as there are ~5 project files (instead of one) and a few extra directories and instructions. This is to support different libraries per project, as well as multi-board targetting, and other features.
 
+**Wifi**
 
-Azure (via WiFi)
-----------------
+`m5core2_wifi` has Advanced / Wifi example from https://github.com/m5stack/M5Core2/tree/master/examples
+
+
+
+M5Stack Core2 to Azure (via WiFi)
+---------------------------------
+
+Create a basic M5Core2 project in PlatformIO:
+
+```shell
+mkdir m5core2_azureiot
+cd m5core2_azureiot
+pio project init --board m5stack-core2
+pio pkg install --library M5Core2
+pio pkg install --library "azure/Azure SDK for C"
+```
+
+To build (`pio run`) I had to make sure the lib_deps section had just "azure/Azure SDK for C" (without any version).
+
+Note that the Arduino (used by PlatformIO) port of the library is version 1.0.0-beta.5, which corresponds to the library version 1.3.2. PlatformIO registry information: https://registry.platformio.org/libraries/azure/Azure%20SDK%20for%20C
+
+Arduino port source code (with samples): https://github.com/Azure/azure-sdk-for-c-arduino
+
+Note that the example is an Arduino IDE sketch file (.ino) and uses some Espressif libraries for Wifi & MQTT, whereas we use M5.
+
+
+
+
+TODO
+----
 
 core2_azure_simfactory
 

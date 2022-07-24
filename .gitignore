@@ -353,3 +353,6 @@ MigrationBackup/
 ## Custom
 
 temp/
+
+# Don't commit local header files, e.g. with passwords
+*.local.h
