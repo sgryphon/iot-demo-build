@@ -20,7 +20,7 @@ reasonable defaults (for Australia, where I am based; you may want to change loc
 ```powershell
 az login
 $VerbosePreference = 'Continue'
-./deploy-server.ps1 -WebPassword YourSecretPassword
+./deploy-leshan.ps1 -WebPassword YourSecretPassword
 ```
 
 The public adddresses of the machine are given a unique name, using the subscription prefix by default (but you can use a different OrgId if you want).
@@ -48,8 +48,8 @@ ssh iotadmin@lwm2m-0xacc5-dev.australiaeast.cloudapp.azure.com
 There are script to stop (to save money) and restart (e.g. each day after the automatic shutdown) the server.
 
 ```powershell
-./stop-server.ps1
-./start-server.ps1
+./stop-leshan.ps1
+./start-leshan.ps1
 ```
 
 After restarting you need to log on and run the Leshan server (`java -jar ~/leshan-server/leshan-server-demo.jar`)
@@ -60,7 +60,7 @@ When you are finished, you can remove the resource group, which removes the serv
 that were deployed.
 
 ```powershell
-./remove-server.ps1
+./remove-leshan.ps1
 ```
 
 

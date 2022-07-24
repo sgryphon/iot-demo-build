@@ -8,6 +8,8 @@
   server, with HTTPS security behind a Caddy proxy, and with web access behind
   basic security.
 
+  The server uses the landing zone private network defined in `azure-landing`.
+
   By default it has a public IPv6 and a DNS entry with a unique identifier based on
   your subscription prefix: "lwm2m-<prefix>-dev.australiaeast.cloudapp.azure.com"
 
@@ -33,7 +35,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-server.ps1 -WebPassword YourSecretPassword
+   ./deploy-leshan.ps1 -WebPassword YourSecretPassword
 #>
 [CmdletBinding()]
 param (
@@ -59,8 +61,6 @@ param (
     [switch]$AddPublicIpv4 = $true
 )
 
-if (!$WebPassword) { throw 'You must supply a value for -WebPassword or set environment variable DEPLOY_WEB_PASSWORD' }
-
 <#
 To run interactively, start with:
 
@@ -76,6 +76,9 @@ $ShutdownUtc = $ENV:DEPLOY_SHUTDOWN_UTC ?? '0900'
 $ShutdownEmail = $ENV:DEPLOY_SHUTDOWN_UTC ?? ''
 $AddPublicIpv4 = $true
 #>
+
+if (!$WebPassword) { throw 'You must supply a value for -WebPassword or set environment variable DEPLOY_WEB_PASSWORD' }
+
 $ErrorActionPreference="Stop"
 
 $SubscriptionId = $(az account show --query id --output tsv)
@@ -117,6 +120,8 @@ $tags = $TagDictionary.Keys | ForEach-Object { $key = $_; "$key=$($TagDictionary
 # Get network subnets, and generate addresses
 
 $dmzSnet = az network vnet subnet show --name $dmzSnetName -g $networkRgName --vnet-name $vnetName | ConvertFrom-Json
+
+if (!$dmzSnet) { throw 'Landing zone network subnet $dmzSnetName not found; see scripts in azure-landing to create' }
 
 # Assumption: ends in "/64"
 $dmzUlaPrefix = $dmzSnet.addressPrefixes | Where-Object { $_.StartsWith('fd') } | Select-Object -First 1
@@ -204,9 +209,9 @@ if ($AddPublicIpv4) {
 }
    
 Write-Verbose "Configurating cloud-init.txt~ file with host names: $hostNames"
-(((Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
-  -replace 'INIT_HOST_NAMES',$hostNames) `
-  -replace 'INIT_PASSWORD_INPUT',$WebPassword) `
+(Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
+  -replace '#INIT_HOST_NAMES#',$hostNames `
+  -replace '#INIT_PASSWORD_INPUT#',$WebPassword `
   | Set-Content -Path (Join-Path $PSScriptRoot cloud-init.txt~)
 
 Write-Verbose "Creating Virtual machine $vmName (size $vmSize)"
