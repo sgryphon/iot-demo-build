@@ -81,9 +81,9 @@ write_files:
   - owner: www-data:www-data
     path: /etc/caddy/Caddyfile
     content: |
-      INIT_HOST_NAMES {
+      #INIT_HOST_NAMES# {
         basicauth {
-          iotadmin hashed_password_base64
+          iotadmin __hashed_password_base64__
         }
         reverse_proxy localhost:8080
       }
@@ -94,8 +94,8 @@ runcmd:
   - ufw allow 5683/udp
   - ufw allow 5684/udp
   - ufw enable
-  - HASHED_PASSWORD=$(caddy hash-password --plaintext 'INIT_PASSWORD_INPUT')
-  - sed -i s/hashed_password_base64/$HASHED_PASSWORD/g /etc/caddy/Caddyfile
+  - HASHED_PASSWORD=$(caddy hash-password --plaintext '#INIT_PASSWORD_INPUT#')
+  - sed -i s/__hashed_password_base64__/$HASHED_PASSWORD/g /etc/caddy/Caddyfile
   - service caddy restart
   - mkdir /home/iotadmin/leshan-server
   - cd /home/iotadmin/leshan-server

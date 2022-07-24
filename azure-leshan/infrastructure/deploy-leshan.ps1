@@ -8,6 +8,8 @@
   server, with HTTPS security behind a Caddy proxy, and with web access behind
   basic security.
 
+  The server uses the landing zone private network defined in `azure-landing`.
+
   By default it has a public IPv6 and a DNS entry with a unique identifier based on
   your subscription prefix: "lwm2m-<prefix>-dev.australiaeast.cloudapp.azure.com"
 
@@ -33,7 +35,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-server.ps1 -WebPassword YourSecretPassword
+   ./deploy-leshan.ps1 -WebPassword YourSecretPassword
 #>
 [CmdletBinding()]
 param (
@@ -49,10 +51,8 @@ param (
     [string]$VmSize = $ENV:DEPLOY_VM_SIZE ?? 'Standard_B2s',
     ## Linux admin account name (authentication via SSH)
     [string]$AdminUsername = $ENV:DEPLOY_ADMIN_USERNAME ?? 'iotadmin',
-    ## IPv6 Unique Local Address GlobalID to use (default hash of subscription ID)
-    [string]$UlaGlobalId = $ENV:DEPLOY_GLOBAL_ID ?? (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes((az account show --query id --output tsv))))).Hash.Substring(0, 10),
-    ## IPv6 Unique Local Address SubnetID to use for DMZ subnet (default 102)
-    [string]$UlaDmzSubnetId = $ENV:DEPLOY_DMZ_SUBNET_ID ?? ("0102"),
+    ## Static server address suffix
+    [string]$PrivateIpSuffix = $ENV:DEPLOY_PRIVATE_IP ?? "100d",
     ## Auto-shutdown time in UTC, default 0900 is 19:00 in Brisbane
     [string]$ShutdownUtc = $ENV:DEPLOY_SHUTDOWN_UTC ?? '0900',
     ## Email to send auto-shutdown notification to (optional)
@@ -60,8 +60,6 @@ param (
     ## Add a public IPv4 (if needed)
     [switch]$AddPublicIpv4 = $true
 )
-
-if (!$WebPassword) { throw 'You must supply a value for -WebPassword or set environment variable DEPLOY_WEB_PASSWORD' }
 
 <#
 To run interactively, start with:
@@ -73,12 +71,14 @@ $Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast'
 $OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))"
 $VmSize = $ENV:DEPLOY_VM_SIZE ?? 'Standard_B2s'
 $AdminUsername = $ENV:DEPLOY_ADMIN_USERNAME ?? 'iotadmin'
-$UlaGlobalId = $ENV:DEPLOY_GLOBAL_ID ?? (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes((az account show --query id --output tsv))))).Hash.Substring(0, 10)
-$UlaDmzSubnetId = $ENV:DEPLOY_DMZ_SUBNET_ID ?? ("0102")
+$PrivateIpSuffix = $ENV:DEPLOY_PRIVATE_IP ?? "100d"
 $ShutdownUtc = $ENV:DEPLOY_SHUTDOWN_UTC ?? '0900'
 $ShutdownEmail = $ENV:DEPLOY_SHUTDOWN_UTC ?? ''
 $AddPublicIpv4 = $true
 #>
+
+if (!$WebPassword) { throw 'You must supply a value for -WebPassword or set environment variable DEPLOY_WEB_PASSWORD' }
+
 $ErrorActionPreference="Stop"
 
 $SubscriptionId = $(az account show --query id --output tsv)
@@ -121,13 +121,16 @@ $tags = $TagDictionary.Keys | ForEach-Object { $key = $_; "$key=$($TagDictionary
 
 $dmzSnet = az network vnet subnet show --name $dmzSnetName -g $networkRgName --vnet-name $vnetName | ConvertFrom-Json
 
+if (!$dmzSnet) { throw 'Landing zone network subnet $dmzSnetName not found; see scripts in azure-landing to create' }
+
 # Assumption: ends in "/64"
 $dmzUlaPrefix = $dmzSnet.addressPrefixes | Where-Object { $_.StartsWith('fd') } | Select-Object -First 1
-$vmIpAddress = "$($dmzUlaPrefix.Substring(0, $dmzUlaPrefix.Length - 3))100d"
+$vmIpAddress = "$($dmzUlaPrefix.Substring(0, $dmzUlaPrefix.Length - 3))$PrivateIpSuffix"
 
 # Assumption: ends in "0/24"
-$dmzIP4Prefix = $dmzSnet.addressPrefixes | Where-Object { $_.StartsWith('10.') } | Select-Object -First 1
-$vmIPv4 = "$($dmzIP4Prefix.Substring(0, $dmzIP4Prefix.Length - 4))13"
+$dmzIPv4Prefix = $dmzSnet.addressPrefixes | Where-Object { $_.StartsWith('10.') } | Select-Object -First 1
+$privateIPv4Suffix = [int]"0x$($PrivateIpSuffix.Substring($PrivateIpSuffix.Length -2))"
+$vmIPv4 = "$($dmzIPv4Prefix.Substring(0, $dmzIPv4Prefix.Length - 4))$privateIPv4Suffix"
 
 
 # Create
@@ -206,9 +209,9 @@ if ($AddPublicIpv4) {
 }
    
 Write-Verbose "Configurating cloud-init.txt~ file with host names: $hostNames"
-(((Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
-  -replace 'INIT_HOST_NAMES',$hostNames) `
-  -replace 'INIT_PASSWORD_INPUT',$WebPassword) `
+(Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
+  -replace '#INIT_HOST_NAMES#',$hostNames `
+  -replace '#INIT_PASSWORD_INPUT#',$WebPassword `
   | Set-Content -Path (Join-Path $PSScriptRoot cloud-init.txt~)
 
 Write-Verbose "Creating Virtual machine $vmName (size $vmSize)"
