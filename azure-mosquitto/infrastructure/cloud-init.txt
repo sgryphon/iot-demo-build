@@ -17,15 +17,15 @@ write_files:
       listener 1883 localhost
 
       listener 8883
-      certfile /etc/letsencrypt/live/INIT_HOST_NAME/cert.pem
-      cafile /etc/letsencrypt/live/INIT_HOST_NAME/chain.pem
-      keyfile /etc/letsencrypt/live/INIT_HOST_NAME/privkey.pem
+      certfile /etc/letsencrypt/live/mosquitto-mqtt-certcert.pem
+      cafile /etc/letsencrypt/live/mosquitto-mqtt-cert/chain.pem
+      keyfile /etc/letsencrypt/live/mosquitto-mqtt-cert/privkey.pem
 
       listener 8083
       protocol websockets
-      certfile /etc/letsencrypt/live/INIT_HOST_NAME/cert.pem
-      cafile /etc/letsencrypt/live/INIT_HOST_NAME/chain.pem
-      keyfile /etc/letsencrypt/live/INIT_HOST_NAME/privkey.pem
+      certfile /etc/letsencrypt/live/mosquitto-mqtt-cert/cert.pem
+      cafile /etc/letsencrypt/live/mosquitto-mqtt-cert/chain.pem
+      keyfile /etc/letsencrypt/live/mosquitto-mqtt-cert/privkey.pem
 runcmd:
   - ufw allow ssh
   - ufw allow http
@@ -33,3 +33,6 @@ runcmd:
   - ufw allow 8883
   - ufw allow 8083
   - ufw enable
+  - certbot certonly --standalone --preferred-challenges http --cert-name mosquitto-mqtt-cert -d #INIT_HOST_NAMES# -n --agree-tos -m #INIT_CERT_EMAIL#
+  - mosquitto_passwd -b /etc/mosquitto/passwd mqttuser #INIT_PASSWORD_INPUT#
+  - echo "renew_hook = systemctl restart mosquitto" | tee -a /etc/letsencrypt/renewal/mosquitto-mqtt-cert.conf
