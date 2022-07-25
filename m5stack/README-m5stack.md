@@ -9,6 +9,24 @@ Atom: Miniature devices that are just the controller, with a range of add-on sen
 
 Stick: Full feature miniature devices.
 
+Hardware - Core 2
+-----------------
+
+Chip: ESP32-D0WDQ6-V3
+Flash: 16MB
+PSRAM: 8MB
+Interfaces: 1x TypeC, 1x Grove (I2C+I/O+UART)
+Screen: 320x240 LCD
+Input: touch screen, 3 virtual buttons, power, reset
+Speaker: 1W
+LED: Green power indicator
+Vibration
+Microphone
+6-axis Intertial Measurement Unit
+RTC
+390mAh battery
+
+Base has 2x Grove (B, C), and 2x LED
 
 Programming options
 -------------------
@@ -125,6 +143,18 @@ Note that the Arduino (used by PlatformIO) port of the library is version 1.0.0-
 Arduino port source code (with samples): https://github.com/Azure/azure-sdk-for-c-arduino
 
 Note that the example is an Arduino IDE sketch file (.ino) and uses some Espressif libraries for Wifi & MQTT, whereas we use M5.
+
+
+Library references
+------------------
+
+PlatformIO library registry: https://registry.platformio.org/
+
+* M5Core2 library: https://registry.platformio.org/libraries/m5stack/M5Core2
+* AWSLabs SimpleIoT: https://github.com/awslabs/simpleiot-arduino
+
+
+https://github.com/khoih-prog/ESP_WiFiManager
 
 
 
