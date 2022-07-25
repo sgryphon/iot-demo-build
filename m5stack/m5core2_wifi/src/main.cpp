@@ -60,16 +60,6 @@ void printWiFi() {
 
   M5.Lcd.printf("WiFi Status: %d\n", WiFi.status());
 
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("DNS: ");
-  M5.Lcd.print(WiFi.dnsIP(0));
-  M5.Lcd.print("\n");
-  M5.Lcd.print("Gateway: ");
-  M5.Lcd.print(WiFi.gatewayIP());
-  M5.Lcd.print("\n");
-
   M5.Lcd.print("IPv6: ");
   M5.Lcd.print(WiFi.localIPv6());
   M5.Lcd.print("\n");
@@ -78,6 +68,16 @@ void printWiFi() {
   M5.Lcd.print("\n");
   M5.Lcd.print("DNS: ");
   M5.Lcd.print(dnsIPv6());
+  M5.Lcd.print("\n");
+
+  M5.Lcd.print("IPv4: ");
+  M5.Lcd.print(WiFi.localIP());
+  M5.Lcd.print("\n");
+  M5.Lcd.print("DNS: ");
+  M5.Lcd.print(WiFi.dnsIP(0));
+  M5.Lcd.print("\n");
+  M5.Lcd.print("Gateway: ");
+  M5.Lcd.print(WiFi.gatewayIP());
   M5.Lcd.print("\n");
 
   M5.Lcd.print("\n");
