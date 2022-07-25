@@ -153,10 +153,17 @@ PlatformIO library registry: https://registry.platformio.org/
 * M5Core2 library: https://registry.platformio.org/libraries/m5stack/M5Core2
 * AWSLabs SimpleIoT: https://github.com/awslabs/simpleiot-arduino
 
+* Arduino-ESP32 IPv6 example: https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/WiFiIPv6/WiFiIPv6.ino
 
 https://github.com/khoih-prog/ESP_WiFiManager
 
 
+* Video on ESP32 IPv6, https://www.youtube.com/watch?v=mn0imqzramQ
+  - CONFIG_IPV6_DHCP6_OTHER_FLAGS => "-DLWIP_IPV6_DHCP6=1"
+  - CONFIG_IPV6_RA_RDNSS => "-DLWIP_ND6_RDNSS_MAX_DNS_SERVERS=1"
+  - CONFIG_IPV6_GLOBAL_AUTOCONFIG => ?
+  -  => ESP_IPV6_AUTOCONFIG
+  - See: https://github.com/espressif/arduino-esp32/blob/master/tools/sdk/esp32c3/include/lwip/lwip/src/include/lwip/opt.h
 
 
 TODO

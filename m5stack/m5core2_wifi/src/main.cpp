@@ -21,71 +21,6 @@ HTTPClient http;
 RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
 
-void setup() {
-  M5.begin();
-  M5.Lcd.print("Connecting...\n");
-
-  Serial.begin(115200);
-  Serial.println("STA Connecting");
-
-  WiFi.disconnect(true);
-  //WiFi.onEvent(WiFiEvent);
-  //WiFi.mode(WIFI_MODE_APSTA);
-  //WiFi.softAP(AP_SSID);
-  //WiFi.begin(STA_SSID, STA_PASS);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED){
-    delay(500);
-    M5.Lcd.print(".");
-    Serial.print(".");
-  }
-
-  M5.Lcd.print("WiFi Connected\n");
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(WiFi.localIPv6());
-  M5.Lcd.print("\n");
-
-  WiFi.enableIpV6();
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
-}
-
-void loop() {
-  M5.update();
-
-  M5.Rtc.GetDate(&rtcDateNow);
-  M5.Rtc.GetTime(&rtcTimeNow);
-  
-  M5.Lcd.clear();
-  M5.Lcd.setCursor(0, 0);
-
-  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d\n",
-    rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
-    rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
-
-  M5.Lcd.printf("WiFi Status: %d\n", WiFi.status());
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(WiFi.localIPv6());
-  M5.Lcd.print("\n");
-
-  if(wifi_connected){
-      //wifiConnectedLoop();
-  }
-  delay(2000);
-}
-
 void wifiOnConnect(){
     M5.Lcd.print("STA Connected\n");
     M5.Lcd.print("STA IPv4: ");
@@ -129,8 +64,7 @@ void wifiConnectedLoop(){
   */
 }
 
-/*
-void WiFiEvent(WiFiEvent_t event){
+void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
     switch(event) {
         case ARDUINO_EVENT_WIFI_AP_START:
             //can set ap hostname here
@@ -145,12 +79,14 @@ void WiFiEvent(WiFiEvent_t event){
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             //enable sta ipv6 here
+            M5.Lcd.print("STA_CONNECTED, enable IPv6\n");
             WiFi.enableIpV6();
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             //Serial.print("STA IPv6: ");
             //Serial.println(WiFi.localIPv6());
             M5.Lcd.print("STA IPv6: ");
+            //M5.Lcd.print(info.got_ip6.ip6_info.);
             M5.Lcd.print(WiFi.localIPv6());
             M5.Lcd.print("\n");
             break;
@@ -173,4 +109,68 @@ void WiFiEvent(WiFiEvent_t event){
             break;
     }
 }
-*/
+
+void setup() {
+  M5.begin();
+  M5.Lcd.print("Connecting...\n");
+
+  Serial.begin(115200);
+  Serial.println("STA Connecting");
+
+  WiFi.disconnect(true);
+  WiFi.onEvent(WiFiEvent);
+  //WiFi.mode(WIFI_MODE_APSTA);
+  //WiFi.softAP(AP_SSID);
+  //WiFi.begin(STA_SSID, STA_PASS);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED){
+    delay(500);
+    M5.Lcd.print(".");
+    Serial.print(".");
+  }
+
+  M5.Lcd.print("WiFi Connected\n");
+  M5.Lcd.print("IPv4: ");
+  M5.Lcd.print(WiFi.localIP());
+  M5.Lcd.print("\n");
+
+  M5.Lcd.print("IPv6: ");
+  M5.Lcd.print(WiFi.localIPv6());
+  M5.Lcd.print("\n");
+
+  //WiFi.enableIpV6();
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+}
+
+void loop() {
+  M5.update();
+
+  M5.Rtc.GetDate(&rtcDateNow);
+  M5.Rtc.GetTime(&rtcTimeNow);
+  
+  M5.Lcd.clear();
+  M5.Lcd.setCursor(0, 0);
+
+  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d\n",
+    rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
+    rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+
+  M5.Lcd.printf("WiFi Status: %d\n", WiFi.status());
+  M5.Lcd.print("IPv4: ");
+  M5.Lcd.print(WiFi.localIP());
+  M5.Lcd.print("\n");
+  M5.Lcd.print("IPv6: ");
+  M5.Lcd.print(WiFi.localIPv6());
+  M5.Lcd.print("\n");
+
+  if(wifi_connected){
+      //wifiConnectedLoop();
+  }
+  delay(10000);
+}
