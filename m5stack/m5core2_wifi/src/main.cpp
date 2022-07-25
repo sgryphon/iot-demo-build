@@ -33,18 +33,19 @@ IPv6Address globalIPv6(){
   return IPv6Address(addr.addr);
 }
 
-IPv6Address dnsIPv6(){
+String mainDnsIP(){
 	esp_netif_dns_info_t dns;
   if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-    return IPv6Address();
+    return "";
   }
   if(esp_netif_get_dns_info(get_esp_interface_netif(ESP_IF_WIFI_STA), ESP_NETIF_DNS_MAIN, &dns)) {
-    return IPv6Address();
+    return "ERR";
   }
-  if(dns.ip.type != ESP_IPADDR_TYPE_V6) {
-    return IPv6Address();
+  if(dns.ip.type == ESP_IPADDR_TYPE_V6) {
+    return IPv6Address(dns.ip.u_addr.ip6.addr).toString();
+  } else {
+    return IPAddress(dns.ip.u_addr.ip4.addr).toString();
   }
-  return IPv6Address(dns.ip.u_addr.ip6.addr);
 } 
 
 void printWiFi() {
@@ -68,7 +69,7 @@ void printWiFi() {
   M5.Lcd.print(globalIPv6());
   M5.Lcd.print("\n");
   M5.Lcd.print("DNS: ");
-  M5.Lcd.print(dnsIPv6());
+  M5.Lcd.print(mainDnsIP());
   M5.Lcd.print("\n");
   M5.Lcd.print("\n");
 
