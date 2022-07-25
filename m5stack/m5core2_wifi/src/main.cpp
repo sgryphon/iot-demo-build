@@ -22,16 +22,60 @@ RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
-IPv6Address globalIPv6()
-{
+IPv6Address globalIPv6(){
 	esp_ip6_addr_t addr;
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return IPv6Address();
-    }
-    if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
-        return IPv6Address();
-    }
-    return IPv6Address(addr.addr);
+  if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    return IPv6Address();
+  }
+  if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
+    return IPv6Address();
+  }
+  return IPv6Address(addr.addr);
+}
+
+IPv6Address dnsIPv6(){
+	esp_netif_dns_info_t dns;
+  if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    return IPv6Address();
+  }
+  if(esp_netif_get_dns_info(get_esp_interface_netif(ESP_IF_WIFI_STA), ESP_NETIF_DNS_MAIN, &dns)) {
+    return IPv6Address();
+  }
+  if(dns.ip.type != ESP_IPADDR_TYPE_V6) {
+    return IPv6Address();
+  }
+  return IPv6Address(dns.ip.u_addr.ip6.addr);
+} 
+
+void printWiFi() {
+  M5.Rtc.GetDate(&rtcDateNow);
+  M5.Rtc.GetTime(&rtcTimeNow);
+
+  M5.Lcd.clear();
+  M5.Lcd.setCursor(0, 0);
+
+  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d\n",
+    rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
+    rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+
+  M5.Lcd.printf("WiFi Status: %d\n", WiFi.status());
+  M5.Lcd.print("IPv4: ");
+  M5.Lcd.print(WiFi.localIP());
+  M5.Lcd.print("\n");
+  M5.Lcd.print("DNS: ");
+  M5.Lcd.print(WiFi.dnsIP(0));
+  M5.Lcd.print("\n");
+  M5.Lcd.print("IPv6: ");
+  M5.Lcd.print(WiFi.localIPv6());
+  M5.Lcd.print("\n");
+  M5.Lcd.print("IPv6: ");
+  M5.Lcd.print(globalIPv6());
+  M5.Lcd.print("\n");
+  M5.Lcd.print("DNS: ");
+  M5.Lcd.print(dnsIPv6());
+  M5.Lcd.print("\n");
+
+  M5.Lcd.print("\n");
 }
 
 void wifiOnConnect(){
@@ -56,7 +100,8 @@ void wifiOnDisconnect(){
 }
 
 void wifiConnectedLoop(){
-  M5.Lcd.print("WiFi Connected loop...\n");
+  //M5.Lcd.print("WiFi Connected loop...\n");
+  printWiFi();
 
 /*
   M5.Lcd.print("[HTTP] begin...\n");
@@ -126,7 +171,10 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
 
 void setup() {
   M5.begin();
-  M5.Lcd.print("Connecting...\n");
+
+  printWiFi();
+
+  M5.Lcd.print("Connecting");
 
   Serial.begin(115200);
   Serial.println("STA Connecting");
@@ -144,52 +192,18 @@ void setup() {
     Serial.print(".");
   }
 
-  M5.Lcd.print("WiFi Connected\n");
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(WiFi.localIPv6());
-  M5.Lcd.print("\n");
-
-  //WiFi.enableIpV6();
-
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-
 }
 
 void loop() {
   M5.update();
 
-  M5.Rtc.GetDate(&rtcDateNow);
-  M5.Rtc.GetTime(&rtcTimeNow);
-  
-  M5.Lcd.clear();
-  M5.Lcd.setCursor(0, 0);
-
-  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d\n",
-    rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
-    rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
-
-  M5.Lcd.printf("WiFi Status: %d\n", WiFi.status());
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(WiFi.localIPv6());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(globalIPv6());
-  M5.Lcd.print("\n");
-
-  //WiFi.hostByName()
-
   if(wifi_connected){
-      //wifiConnectedLoop();
+    wifiConnectedLoop();
   }
-  delay(10000);
+
+  delay(5000);
 }
