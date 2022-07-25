@@ -119,9 +119,21 @@ In Git you can see the changes to the libraries and configuration changes that y
 
 **Wifi**
 
-`m5core2_wifi` has Advanced / Wifi example from https://github.com/m5stack/M5Core2/tree/master/examples
+`m5core2_wifi` has a WiFi example that includes IPv6.
 
+You need to set your wifi name and password as environment variables to run:
 
+```
+export PIO_WIFI_SSID=YourWifiName
+export PIO_WIFI_SSID=YourWifiPassword
+pio run --target upload
+```
+
+Based on:
+
+* Arduino-ESP32 IPv6 example: https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/WiFiIPv6/WiFiIPv6.ino
+* M5 Core 2 Advanced Wifi example: https://github.com/m5stack/M5Core2/tree/master/examples
+* Setting DNS: https://www.keithh.com/network/ipv6-setup-esp8266/
 
 M5Stack Core2 to Azure (via WiFi)
 ---------------------------------
@@ -153,7 +165,6 @@ PlatformIO library registry: https://registry.platformio.org/
 * M5Core2 library: https://registry.platformio.org/libraries/m5stack/M5Core2
 * AWSLabs SimpleIoT: https://github.com/awslabs/simpleiot-arduino
 
-* Arduino-ESP32 IPv6 example: https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/WiFiIPv6/WiFiIPv6.ino
 
 https://github.com/khoih-prog/ESP_WiFiManager
 
@@ -165,6 +176,7 @@ https://github.com/khoih-prog/ESP_WiFiManager
   -  => ESP_IPV6_AUTOCONFIG
   - See: https://github.com/espressif/arduino-esp32/blob/master/tools/sdk/esp32c3/include/lwip/lwip/src/include/lwip/opt.h
 
+* Programming guide: https://docs.espressif.com/projects/esp-idf/en/v4.2.2/esp32/api-reference/network/esp_netif.html
 
 TODO
 ----

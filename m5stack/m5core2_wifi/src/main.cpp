@@ -4,7 +4,7 @@
 //#include <WiFiMulti.h>
 #include <HTTPClient.h>
 
-#include "wifi_config.local.h"
+#include "wifi_config.h"
 
 //#define STA_SSID "**********"
 //#define STA_PASS "**********"
@@ -39,27 +39,28 @@ String mainDnsIP(){
     return "";
   }
   if(esp_netif_get_dns_info(get_esp_interface_netif(ESP_IF_WIFI_STA), ESP_NETIF_DNS_MAIN, &dns)) {
-    return "ERR";
+    return "ERROR";
   }
   if(dns.ip.type == ESP_IPADDR_TYPE_V6) {
     return IPv6Address(dns.ip.u_addr.ip6.addr).toString();
   } else {
     return IPAddress(dns.ip.u_addr.ip4.addr).toString();
   }
-} 
+}
 
 void printWiFi() {
   M5.Rtc.GetDate(&rtcDateNow);
   M5.Rtc.GetTime(&rtcTimeNow);
 
-  M5.Lcd.clear();
   M5.Lcd.setCursor(0, 0);
 
-  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d\n",
+  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d",
     rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
     rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+  M5.Lcd.print("\n");
 
-  M5.Lcd.printf("WiFi Status: %d\n", WiFi.status());
+  M5.Lcd.printf("WiFi Status: %3d", WiFi.status());
+  M5.Lcd.print("\n");
   M5.Lcd.print("\n");
 
   M5.Lcd.print("IPv6: ");
@@ -83,27 +84,33 @@ void printWiFi() {
   M5.Lcd.print(WiFi.gatewayIP());
   M5.Lcd.print("\n");
   M5.Lcd.print("\n");
+
+  int16_t x = M5.Lcd.getCursorX();
+  int16_t y = M5.Lcd.getCursorY();
+  M5.Lcd.fillRect(x, y, 320 - x, 240 - y, 0);
 }
 
 void wifiOnConnect(){
-    M5.Lcd.print("STA Connected\n");
-    M5.Lcd.print("STA IPv4: ");
-    M5.Lcd.print(WiFi.localIP());
-    M5.Lcd.print("\n");
+  M5.Lcd.print("STA Connected");
+  M5.Lcd.print("          \n");
+  M5.Lcd.print("STA IPv4: ");
+  M5.Lcd.print(WiFi.localIP());
+  M5.Lcd.print("          \n");
 
-    Serial.println("STA Connected");
-    Serial.print("STA IPv4: ");
-    Serial.println(WiFi.localIP());
+  Serial.println("STA Connected");
+  Serial.print("STA IPv4: ");
+  Serial.println(WiFi.localIP());
     
     //ntpClient.begin(2390);
 }
 
 void wifiOnDisconnect(){
-    M5.Lcd.print("STA Disconnected\n");
-    //Serial.println("STA Disconnected");
-    delay(1000);
-    WiFi.begin(ssid, password);
-    //WiFi.begin(STA_SSID, STA_PASS);
+  M5.Lcd.print("STA Disconnected");
+  M5.Lcd.print("          \n");
+  //Serial.println("STA Disconnected");
+  delay(1000);
+  WiFi.begin(ssid, password);
+  //WiFi.begin(STA_SSID, STA_PASS);
 }
 
 void wifiConnectedLoop(){
@@ -145,7 +152,8 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             //enable sta ipv6 here
-            M5.Lcd.print("STA_CONNECTED, enable IPv6\n");
+            M5.Lcd.print("STA_CONNECTED, enable IPv6");
+            M5.Lcd.print("          \n");
             WiFi.enableIpV6();
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
@@ -154,14 +162,14 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
             M5.Lcd.print("STA IPv6: ");
             M5.Lcd.printf(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
             //M5.Lcd.print(WiFi.localIPv6());
-            M5.Lcd.print("\n");
+            M5.Lcd.print("          \n");
             break;
         case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
             //Serial.print("AP IPv6: ");
             //Serial.println(WiFi.softAPIPv6());
             M5.Lcd.print("AP IPv6: ");
             M5.Lcd.print(WiFi.softAPIPv6());
-            M5.Lcd.print("\n");
+            M5.Lcd.print("          \n");
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             wifiOnConnect();
@@ -181,7 +189,19 @@ void setup() {
 
   printWiFi();
 
-  M5.Lcd.print("Connecting");
+  M5.Lcd.printf("Connecting to %s", ssid);
+  M5.Lcd.print("          \n");
+
+  if (ssid=="") {
+    M5.Lcd.print("SSID missing");
+    M5.Lcd.print("          \n");
+    return;
+  }
+  if (password=="") {
+    M5.Lcd.print("Password missing");
+    M5.Lcd.print("          \n");
+    return;
+  }
 
   Serial.begin(115200);
   Serial.println("STA Connecting");
@@ -193,6 +213,7 @@ void setup() {
   //WiFi.begin(STA_SSID, STA_PASS);
   WiFi.begin(ssid, password);
 
+/*
   while (WiFi.status() != WL_CONNECTED){
     delay(500);
     M5.Lcd.print(".");
@@ -203,6 +224,7 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  */
 }
 
 void loop() {
