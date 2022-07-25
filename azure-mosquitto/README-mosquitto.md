@@ -1,7 +1,7 @@
 Mosquitto server on Azure
 =========================
 
-Server is running dual-stack, as Azure needs IPv4 to access repositories for package install.
+Server is running dual-stack, with the primary access via IPv6, however Azure also needs IPv4 for management access.
 
 The server uses Certbot to acquire an SSL certificate from LetsEncrypt (with automatic renewal), and then configures Mosquitto to
 use that certificate. Mosquitto also has anonymous access turned off, so you must use the supplied password.
@@ -24,13 +24,45 @@ $VerbosePreference = 'Continue'
 
 The public adddresses of the machine are given a unique name, using the subscription prefix by default (but you can use a different OrgId if you want).
 
-After deployment, the fully qualified domain name (fqdns) is shown, and can be used to access the MQTT server using the mosquitto client.
+After deployment, the fully qualified domain name (fqdns) is shown, and can be used to access the MQTT server using an MQTT client, with the username 'mqttuser' and the password you specified when running the script.
+
+
+Testing the Mosquitto server
+----------------------------
+
+You can the Mosquitto tools to test the server, https://mosquitto.org/
+
+Or use an online utility like Paho https://www.eclipse.org/paho/index.php?page=clients/js/utility/index.php.
+
+Install if needed, e.g. on Linux:
 
 ```shell
-mosquitto_sub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
+snap install mosquitto-clients
 ```
 
-To access the server use the username 'mqttuser' and the password you specified when running the script.
+### Running the test clients
+
+First, in one terminal, subscribe:
+
+```shell
+export MQTT_PASSWORD=YourSecretPassword
+mosquitto_sub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
+```
+
+Then use another terminal to publish a message:
+
+```shell
+export MQTT_PASSWORD=YourSecretPassword
+mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m '[{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]' -p 8883 -u mqttuser -P $MQTT_PASSWORD
+```
+
+Example output (also showing the log tail on the server):
+
+![Mosquitto test](pics/mosquitto-test.png)
+
+
+Server management
+-----------------
 
 ### SSH access
 
@@ -40,10 +72,10 @@ You can also SSH into the server, to check the application (the script automatic
 ssh iotadmin@mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com
 ```
 
-You can then check the status with:
+You can then follow the Mosquitto logs with:
 
 ```
-sudo systemctl status mosquitto
+sudo tail -f /var/log/mosquitto/mosquitto.log
 ```
 
 ### Stop and start
@@ -74,33 +106,6 @@ If you do not have IPv6 available, then there is also an IPv4 endpoint:
 mosquitto_sub -h mqtt-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
 ```
 
-Testing the Mosquitto server
-----------------------------
-
-You can the Mosquitto tools to test the server, https://mosquitto.org/
-
-Or use an online utility like Paho https://www.eclipse.org/paho/index.php?page=clients/js/utility/index.php.
-
-Install if needed, e.g. on Linux:
-
-```
-snap install mosquitto-clients
-```
-
-### Running the test clients
-
-First, in one terminal, subscribe:
-
-```
-mosquitto_sub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
-```
-
-Then use another terminal to publish a message:
-
-```
-mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m "hello world" -p 8883 -u mqttuser -P YourSecretPassword
-```
-
 
 Troubleshooting
 ---------------
@@ -111,22 +116,22 @@ Connect (SSH) to the server and check the cloud init logs:
 more /var/log/cloud-init-output.log
 ```
 
+Also see: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloud-init-troubleshooting
+
 Test if Mosquitto is working on the server, e.g
 
 ```shell
 sudo systemctl status mosquitto
+sudo tail /var/log/mosquitto/mosquitto.log
 mosquitto_pub -h localhost -t test -m "hello world" -u mqttuser -P YourSecretPassword
-sudo tail -f /var/log/mosquitto/mosquitto.log
 ```
 
-From the client you can also test if you can connect to the port, and if SSL is working.
+From a client you can also test if you can connect to the port, and if SSL is working.
 
 ```shell
 nc -vz mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com 8883
 echo "Q" | openssl s_client -showcerts mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com:8883
 ```
-
-Also see: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloud-init-troubleshooting
 
 
 References

@@ -81,6 +81,8 @@ $VerbosePreference = 'Continue'
 
 Once loaded you can see the model in the Digital Twins Explorer.
 
+![Factory ontology model](pics/factory-ontology-model.png)
+
 To replace an individual model manually, e.g. if you are making changes:
 
 ```
@@ -99,6 +101,8 @@ $VerbosePreference = 'Continue'
 ```
 
 Once loaded you can see the twins in the Digital Twins Explorer.
+
+![Factory twin graph](pics/factory-twin-graph.png)
 
 ### Clean up
 
