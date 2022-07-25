@@ -21,6 +21,19 @@ HTTPClient http;
 RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
 
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+IPv6Address globalIPv6()
+{
+	esp_ip6_addr_t addr;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPv6Address();
+    }
+    if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
+        return IPv6Address();
+    }
+    return IPv6Address(addr.addr);
+}
+
 void wifiOnConnect(){
     M5.Lcd.print("STA Connected\n");
     M5.Lcd.print("STA IPv4: ");
@@ -44,7 +57,8 @@ void wifiOnDisconnect(){
 
 void wifiConnectedLoop(){
   M5.Lcd.print("WiFi Connected loop...\n");
-  /*
+
+/*
   M5.Lcd.print("[HTTP] begin...\n");
   http.begin("https://zenquotes.io/api/random");
   M5.Lcd.print("[HTTP] GET...\n");
@@ -86,8 +100,8 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
             //Serial.print("STA IPv6: ");
             //Serial.println(WiFi.localIPv6());
             M5.Lcd.print("STA IPv6: ");
-            //M5.Lcd.print(info.got_ip6.ip6_info.);
-            M5.Lcd.print(WiFi.localIPv6());
+            M5.Lcd.printf(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+            //M5.Lcd.print(WiFi.localIPv6());
             M5.Lcd.print("\n");
             break;
         case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
@@ -168,6 +182,11 @@ void loop() {
   M5.Lcd.print("IPv6: ");
   M5.Lcd.print(WiFi.localIPv6());
   M5.Lcd.print("\n");
+  M5.Lcd.print("IPv6: ");
+  M5.Lcd.print(globalIPv6());
+  M5.Lcd.print("\n");
+
+  //WiFi.hostByName()
 
   if(wifi_connected){
       //wifiConnectedLoop();
