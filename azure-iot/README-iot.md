@@ -61,6 +61,30 @@ This will remove the resource groups, deleting all resources in them.
 ./remove-iotcore.ps1
 ```
 
+IoT Endpoints
+-------------
+
+Service endpoints. Each IoT hub exposes a set of endpoints for your solution back end to communicate with your devices.
+
+* Built-in Azure Event Hubs compatible endpoint (AMQPS, or AMQP over WebSockets)
+  - Receive device-to-cloud messages
+  - Send cloud-to-device-messages and receive delivery acknowledgements
+  - Receive file notifications
+  - Direct method invocation
+
+IoT Hub currently supports the following Azure services as additional endpoints:
+
+* Azure Storage containers
+* Event Hubs
+* Service Bus Queues and Service Bus Topics
+
+IoT Hub also integrates with and can publish event messages to:
+
+* Azure Event Grid
+
+See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-endpoints
+And: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
+
 Events
 ------
 

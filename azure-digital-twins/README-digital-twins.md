@@ -112,3 +112,16 @@ Note: You may need to change the interceptor, e.g. use Proxy, if the host name i
 * Github repository: https://github.com/advanced-rest-client/arc-electron
 
 
+Digital Twin Endpoints
+----------------------
+
+Digital Twins currently supports the following Azure services as endpoints:
+
+* Event Grid
+* Event Hubs
+* Service Bus Topics
+
+You can also create a Data History Connection via Event Hubs to Azure Data Explorer.
+
+See: https://docs.microsoft.com/en-us/azure/digital-twins/concepts-route-events
+
