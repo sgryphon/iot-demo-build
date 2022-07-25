@@ -117,24 +117,39 @@ void wifiConnectedLoop(){
   //M5.Lcd.print("WiFi Connected loop...\n");
   printWiFi();
 
-/*
-  M5.Lcd.print("[HTTP] begin...\n");
-  http.begin("https://zenquotes.io/api/random");
-  M5.Lcd.print("[HTTP] GET...\n");
+  M5.Lcd.print("v6: begin");
+  http.begin("http://v6.ipv6-test.com/api/myip.php");
+  M5.Lcd.print(",GET");
   int httpCode = http.GET();
+  M5.Lcd.printf(",%d", httpCode);
   if (httpCode > 0) {  // httpCode will be negative on error.
-    M5.Lcd.printf("[HTTP] GET... code: %d\n", httpCode);
-
     if (httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
-      M5.Lcd.println(payload);
+      M5.Lcd.print(",");
+      M5.Lcd.print(payload);
     }
   } else {
-    M5.Lcd.printf("[HTTP] GET... failed, error: %s\n",
-                  http.errorToString(httpCode).c_str());
+    M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
   }
+  M5.Lcd.print("\n");
   http.end();
-  */
+
+  M5.Lcd.print("v4v6: begin");
+  http.begin("http://v4v6.ipv6-test.com/api/myip.php");
+  M5.Lcd.print(",GET");
+  httpCode = http.GET();
+  M5.Lcd.printf(",%d", httpCode);
+  if (httpCode > 0) {  // httpCode will be negative on error.
+    if (httpCode == HTTP_CODE_OK) {
+      String payload = http.getString();
+      M5.Lcd.print(",");
+      M5.Lcd.print(payload);
+    }
+  } else {
+    M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+  }
+  M5.Lcd.print("\n");
+  http.end();
 }
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
