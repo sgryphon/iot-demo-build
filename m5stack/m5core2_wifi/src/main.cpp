@@ -61,14 +61,25 @@ const char* root_ca= \
 void printHeader() {
   // Time = 8, IPv6 = 39
   // Date = 10, MAC = 17, WiFi 3, IPv4 = 15
+  uint16_t headerColor;
+  String ipv6 = StartNetwork.globalIPv6().toString();
+  if (StartNetwork.wifiConnected()) {
+    if (ipv6 != "0000:0000:0000:0000:0000:0000:0000:0000") {
+      headerColor = DARKGREEN;
+    } else {
+      headerColor = BLUE;
+    }
+  } else {
+    headerColor = ORANGE;
+  }
   RTC_DateTypeDef rtcDateNow;
   RTC_TimeTypeDef rtcTimeNow;
   M5.Rtc.GetDate(&rtcDateNow);
   M5.Rtc.GetTime(&rtcTimeNow);
   int x = M5.Lcd.getCursorX();
   int y = M5.Lcd.getCursorY();
-  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, M5.Lcd.color565(0x83, 0x4c, 0xc2));
-  M5.Lcd.setTextColor(WHITE, M5.Lcd.color565(0x83, 0x4c, 0xc2));
+  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);
+  M5.Lcd.setTextColor(WHITE, headerColor);
   // Time
   M5.Lcd.setCursor(0, 0);
   M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
@@ -76,7 +87,6 @@ void printHeader() {
   M5.Lcd.setCursor(0, 8);
   M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date);
   // IPv6
-  String ipv6 = StartNetwork.globalIPv6().toString();
   M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
   //M5.Lcd.setCursor((53-39)*6, 0);
   M5.Lcd.print(ipv6);
