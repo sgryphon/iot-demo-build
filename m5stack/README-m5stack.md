@@ -137,7 +137,19 @@ Based on:
 
 **MQTT**
 
+You need to set your wifi and MQTT credentials to run:
 
+```
+export PIO_WIFI_SSID=YourWifiName
+export PIO_WIFI_PASSWORD=YourWifiPassword
+export PIO_MQTT_USER=mqttuser
+export PIO_MQTT_PASSWORD=YourMQTTPassword
+pio run --target upload
+```
+
+* PubSubClient, https://github.com/knolleary/pubsubclient
+* Bundle PubSubClient & WiFi, https://github.com/plapointe6/EspMQTTClient
+* Alernative MQTT https://github.com/256dpi/arduino-mqtt
 
 M5Stack Core2 to Azure (via WiFi)
 ---------------------------------
