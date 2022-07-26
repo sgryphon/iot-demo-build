@@ -1,6 +1,6 @@
 #include "StartNetwork.h"
 
-#define START_NETWORK_MD5_LCD 1
+//#define START_NETWORK_MD5_LCD 1
 //#ifdef START_NETWORK_MD5_LCD
 #include <M5Core2.h>
 //#endif
@@ -60,6 +60,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             //enable sta ipv6 here
+            // NOTE: Need a short delay (e.g. printing a message, or explicit delay)
             delay(100);
             WiFi.enableIpV6();
 //            M5.Lcd.print("STA_CONNECTED, enable IPv6");

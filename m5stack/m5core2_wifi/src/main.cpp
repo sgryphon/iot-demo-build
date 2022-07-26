@@ -63,7 +63,6 @@ void wifiConnectedLoop(){
   //M5.Lcd.print("WiFi Connected loop...\n");
   printWiFi();
 
-/*
   M5.Lcd.print("v6: begin");
   http.begin("http://v6.ipv6-test.com/api/myip.php");
   M5.Lcd.print(",GET");
@@ -97,7 +96,6 @@ void wifiConnectedLoop(){
   }
   M5.Lcd.print("\n");
   http.end();
-  */
 }
 
 
