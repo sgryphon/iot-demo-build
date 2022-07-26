@@ -117,6 +117,16 @@ pio run --target upload
 
 In Git you can see the changes to the libraries and configuration changes that you have made. Slightly more complicated than the Arduino IDE as there are ~5 project files (instead of one) and a few extra directories and instructions. This is to support different libraries per project, as well as multi-board targetting, and other features.
 
+**LCD Screen**
+
+The LCD screen is 320x240, with 0,0 in the top left.
+
+Default text (size 1) fits 53 characters across, and 30 lines (6x8 per character).
+
+Size 2 fits 26 characters across, with 15 lines (12x16 per character).
+
+Size 3 fits 17 characters across, with 10 lines (18x24 per character).
+
 **Wifi**
 
 `m5core2_wifi` has a WiFi example that includes IPv6.
