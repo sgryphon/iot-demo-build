@@ -113,6 +113,23 @@ void wifiConnectedLoop() {
     }
     M5.Lcd.print("\n");
     http.end();
+
+    M5.Lcd.print("v4v6-tls: begin");
+    http.begin("https://v4v6.ipv6-test.com/api/myip.php");
+    M5.Lcd.print(",GET");
+    httpCode = http.GET();
+    M5.Lcd.printf(",%d", httpCode);
+    if (httpCode > 0) {  // httpCode will be negative on error.
+      if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        M5.Lcd.print(",");
+        M5.Lcd.print(payload);
+      }
+    } else {
+      M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+    }
+    M5.Lcd.print("\n");
+    http.end();
   }
 }
 
