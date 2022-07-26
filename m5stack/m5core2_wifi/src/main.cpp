@@ -4,8 +4,11 @@
 //#include <WiFiMulti.h>
 #include <HTTPClient.h>
 
+#include "esp_log.h"
 #include "StartNetwork.h"
 #include "wifi_config.h"
+
+static const char* TAG = "demo";
 
 static const char* ssid = WIFI_SSID;
 static const char* password = WIFI_PASSWORD;
@@ -212,6 +215,8 @@ export PIO_MQTT_PASSWORD=Pass@word1
 
 void setup() {
   M5.begin();
+  Serial.begin(115200);
+  ESP_LOGI(TAG, "** Setup **");
 
   printHeader();
   M5.Lcd.setCursor(0, HEADER_HEIGHT);
@@ -231,14 +236,15 @@ void setup() {
     return;
   }
 
-  Serial.begin(115200);
-  Serial.println("STA Connecting");
 
   StartNetwork.begin(ssid, password);
   delay(1000);
 }
 
 void loop() {
+  //ESP_LOGD(TAG, "** Loop **");
+  ESP_LOGI(TAG, "** Loop %d **", millis());
+
   M5.update();
   printHeader();
   if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
