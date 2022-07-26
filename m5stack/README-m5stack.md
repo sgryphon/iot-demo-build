@@ -135,6 +135,10 @@ Based on:
 * M5 Core 2 Advanced Wifi example: https://github.com/m5stack/M5Core2/tree/master/examples
 * Setting DNS: https://www.keithh.com/network/ipv6-setup-esp8266/
 
+**MQTT**
+
+
+
 M5Stack Core2 to Azure (via WiFi)
 ---------------------------------
 
