@@ -145,9 +145,9 @@ void setup() {
 
   StartNetwork.begin(ssid, password);
 
-  //client.setServer(mqttServer, mqttPort);
-  IPAddress mqttIp = IPAddress(20,213,94,9);
-  client.setServer(mqttIp, mqttPort);
+  client.setServer(mqttServer, mqttPort);
+  //IPAddress mqttIp = IPAddress(20,213,94,9);
+  //client.setServer(mqttIp, mqttPort);
   client.setCallback(callback); 
 
   delay(1000);
