@@ -10,27 +10,47 @@
 static const char* ssid = WIFI_SSID;
 static const char* password = WIFI_PASSWORD;
 
-//WiFiMulti wifiMulti;
+#define SEND_INTERVAL_MS (10000)
+unsigned long nextMessageMilliseconds = 0;
 HTTPClient http;
-//WiFiUDP ntpClient;
-RTC_DateTypeDef rtcDateNow;
-RTC_TimeTypeDef rtcTimeNow;
 
-void printWiFi() {
+#define HEADER_HEIGHT (16)
+
+void printHeader() {
+  // Time = 8, IPv6 = 39
+  // Date = 10, MAC = 17, WiFi 3, IPv4 = 15
+  RTC_DateTypeDef rtcDateNow;
+  RTC_TimeTypeDef rtcTimeNow;
   M5.Rtc.GetDate(&rtcDateNow);
   M5.Rtc.GetTime(&rtcTimeNow);
-
+  int x = M5.Lcd.getCursorX();
+  int y = M5.Lcd.getCursorY();
+  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, M5.Lcd.color565(0x83, 0x4c, 0xc2));
+  M5.Lcd.setTextColor(WHITE, M5.Lcd.color565(0x83, 0x4c, 0xc2));
+  // Time
   M5.Lcd.setCursor(0, 0);
+  M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+  // Date
+  M5.Lcd.setCursor(0, 8);
+  M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date);
+  // IPv6
+  String ipv6 = StartNetwork.globalIPv6().toString();
+  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
+  //M5.Lcd.setCursor((53-39)*6, 0);
+  M5.Lcd.print(ipv6);
+  // MAC & WiFi Status
+  M5.Lcd.setCursor((53-39)*6, 8);
+  M5.Lcd.printf("%s (%3d)", WiFi.macAddress().c_str(), WiFi.status());
+  // IPv4
+  String ipv4 = WiFi.localIP().toString();
+  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv4), 8); 
+  M5.Lcd.print(ipv4.c_str());
 
-  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d",
-    rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
-    rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
-  M5.Lcd.print("\n");
+  M5.Lcd.setCursor(x, y);
+  M5.Lcd.setTextColor(WHITE, BLACK);
+}
 
-  M5.Lcd.printf("WiFi Status: %3d", WiFi.status());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("\n");
-
+void printWiFi() {
   M5.Lcd.print("IPv6: ");
   M5.Lcd.print(WiFi.localIPv6());
   M5.Lcd.print("\n");
@@ -52,56 +72,56 @@ void printWiFi() {
   M5.Lcd.print(WiFi.gatewayIP());
   M5.Lcd.print("\n");
   M5.Lcd.print("\n");
-
-  int16_t x = M5.Lcd.getCursorX();
-  int16_t y = M5.Lcd.getCursorY();
-  M5.Lcd.fillRect(x, y, 320 - x, 240 - y, 0);
 }
 
+void wifiConnectedLoop() {
+  unsigned long nowMilliseconds = millis();
+  if (nowMilliseconds > nextMessageMilliseconds) {
+    nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
 
-void wifiConnectedLoop(){
-  //M5.Lcd.print("WiFi Connected loop...\n");
-  printWiFi();
-
-  M5.Lcd.print("v6: begin");
-  http.begin("http://v6.ipv6-test.com/api/myip.php");
-  M5.Lcd.print(",GET");
-  int httpCode = http.GET();
-  M5.Lcd.printf(",%d", httpCode);
-  if (httpCode > 0) {  // httpCode will be negative on error.
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      M5.Lcd.print(",");
-      M5.Lcd.print(payload);
+    M5.Lcd.println(nowMilliseconds);
+    M5.Lcd.print("v6: begin");
+    http.begin("http://v6.ipv6-test.com/api/myip.php");
+    M5.Lcd.print(",GET");
+    int httpCode = http.GET();
+    M5.Lcd.printf(",%d", httpCode);
+    if (httpCode > 0) {  // httpCode will be negative on error.
+      if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        M5.Lcd.print(",");
+        M5.Lcd.print(payload);
+      }
+    } else {
+      M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
     }
-  } else {
-    M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
-  }
-  M5.Lcd.print("\n");
-  http.end();
+    M5.Lcd.print("\n");
+    http.end();
 
-  M5.Lcd.print("v4v6: begin");
-  http.begin("http://v4v6.ipv6-test.com/api/myip.php");
-  M5.Lcd.print(",GET");
-  httpCode = http.GET();
-  M5.Lcd.printf(",%d", httpCode);
-  if (httpCode > 0) {  // httpCode will be negative on error.
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      M5.Lcd.print(",");
-      M5.Lcd.print(payload);
+    M5.Lcd.print("v4v6: begin");
+    http.begin("http://v4v6.ipv6-test.com/api/myip.php");
+    M5.Lcd.print(",GET");
+    httpCode = http.GET();
+    M5.Lcd.printf(",%d", httpCode);
+    if (httpCode > 0) {  // httpCode will be negative on error.
+      if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        M5.Lcd.print(",");
+        M5.Lcd.print(payload);
+      }
+    } else {
+      M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
     }
-  } else {
-    M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+    M5.Lcd.print("\n");
+    http.end();
   }
-  M5.Lcd.print("\n");
-  http.end();
 }
 
 
 void setup() {
   M5.begin();
 
+  printHeader();
+  M5.Lcd.setCursor(0, HEADER_HEIGHT);
   printWiFi();
 
   M5.Lcd.printf("Connecting to %s", ssid);
@@ -123,27 +143,20 @@ void setup() {
 
   StartNetwork.begin(ssid, password);
   delay(1000);
-
-/*
-  while (WiFi.status() != WL_CONNECTED){
-    delay(500);
-    M5.Lcd.print(".");
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  */
 }
 
 void loop() {
   M5.update();
+  printHeader();
+  if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
+    M5.Lcd.fillRect(0, HEADER_HEIGHT, 320, 240 - HEADER_HEIGHT, 0);
+    M5.Lcd.setCursor(0, HEADER_HEIGHT);
+    printWiFi();
+  }
 
   if(StartNetwork.wifiConnected()){
     wifiConnectedLoop();
   }
 
-  delay(10000);
+  delay(1000);
 }

@@ -1,6 +1,6 @@
 #include "StartNetwork.h"
 
-//#define START_NETWORK_MD5_LCD 1
+#define START_NETWORK_MD5_LCD 1
 //#ifdef START_NETWORK_MD5_LCD
 #include <M5Core2.h>
 //#endif

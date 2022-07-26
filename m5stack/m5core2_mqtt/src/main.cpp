@@ -109,6 +109,7 @@ void wifiConnectedLoop(){
 
     unsigned long nowMilliseconds = millis();
     if (nowMilliseconds > nextMessageMilliseconds) {
+      nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
       ++value;
       String eui64 = macToEui64(WiFi.macAddress());
       snprintf(message, MESSAGE_BUFFER_SIZE, "[{\"t\":%d,\"n\":\"urn:dev:ow:%s\",\"u\":\"Cel\",\"v\":%d}]", nowMilliseconds, eui64.c_str(), value);
@@ -116,7 +117,6 @@ void wifiConnectedLoop(){
       M5.Lcd.print(message);
       M5.Lcd.print("\n");
       client.publish("M5Stack", message);
-      nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
     }
   }
 }
