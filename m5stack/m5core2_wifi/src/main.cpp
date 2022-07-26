@@ -145,5 +145,5 @@ void loop() {
     wifiConnectedLoop();
   }
 
-  delay(5000);
+  delay(10000);
 }
