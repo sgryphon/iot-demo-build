@@ -165,13 +165,14 @@ export PIO_MQTT_PASSWORD=Pass@word1
 
     // https://github.com/espressif/arduino-esp32/blob/master/libraries/HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino
 
+    M5.Lcd.print("v4v6-tls: ");
     WiFiClientSecure *client = new WiFiClientSecure;
     if (client) {
-      client->setCACert(root_ca);
+      client->setCACert((char *)root_ca_pem_start);
+      //client->setCACert(root_ca);
       {
         HTTPClient http;
-        M5.Lcd.print("v4v6-tls: begin");
-        //http.begin("https://v4v6.ipv6-test.com/api/myip.php", (char *)root_ca_pem_start);
+        M5.Lcd.print("begin");
         if (http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php")) {
           M5.Lcd.print(",GET");
           httpCode = http.GET();
