@@ -166,7 +166,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
       }
       delete client;
     } else {
-          DemoConsole.print("Unable to create client\n");
+      DemoConsole.print("Unable to create client\n");
     }
   } 
 }

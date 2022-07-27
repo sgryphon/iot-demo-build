@@ -22,13 +22,33 @@ static const char* mqttPassword = MQTT_PASSWORD;
 extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_ISRG_Root_X1_pem_start");
 extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_ISRG_Root_X1_pem_end");
 
-#define MESSAGE_BUFFER_SIZE (100)
+#define MESSAGE_BUFFER_SIZE (255)
 #define SEND_INTERVAL_MS (5000)
 
 unsigned long nextMessageMilliseconds = 0;
 char message[MESSAGE_BUFFER_SIZE];
-static const char* messageTemplate = "[{\"n\":\"urn:dev:mac:%s\",\"u\":\"Cel\",\"v\":%d}]";
-int value;
+
+int counter = 0;
+
+// generic
+const char* messageTemplate0 = \
+  "{\"battery_volts\":%.3f," \
+  "\"battery_amps\":%.3f," \
+  "\"battery_watts\":%.1f," \
+  "\"temperature_celsius\":%.2f}";
+
+// SenML message
+const char* messageTemplate1 = \
+  "[{\"bn\":\"urn:dev:mac:%s_\",\"n\":\"voltage\",\"u\":\"V\",\"v\":%.3f}," \
+  "{\"n\":\"current\",\"u\":\"A\",\"v\":%.3f}," \
+  "{\"n\":\"power\",\"u\":\"W\",\"v\":%.1f}," \
+  "{\"n\":\"temperature\",\"u\":\"Cel\",\"v\":%.2f}]";
+
+// LwM2M SenML
+const char* messageTemplate2 = \
+  "[{\"n\":\"/3/0/7/0\",\"v\":%.0f}," \
+  "{\"n\":\"/3/0/8/0\",\"v\":%.0f}," \
+  "{\"n\":\"/3303/0/5700\",\"v\":%.2f}]";
 
 WiFiClientSecure *wifiClientSecure = NULL;
 PubSubClient pubSubClient;
@@ -94,8 +114,34 @@ void wifiConnectedLoop(){
     unsigned long nowMilliseconds = millis();
     if (nowMilliseconds > nextMessageMilliseconds) {
       nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
-      ++value;
-      snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate, StartNetwork.eui64(), value);
+
+      // Build message
+      float batteryVoltage = M5.Axp.GetBatVoltage();
+      float batteryCurrent = M5.Axp.GetBatCurrent();
+      float batteryPower = M5.Axp.GetBatPower();
+      bool batteryIsCharging = M5.Axp.isCharging();
+      float temperature = 0.0F;
+      M5.IMU.getTempData(&temperature);
+
+      ESP_LOGD(TAG, "voltage=%f current=%f power=%f temperature=%f",
+        batteryVoltage, batteryCurrent, batteryPower, temperature);
+
+      counter++;
+      switch (counter % 3) {
+        case 1:
+          snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate1, 
+            StartNetwork.eui64(), batteryVoltage, batteryCurrent, batteryPower, temperature);
+          break;
+        case 2:
+          snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate2, 
+            batteryVoltage * 1000, batteryCurrent * 1000, temperature);
+          break;
+        default:
+          snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate0, 
+            batteryVoltage, batteryCurrent, batteryPower, temperature);
+          break;
+      }
+
       DemoConsole.print("Publish:");
       DemoConsole.print(message);
       DemoConsole.print("\n");
@@ -105,9 +151,11 @@ void wifiConnectedLoop(){
 }
 
 void setup() {
-  M5.begin();
   Serial.begin(115200);
   ESP_LOGI(TAG, "** Setup **");
+
+  M5.begin();
+  M5.IMU.Init();
 
   DemoConsole.begin();
 
