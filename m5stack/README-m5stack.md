@@ -201,7 +201,7 @@ TODO:
 
 You need to set your wifi and MQTT credentials to run:
 
-```
+```shell
 export PIO_WIFI_SSID=YourWifiName
 export PIO_WIFI_PASSWORD=YourWifiPassword
 export PIO_MQTT_USER=mqttuser
@@ -234,7 +234,7 @@ mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m 'He
 M5Stack Core2 to Azure (via WiFi)
 ---------------------------------
 
-Create a basic M5Core2 project in PlatformIO:
+We need to add both the M5Core2 library and the Azure SDK, e.g. if you were creating from scratch:
 
 ```shell
 mkdir m5core2_azureiot
@@ -248,12 +248,52 @@ To build (`pio run`) I had to make sure the lib_deps section had just "azure/Azu
 
 Note that the Arduino (used by PlatformIO) port of the library is version 1.0.0-beta.5, which corresponds to the library version 1.3.2. PlatformIO registry information: https://registry.platformio.org/libraries/azure/Azure%20SDK%20for%20C
 
-Arduino port source code (with samples): https://github.com/Azure/azure-sdk-for-c-arduino
+Arduino port source code (with samples; this is based on the ESP32 sample): https://github.com/Azure/azure-sdk-for-c-arduino
 
-Note that the example is an Arduino IDE sketch file (.ino) and uses some Espressif libraries for Wifi & MQTT, whereas we use M5.
+Note that the example is an Arduino IDE sketch file (.ino), although it is easy to convert to a normal C++ file to use with Platform IO. Note that it uses the lower level Espressif libraries for MQTT, rather than PubSubClient.
 
+You need to set some Azure values. If Device ID is blank, the app will use the device EUI-64 (based on the MAC), and print out the details (on screen and to the serial logging) so you can register it in IoT Hub and get the device key.
 
-Azure:
+In PlatformIO CLI, monitor the serial port to see the Device ID:
+
+```shell
+pio device monitor --baud 115200
+```
+
+To register the device and output the host name and device key:
+
+```powershell
+az login
+$deviceId = "eui-0a3af2fffe65db28"
+$iotName = "iot-hub001-0x$((az account show --query id --output tsv).Substring(0,4))-dev"
+$iotHub = az iot hub show --name $iotName | ConvertFrom-Json
+$device = az iot hub device-identity create -n $iotName -d $deviceId | ConvertFrom-Json
+$iotHub.properties.hostName
+$device.authentication.symmetricKey.primaryKey
+```
+
+Once you have the host and device key, you can set the values (along with your wifi credentials) and run the application.
+
+```shell
+export PIO_WIFI_SSID=YourWifiName
+export PIO_WIFI_PASSWORD=YourWifiPassword
+export IOT_CONFIG_DEVICE_ID=
+export IOT_CONFIG_IOTHUB_FQDN=YourAzureIotHostName.azure-devices.net
+export IOT_CONFIG_DEVICE_KEY=YourAzureIoTDeviceKey
+pio run --target upload
+```
+
+While running, to monitor the IoT Hub events:
+
+```powershell
+az login
+$deviceId = "eui-0a3af2fffe65db28"
+$iotName = "iot-hub001-0x$((az account show --query id --output tsv).Substring(0,4))-dev"
+$connection = az iot hub connection-string show --hub-name $iotName | ConvertFrom-Json
+az iot hub monitor-events --login $connection.connectionString --device-id $deviceId
+```
+
+Device ID notes:
 
 * Device ID: max 128 characters, alphanumeric plus -.+%_#*?!(),:=@'
 * Registration ID (DPS): max 128 characters, alphanumeric plus -._:

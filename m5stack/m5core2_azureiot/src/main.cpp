@@ -12,7 +12,10 @@
  * To connect and work with Azure IoT Hub you need an MQTT client, connecting, subscribing
  * and publishing to specific topics to use the messaging features of the hub.
  * Our azure-sdk-for-c is an MQTT client support library, helping composing and parsing the
- * MQTT topic names and messages exchanged with the Azure IoT Hub.
+ * MQTT topic names and messages exchanged with the Azure export IOT_CONFIG_DEVICE_ID=
+export IOT_CONFIG_IOTHUB_FQDN=iot-hub001-0xacc5-dev.azure-devices.net
+export IOT_CONFIG_DEVICE_KEY=m5Dy2sMY9C4x15VhjZT0//Wpe/7GHkNZ4+HgUW96I4g=
+IoT Hub.
  *
  * This sample performs the following tasks:
  * - Synchronize the device clock with a NTP server;
@@ -41,7 +44,14 @@
 // Additional sample headers 
 #include "AzIoTSasToken.h"
 #include "SerialLogger.h"
-#include "iot_configs.h"
+#include "config.h"
+
+#include <M5Core2.h>
+#include "DemoConsole.h"
+#include "StartNetwork.h"
+
+#include "esp_log.h"
+static const char* TAG = "demo";
 
 // When developing for your own Arduino-based platform,
 // please follow the format '(ard;<platform>)'. 
@@ -62,11 +72,21 @@
 #define GMT_OFFSET_SECS_DST ((PST_TIME_ZONE + PST_TIME_ZONE_DAYLIGHT_SAVINGS_DIFF) * 3600)
 
 // Translate iot_configs.h defines into variables used by the sample
-static const char* ssid = IOT_CONFIG_WIFI_SSID;
-static const char* password = IOT_CONFIG_WIFI_PASSWORD;
-static const char* host = IOT_CONFIG_IOTHUB_FQDN;
-static const char* mqtt_broker_uri = "mqtts://" IOT_CONFIG_IOTHUB_FQDN;
-static const char* device_id = IOT_CONFIG_DEVICE_ID;
+static const char* ssid = WIFI_SSID;
+static const char* password = WIFI_PASSWORD;
+
+#define ST(A) #A
+#define STR(A) ST(A)
+
+static const char* host = STR(IOT_CONFIG_IOTHUB_FQDN);
+static const char* mqtt_broker_uri = "mqtts://" STR(IOT_CONFIG_IOTHUB_FQDN);
+static const char* config_device_id = STR(IOT_CONFIG_DEVICE_ID);
+static char device_id[128];
+
+#ifndef IOT_CONFIG_USE_X509_CERT
+static const char* device_key = STR(IOT_CONFIG_DEVICE_KEY);
+#endif
+
 static const int mqttPort = AZ_IOT_DEFAULT_MQTT_CONNECT_PORT;
 
 // Memory allocated for the sample's variables and structures.
@@ -89,54 +109,56 @@ static char incoming_data[INCOMING_DATA_BUFFER_SIZE];
 #ifndef IOT_CONFIG_USE_X509_CERT
 static AzIoTSasToken sasToken(
     &client,
-    AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY),
+    AZ_SPAN_FROM_STR(STR(IOT_CONFIG_DEVICE_KEY)),
+    //az_span_create((uint8_t*)device_key, strlen(device_key)),
     AZ_SPAN_FROM_BUFFER(sas_signature_buffer),
     AZ_SPAN_FROM_BUFFER(mqtt_password));
 #endif // IOT_CONFIG_USE_X509_CERT
 
 static void connectToWiFi()
 {
-  Logger.Info("Connecting to WIFI SSID " + String(ssid));
+  DemoConsole.printf("Connecting to WIFI SSID %s\n", ssid);
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
+  StartNetwork.begin(ssid, password);
+
+  //while (WiFi.status() != WL_CONNECTED)
+  while (!StartNetwork.wifiConnected())
   {
     delay(500);
-    Serial.print(".");
+    DemoConsole.loop();
+    DemoConsole.print(".");
   }
 
-  Serial.println("");
-
-  Logger.Info("WiFi connected, IP address: " + WiFi.localIP().toString());
+  DemoConsole.printf("WiFi connected, IP address: %s\n", WiFi.localIP().toString().c_str());
 }
 
 static void initializeTime()
 {
-  Logger.Info("Setting time using SNTP");
+  DemoConsole.print("Setting time using SNTP\n");
 
   configTime(GMT_OFFSET_SECS, GMT_OFFSET_SECS_DST, NTP_SERVERS);
   time_t now = time(NULL);
   while (now < UNIX_TIME_NOV_13_2017)
   {
     delay(500);
-    Serial.print(".");
+    DemoConsole.loop();
+    DemoConsole.print(".");
     now = time(nullptr);
   }
-  Serial.println("");
-  Logger.Info("Time initialized!");
+  DemoConsole.print("\n");
+  DemoConsole.printf("Time initialized! %d\n", now);
 }
 
 void receivedCallback(char* topic, byte* payload, unsigned int length)
 {
-  Logger.Info("Received [");
-  Logger.Info(topic);
-  Logger.Info("]: ");
+  DemoConsole.print("Received [");
+  DemoConsole.print(topic);
+  DemoConsole.print("]: ");
   for (int i = 0; i < length; i++)
   {
-    Serial.print((char)payload[i]);
+    DemoConsole.printf("%c", (char)payload[i]);
   }
-  Serial.println("");
+  DemoConsole.print("\n");
 }
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
@@ -146,57 +168,57 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     int i, r;
 
     case MQTT_EVENT_ERROR:
-      Logger.Info("MQTT event MQTT_EVENT_ERROR");
+      DemoConsole.print("MQTT event MQTT_EVENT_ERROR\n");
       break;
     case MQTT_EVENT_CONNECTED:
-      Logger.Info("MQTT event MQTT_EVENT_CONNECTED");
+      DemoConsole.print("MQTT event MQTT_EVENT_CONNECTED\n");
 
       r = esp_mqtt_client_subscribe(mqtt_client, AZ_IOT_HUB_CLIENT_C2D_SUBSCRIBE_TOPIC, 1);
       if (r == -1)
       {
-        Logger.Error("Could not subscribe for cloud-to-device messages.");
+        DemoConsole.print("ERROR: Could not subscribe for cloud-to-device messages.\n");
       }
       else
       {
-        Logger.Info("Subscribed for cloud-to-device messages; message id:"  + String(r));
+        DemoConsole.printf("Subscribed for cloud-to-device messages; message id: %d\n", r);
       }
 
       break;
     case MQTT_EVENT_DISCONNECTED:
-      Logger.Info("MQTT event MQTT_EVENT_DISCONNECTED");
+      DemoConsole.print("MQTT event MQTT_EVENT_DISCONNECTED\n");
       break;
     case MQTT_EVENT_SUBSCRIBED:
-      Logger.Info("MQTT event MQTT_EVENT_SUBSCRIBED");
+      DemoConsole.print("MQTT event MQTT_EVENT_SUBSCRIBED\n");
       break;
     case MQTT_EVENT_UNSUBSCRIBED:
-      Logger.Info("MQTT event MQTT_EVENT_UNSUBSCRIBED");
+      DemoConsole.print("MQTT event MQTT_EVENT_UNSUBSCRIBED\n");
       break;
     case MQTT_EVENT_PUBLISHED:
-      Logger.Info("MQTT event MQTT_EVENT_PUBLISHED");
+      DemoConsole.print("MQTT event MQTT_EVENT_PUBLISHED\n");
       break;
     case MQTT_EVENT_DATA:
-      Logger.Info("MQTT event MQTT_EVENT_DATA");
+      DemoConsole.print("MQTT event MQTT_EVENT_DATA\n");
 
       for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->topic_len; i++)
       {
         incoming_data[i] = event->topic[i]; 
       }
       incoming_data[i] = '\0';
-      Logger.Info("Topic: " + String(incoming_data));
+      DemoConsole.printf("Topic: %s\n", incoming_data);
       
       for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->data_len; i++)
       {
         incoming_data[i] = event->data[i]; 
       }
       incoming_data[i] = '\0';
-      Logger.Info("Data: " + String(incoming_data));
+      DemoConsole.printf("Data: %s\n", incoming_data);
 
       break;
     case MQTT_EVENT_BEFORE_CONNECT:
-      Logger.Info("MQTT event MQTT_EVENT_BEFORE_CONNECT");
+      DemoConsole.print("MQTT event MQTT_EVENT_BEFORE_CONNECT\n");
       break;
     default:
-      Logger.Error("MQTT event UNKNOWN");
+      DemoConsole.print("ERROR: MQTT event UNKNOWN\n");
       break;
   }
 
@@ -214,7 +236,7 @@ static void initializeIoTHubClient()
           az_span_create((uint8_t*)device_id, strlen(device_id)),
           &options)))
   {
-    Logger.Error("Failed initializing Azure IoT Hub client");
+    DemoConsole.print("ERROR: Failed initializing Azure IoT Hub client\n");
     return;
   }
 
@@ -222,27 +244,28 @@ static void initializeIoTHubClient()
   if (az_result_failed(az_iot_hub_client_get_client_id(
           &client, mqtt_client_id, sizeof(mqtt_client_id) - 1, &client_id_length)))
   {
-    Logger.Error("Failed getting client id");
+    DemoConsole.print("ERROR: Failed getting client id\n");
     return;
   }
 
   if (az_result_failed(az_iot_hub_client_get_user_name(
           &client, mqtt_username, sizeofarray(mqtt_username), NULL)))
   {
-    Logger.Error("Failed to get MQTT clientId, return code");
+    DemoConsole.print("ERROR: Failed to get MQTT clientId, return code\n");
     return;
   }
 
-  Logger.Info("Client ID: " + String(mqtt_client_id));
-  Logger.Info("Username: " + String(mqtt_username));
+  DemoConsole.printf("Client ID: %s\n", mqtt_client_id);
+  DemoConsole.printf("Username: %s\n", mqtt_username);
 }
 
 static int initializeMqttClient()
 {
   #ifndef IOT_CONFIG_USE_X509_CERT
+  DemoConsole.print("Generating SAS token\n");
   if (sasToken.Generate(SAS_TOKEN_DURATION_IN_MINUTES) != 0)
   {
-    Logger.Error("Failed generating SAS token");
+    DemoConsole.print("ERROR: Failed generating SAS token\n");
     return 1;
   }
   #endif
@@ -255,11 +278,13 @@ static int initializeMqttClient()
   mqtt_config.username = mqtt_username;
 
   #ifdef IOT_CONFIG_USE_X509_CERT
-    Logger.Info("MQTT client using X509 Certificate authentication");
+    DemoConsole.print("MQTT client using X509 Certificate authentication\n");
     mqtt_config.client_cert_pem = IOT_CONFIG_DEVICE_CERT;
     mqtt_config.client_key_pem = IOT_CONFIG_DEVICE_CERT_PRIVATE_KEY;
   #else // Using SAS key
+    DemoConsole.print("Setting password from SAS token\n");
     mqtt_config.password = (const char*)az_span_ptr(sasToken.Get());
+    DemoConsole.printf("Got password: %s\n", mqtt_config.password);
   #endif
 
   mqtt_config.keepalive = 30;
@@ -269,24 +294,28 @@ static int initializeMqttClient()
   mqtt_config.user_context = NULL;
   mqtt_config.cert_pem = (const char*)ca_pem;
 
+  DemoConsole.print("Init MQTT client\n");
   mqtt_client = esp_mqtt_client_init(&mqtt_config);
 
   if (mqtt_client == NULL)
   {
-    Logger.Error("Failed creating mqtt client");
+    DemoConsole.print("ERROR: Failed creating mqtt client\n");
     return 1;
   }
 
+  DemoConsole.print("Start MQTT client\n");
   esp_err_t start_result = esp_mqtt_client_start(mqtt_client);
+
+  DemoConsole.printf("Start result %d\n", start_result);
 
   if (start_result != ESP_OK)
   {
-    Logger.Error("Could not start mqtt client; error code:" + start_result);
+    DemoConsole.printf("ERROR: Could not start mqtt client; error code: %d\n", start_result);
     return 1;
   }
   else
   {
-    Logger.Info("MQTT client started");
+    DemoConsole.print("MQTT client started\n");
     return 0;
   }
 }
@@ -325,7 +354,7 @@ static void sendTelemetry()
 {
   az_span telemetry = AZ_SPAN_FROM_BUFFER(telemetry_payload);
 
-  Logger.Info("Sending telemetry ...");
+  DemoConsole.print("Sending telemetry ...\n");
 
   // The topic could be obtained just once during setup,
   // however if properties are used the topic need to be generated again to reflect the
@@ -333,7 +362,7 @@ static void sendTelemetry()
   if (az_result_failed(az_iot_hub_client_telemetry_get_publish_topic(
           &client, NULL, telemetry_topic, sizeof(telemetry_topic), NULL)))
   {
-    Logger.Error("Failed az_iot_hub_client_telemetry_get_publish_topic");
+    DemoConsole.print("ERROR: Failed az_iot_hub_client_telemetry_get_publish_topic\n");
     return;
   }
 
@@ -348,11 +377,11 @@ static void sendTelemetry()
           DO_NOT_RETAIN_MSG)
       == 0)
   {
-    Logger.Error("Failed publishing");
+    DemoConsole.print("ERROR: Failed publishing\n");
   }
   else
   {
-    Logger.Info("Message published successfully");
+    DemoConsole.print("Message published successfully\n");
   }
 }
 
@@ -360,26 +389,87 @@ static void sendTelemetry()
 
 void setup()
 {
+  Serial.begin(115200);
+  ESP_LOGI(TAG, "** Setup **");
+
+  M5.begin();
+  DemoConsole.begin();
+
+  bool missingConfig = false;
+  if (ssid=="") {
+    DemoConsole.print("WiFi SSID missing\n");
+    missingConfig = true;
+  } else {
+    DemoConsole.printf("Using WiFi SSID: %s\n", ssid);
+  }
+  if (password=="") {
+    DemoConsole.print("WiFi Password missing\n");
+    missingConfig = true;
+  }
+  if (host=="") {
+    DemoConsole.print("IoT Hub FQDN missing\n");
+    missingConfig = true;
+  } else {
+    DemoConsole.printf("Using IoT Hub: %s\n", host);
+  }
+
+if (config_device_id=="") {
+  snprintf(device_id, sizeof(device_id), "eui-%s", StartNetwork.eui64());
+  DemoConsole.printf("Using default Device ID: %s\n", device_id);
+} else {
+  snprintf(device_id, sizeof(device_id), "%s", config_device_id);
+  DemoConsole.printf("Using configured Device ID: %s\n", device_id);
+}
+
+#ifndef IOT_CONFIG_USE_X509_CERT
+  if (device_key=="") {
+    DemoConsole.printf("IoT Hub Key missing");
+    missingConfig = true;
+  }
+#endif
+
+#ifdef IOT_CONFIG_USE_X509_CERT
+  if (IOT_CONFIG_DEVICE_CERT=="") {
+    DemoConsole.print("IoT Hub X509 Certificate missing");
+    missingConfig = true;
+  }
+  if (IOT_CONFIG_DEVICE_CERT_PRIVATE_KEY=="") {
+    DemoConsole.print("IoT Hub X509 Private Key missing");
+    missingConfig = true;
+  }
+}
+#endif
+
+  if (missingConfig) {
+    return;
+  }
+
   establishConnection();
 }
 
 void loop()
 {
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    connectToWiFi();
+  ESP_LOGD(TAG, "** Loop %d **", millis());
+  //ESP_LOGI(TAG, "** Loop %d **", millis());
+
+  M5.update();
+  DemoConsole.loop();
+
+  if(StartNetwork.wifiConnected()){
+    #ifndef IOT_CONFIG_USE_X509_CERT
+    if (sasToken.IsExpired())
+    {
+      DemoConsole.print("SAS token expired; reconnecting with a new one.\n");
+      (void)esp_mqtt_client_destroy(mqtt_client);
+      initializeMqttClient();
+    }
+    #endif
+    else if (millis() > next_telemetry_send_time_ms)
+    {
+      sendTelemetry();
+      next_telemetry_send_time_ms = millis() + TELEMETRY_FREQUENCY_MILLISECS;
+    }
   }
-  #ifndef IOT_CONFIG_USE_X509_CERT
-  else if (sasToken.IsExpired())
-  {
-    Logger.Info("SAS token expired; reconnecting with a new one.");
-    (void)esp_mqtt_client_destroy(mqtt_client);
-    initializeMqttClient();
-  }
-  #endif
-  else if (millis() > next_telemetry_send_time_ms)
-  {
-    sendTelemetry();
-    next_telemetry_send_time_ms = millis() + TELEMETRY_FREQUENCY_MILLISECS;
-  }
+
+  delay(500);
 }
