@@ -223,7 +223,7 @@ You can also run a client to receive (or send messages):
 export MQTT_PASSWORD=YourSecretPassword
 mosquitto_sub -h mqtt-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
 ...
-mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m 'Hello World' -p 8883 -u mqttuser -P $MQTT_PASSWORD
+mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m 'Hello Command' -p 8883 -u mqttuser -P $MQTT_PASSWORD
 ```
 
 * PubSubClient, https://github.com/knolleary/pubsubclient
@@ -251,6 +251,14 @@ Note that the Arduino (used by PlatformIO) port of the library is version 1.0.0-
 Arduino port source code (with samples): https://github.com/Azure/azure-sdk-for-c-arduino
 
 Note that the example is an Arduino IDE sketch file (.ino) and uses some Espressif libraries for Wifi & MQTT, whereas we use M5.
+
+
+Azure:
+
+* Device ID: max 128 characters, alphanumeric plus -.+%_#*?!(),:=@'
+* Registration ID (DPS): max 128 characters, alphanumeric plus -._:
+* RFC9039 Uniform Resource Names for Device Identifiers, start with "urn:dev:", with alphanumeric plus -._: at various locations, e.g. urn:dev:mac:0224befffe804ff1
+* RFC7254 The GSM and IEI URN, e.g. "urn:gsma:imei:90420156-025763-0;vers=0"
 
 
 Library references

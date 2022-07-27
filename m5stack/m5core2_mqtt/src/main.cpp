@@ -30,9 +30,8 @@ char message[MESSAGE_BUFFER_SIZE];
 static const char* messageTemplate = "[{\"n\":\"urn:dev:mac:%s\",\"u\":\"Cel\",\"v\":%d}]";
 int value;
 
-WiFiClientSecure *wifiClientSecure = new WiFiClientSecure;
-
-PubSubClient pubSubClient(*wifiClientSecure);
+WiFiClientSecure *wifiClientSecure = NULL;
+PubSubClient pubSubClient;
 
 RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
@@ -50,33 +49,38 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void reConnect() {
   if (!pubSubClient.connected()) {
     DemoConsole.print("Attempting MQTT connection...");
-    // Create a random client ID.  创建一个随机的客户端ID
-    String clientId = "M5Stack-";
-    clientId += String(random(0xffff), HEX);
-    if (pubSubClient.connect(clientId.c_str(), mqttUser, mqttPassword)) {
-      DemoConsole.printf("\nSuccess\n");
-      // Once connected, publish an announcement to the topic.  一旦连接，发送一条消息至指定话题
-      pubSubClient.publish("test", "hello world");
-      // ... and resubscribe.  重新订阅话题
-      pubSubClient.subscribe("test");
+    if (wifiClientSecure) {
+      ESP_LOGD(TAG, "Deleting wifClientSecure");
+      delete wifiClientSecure;
+    }
+    wifiClientSecure = new WiFiClientSecure;
+    if (wifiClientSecure) {
+      ESP_LOGD(TAG, "Created new wifiClientSecure");
+
+      wifiClientSecure->setCACert((char *)root_ca_pem_start);
+
+      pubSubClient.setClient(*wifiClientSecure);
+
+      // Create a random client ID.  创建一个随机的客户端ID
+      char clientId[21];
+      snprintf(clientId, sizeof(clientId), "eui-%s", StartNetwork.eui64());
+      if (pubSubClient.connect(clientId, mqttUser, mqttPassword)) {
+        DemoConsole.printf("\nSuccess\n");
+        // Once connected, publish an announcement to the topic.  一旦连接，发送一条消息至指定话题
+        pubSubClient.publish("test", "{\"m\"=\"client_connected\"}");
+        // ... and resubscribe.  重新订阅话题
+        pubSubClient.subscribe("test");
+      } else {
+        DemoConsole.print("failed, rc=");
+        DemoConsole.printf("%d", pubSubClient.state());
+        DemoConsole.print(", con=");
+        DemoConsole.printf("%d", pubSubClient.connected());
+        DemoConsole.print("\n");
+      }
     } else {
-      DemoConsole.print("failed, rc=");
-      DemoConsole.printf("%d", pubSubClient.state());
-      DemoConsole.print(", con=");
-      DemoConsole.printf("%d", pubSubClient.connected());
-      DemoConsole.print("\n");
+      DemoConsole.print("Unable to create client\n");
     }
   }
-}
-
-// 01:34:67:9a:cd:f0
-// 0<3>3467 fffe 9acdf0
-String macToEui64(String mac) {
-  byte n = (mac[1] < '9') ? mac[1] - '0' : mac[1] - '7';
-  n = n ^ 2;
-
-  return mac.substring(0,1) + "2" + mac.substring(3,2) + mac.substring(6,2)
-    + "fffe" + mac.substring(9,2) + mac.substring(12,2) + mac.substring(15,2);
 }
 
 void wifiConnectedLoop(){
@@ -91,8 +95,7 @@ void wifiConnectedLoop(){
     if (nowMilliseconds > nextMessageMilliseconds) {
       nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
       ++value;
-      String eui64 = macToEui64(WiFi.macAddress());
-      snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate, eui64.c_str(), value);
+      snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate, StartNetwork.eui64(), value);
       DemoConsole.print("Publish:");
       DemoConsole.print(message);
       DemoConsole.print("\n");
@@ -107,8 +110,6 @@ void setup() {
   ESP_LOGI(TAG, "** Setup **");
 
   DemoConsole.begin();
-
-  wifiClientSecure->setCACert((char *)root_ca_pem_start);
 
   DemoConsole.printf("Connecting to %s", ssid);
   DemoConsole.print("\n");
