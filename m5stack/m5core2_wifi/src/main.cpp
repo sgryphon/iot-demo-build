@@ -185,13 +185,11 @@ void setup() {
   DemoConsole.print("\n");
 
   if (ssid=="") {
-    DemoConsole.print("SSID missing");
-    DemoConsole.print("\n");
+    DemoConsole.print("SSID missing\n");
     return;
   }
   if (password=="") {
-    M5.Lcd.print("Password missing");
-    M5.Lcd.print("\n");
+    DemoConsole.print("Password missing\n");
     return;
   }
 

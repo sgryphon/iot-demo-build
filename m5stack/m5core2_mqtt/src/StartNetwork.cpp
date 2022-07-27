@@ -1,11 +1,11 @@
 #include "StartNetwork.h"
+#include <M5Core2.h>
+#include <WiFi.h>
+#include "DemoConsole.h"
+#include "esp_log.h"
+static const char* TAG = "demo";
 
 #define START_NETWORK_MD5_LCD 1
-//#ifdef START_NETWORK_MD5_LCD
-#include <M5Core2.h>
-//#endif
-
-#include <WiFi.h>
 
 static const char* _ssid = NULL;
 static const char* _password = NULL;
@@ -20,29 +20,23 @@ esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
 
 void wifiOnConnect(){
 #ifdef START_NETWORK_MD5_LCD
-  M5.Lcd.print("STA Connected");
-  M5.Lcd.print("          \n");
-  M5.Lcd.print("STA IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("          \n");
+  DemoConsole.print("STA Connected\n");
+  DemoConsole.print("STA IPv4: ");
+  DemoConsole.print(WiFi.localIP());
+  DemoConsole.print("\n");
 #endif
-/*
-  Serial.println("STA Connected");
-  Serial.print("STA IPv4: ");
-  Serial.println(WiFi.localIP());
-    */
-    //ntpClient.begin(2390);
+  ESP_LOGI(TAG, "StartNetwork wifiOnConnect: IPv4 %s", WiFi.localIP().toString().c_str());
+
+  //ntpClient.begin(2390);
 }
 
 void wifiOnDisconnect(){
+  ESP_LOGI(TAG, "StartNetwork wifiOnDisconnect: waiting 1000ms then reconnect");
 #ifdef START_NETWORK_MD5_LCD
-  M5.Lcd.print("STA Disconnected");
-  M5.Lcd.print("          \n");
+  DemoConsole.print("STA Disconnected\n");
 #endif
-  //Serial.println("STA Disconnected");
   delay(1000);
   WiFi.begin(_ssid, _password);
-  //WiFi.begin(STA_SSID, STA_PASS);
 }
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
@@ -61,32 +55,29 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             //enable sta ipv6 here
             // NOTE: Need a short delay (e.g. printing a message, or explicit delay)
+            ESP_LOGD(TAG, "WIFI_STA_CONNECTED: enabling IPv6");
             delay(100);
             WiFi.enableIpV6();
-//            M5.Lcd.print("STA_CONNECTED, enable IPv6");
 #ifdef START_NETWORK_MD5_LCD
-            M5.Lcd.print("STA_CONNECTED, ** enable IPv6 **");
-            M5.Lcd.print("          \n");
+            DemoConsole.print("STA_CONNECTED, ** enable IPv6 **\n");
 #endif
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-            //Serial.print("STA IPv6: ");
-            //Serial.println(WiFi.localIPv6());
-//            M5.Lcd.printf(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+            //char ipv6[40];
+            //snprintf(ipv6, sizeof(ipv6), IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+            ESP_LOGD(TAG, "WIFI STA_GOT_IP6: " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
 #ifdef START_NETWORK_MD5_LCD
-            M5.Lcd.print("STA IPv6: ");
-            M5.Lcd.printf(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+            DemoConsole.print("STA IPv6: ");
+            DemoConsole.printf(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
             //M5.Lcd.print(WiFi.localIPv6());
-            M5.Lcd.print("          \n");
+            DemoConsole.print("\n");
 #endif
             break;
         case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
-            //Serial.print("AP IPv6: ");
-            //Serial.println(WiFi.softAPIPv6());
 #ifdef START_NETWORK_MD5_LCD
-            M5.Lcd.print("AP IPv6: ");
-            M5.Lcd.print(WiFi.softAPIPv6());
-            M5.Lcd.print("          \n");
+            DemoConsole.print("AP IPv6: ");
+            DemoConsole.print(WiFi.softAPIPv6());
+            DemoConsole.print("\n");
 #endif
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:

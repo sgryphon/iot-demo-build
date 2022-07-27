@@ -4,8 +4,12 @@
 //#include <WiFiMulti.h>
 #include <PubSubClient.h>
 
+#include "DemoConsole.h"
 #include "StartNetwork.h"
 #include "config.h"
+
+#include "esp_log.h"
+static const char* TAG = "demo";
 
 static const char* ssid = WIFI_SSID;
 static const char* password = WIFI_PASSWORD;
@@ -19,7 +23,7 @@ static const char* mqttPassword = MQTT_PASSWORD;
 
 unsigned long nextMessageMilliseconds = 0;
 char message[MESSAGE_BUFFER_SIZE];
-static const char* messageTemplate = "[{\"t\":%d,\"n\":\"urn:dev:mac:%s\",\"u\":\"Cel\",\"v\":%d}]";
+static const char* messageTemplate = "[{\"n\":\"urn:dev:mac:%s\",\"u\":\"Cel\",\"v\":%d}]";
 int value;
 
 WiFiClient espClient;
@@ -29,34 +33,34 @@ RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  M5.Lcd.print("Message arrived [");
-  M5.Lcd.print(topic);
-  M5.Lcd.print("] ");
+  DemoConsole.print("Message arrived [");
+  DemoConsole.print(topic);
+  DemoConsole.print("] ");
   for (int i = 0; i < length; i++) {
-    M5.Lcd.print((char)payload[i]);
+    DemoConsole.printf("%c", payload[i]);
   }
-  M5.Lcd.println();
+  DemoConsole.print("\n");
 }
 
 void reConnect() {
   if (!client.connected()) {
-    M5.Lcd.print("Attempting MQTT connection...");
+    DemoConsole.print("Attempting MQTT connection...");
     // Create a random client ID.  创建一个随机的客户端ID
     String clientId = "M5Stack-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect.  尝试重新连接
     if (client.connect(clientId.c_str(), mqttUser, mqttPassword)) {
-      M5.Lcd.printf("\nSuccess\n");
+      DemoConsole.printf("\nSuccess\n");
       // Once connected, publish an announcement to the topic.  一旦连接，发送一条消息至指定话题
       client.publish("M5Stack", "hello world");
       // ... and resubscribe.  重新订阅话题
       client.subscribe("M5Stack");
     } else {
-      M5.Lcd.print("failed, rc=");
-      M5.Lcd.print(client.state());
-      M5.Lcd.print(", con=");
-      M5.Lcd.print(client.connected());
-      M5.Lcd.print("\n");
+      DemoConsole.print("failed, rc=");
+      DemoConsole.printf("%d", client.state());
+      DemoConsole.print(", con=");
+      DemoConsole.printf("%d", client.connected());
+      DemoConsole.print("\n");
     }
   }
 }
@@ -68,35 +72,6 @@ String macToEui64(String mac) {
   n = n ^ 2;  
   return mac.substring(0,1) + "2" + mac.substring(3,2) + mac.substring(6,2)
     + "fffe" + mac.substring(9,2) + mac.substring(12,2) + mac.substring(15,2);
-}
-
-void printWiFi() {
-  M5.Rtc.GetDate(&rtcDateNow);
-  M5.Rtc.GetTime(&rtcTimeNow);
-
-  M5.Lcd.setCursor(0, 0);
-
-  M5.Lcd.printf("Clock %04d-%02d-%02d %02d:%02d:%02d",
-    rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date,
-    rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
-  M5.Lcd.print("\n");
-
-  M5.Lcd.printf("WiFi MAC: ");
-  M5.Lcd.printf(WiFi.macAddress().c_str());
-  M5.Lcd.printf(" Status: %3d", WiFi.status());
-  M5.Lcd.print("\n");
-
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(StartNetwork.globalIPv6());
-  M5.Lcd.print("\n");
-
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-
-  int16_t x = M5.Lcd.getCursorX();
-  int16_t y = M5.Lcd.getCursorY();
-  M5.Lcd.fillRect(x, y, 320 - x, 240 - y, 0);
 }
 
 void wifiConnectedLoop(){
@@ -112,10 +87,10 @@ void wifiConnectedLoop(){
       nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
       ++value;
       String eui64 = macToEui64(WiFi.macAddress());
-      snprintf(message, MESSAGE_BUFFER_SIZE, "[{\"t\":%d,\"n\":\"urn:dev:ow:%s\",\"u\":\"Cel\",\"v\":%d}]", nowMilliseconds, eui64.c_str(), value);
-      M5.Lcd.print("Publish");
-      M5.Lcd.print(message);
-      M5.Lcd.print("\n");
+      snprintf(message, MESSAGE_BUFFER_SIZE, messageTemplate, eui64.c_str(), value);
+      DemoConsole.print("Publish:");
+      DemoConsole.print(message);
+      DemoConsole.print("\n");
       client.publish("M5Stack", message);
     }
   }
@@ -123,25 +98,22 @@ void wifiConnectedLoop(){
 
 void setup() {
   M5.begin();
+  Serial.begin(115200);
+  ESP_LOGI(TAG, "** Setup **");
 
-  printWiFi();
+  DemoConsole.begin();
 
-  M5.Lcd.printf("Connecting to %s", ssid);
-  M5.Lcd.print("\n");
+  DemoConsole.printf("Connecting to %s", ssid);
+  DemoConsole.print("\n");
 
   if (ssid=="") {
-    M5.Lcd.print("SSID missing");
-    M5.Lcd.print("\n");
+    DemoConsole.print("SSID missing\n");
     return;
   }
   if (password=="") {
-    M5.Lcd.print("Password missing");
-    M5.Lcd.print("\n");
+    DemoConsole.print("Password missing\n");
     return;
   }
-
-  Serial.begin(115200);
-  Serial.println("STA Connecting");
 
   StartNetwork.begin(ssid, password);
 
@@ -154,14 +126,13 @@ void setup() {
 }
 
 void loop() {
+  ESP_LOGD(TAG, "** Loop %d **", millis());
+
   M5.update();
+  DemoConsole.loop();
 
   if(StartNetwork.wifiConnected()){
     wifiConnectedLoop();
-  }
-
-  if (M5.Lcd.getCursorY() > 220) {
-    printWiFi();
   }
 
   delay(1000);
