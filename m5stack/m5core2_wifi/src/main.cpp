@@ -4,10 +4,11 @@
 //#include <WiFiMulti.h>
 #include <HTTPClient.h>
 
-#include "esp_log.h"
+#include "DemoConsole.h"
 #include "StartNetwork.h"
 #include "wifi_config.h"
 
+#include "esp_log.h"
 static const char* TAG = "demo";
 
 static const char* ssid = WIFI_SSID;
@@ -16,8 +17,6 @@ static const char* password = WIFI_PASSWORD;
 #define SEND_INTERVAL_MS (10000)
 unsigned long nextMessageMilliseconds = 0;
 HTTPClient http;
-
-#define HEADER_HEIGHT (16)
 
 // https://docs.platformio.org/en/latest/platforms/espressif32.html#embedding-binary-data
 // https://techtutorialsx.com/2017/11/18/esp32-arduino-https-get-request/
@@ -61,51 +60,9 @@ const char* root_ca= \
 "jjxDah2nGN59PRbxYvnKkKj9\n" \
 "-----END CERTIFICATE-----\n";
 
-void printHeader() {
-  // Time = 8, IPv6 = 39
-  // Date = 10, MAC = 17, WiFi 3, IPv4 = 15
-  uint16_t headerColor;
-  String ipv6 = StartNetwork.globalIPv6().toString();
-  if (StartNetwork.wifiConnected()) {
-    if (ipv6 != "0000:0000:0000:0000:0000:0000:0000:0000") {
-      headerColor = DARKGREEN;
-    } else {
-      headerColor = BLUE;
-    }
-  } else {
-    headerColor = ORANGE;
-  }
-  RTC_DateTypeDef rtcDateNow;
-  RTC_TimeTypeDef rtcTimeNow;
-  M5.Rtc.GetDate(&rtcDateNow);
-  M5.Rtc.GetTime(&rtcTimeNow);
-  int x = M5.Lcd.getCursorX();
-  int y = M5.Lcd.getCursorY();
-  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);
-  M5.Lcd.setTextColor(WHITE, headerColor);
-  // Time
-  M5.Lcd.setCursor(0, 0);
-  M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
-  // Date
-  M5.Lcd.setCursor(0, 8);
-  M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date);
-  // IPv6
-  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
-  //M5.Lcd.setCursor((53-39)*6, 0);
-  M5.Lcd.print(ipv6);
-  // MAC & WiFi Status
-  M5.Lcd.setCursor((53-39)*6, 8);
-  M5.Lcd.printf("%s (%3d)", WiFi.macAddress().c_str(), WiFi.status());
-  // IPv4
-  String ipv4 = WiFi.localIP().toString();
-  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv4), 8); 
-  M5.Lcd.print(ipv4.c_str());
-
-  M5.Lcd.setCursor(x, y);
-  M5.Lcd.setTextColor(WHITE, BLACK);
-}
-
 void printWiFi() {
+  ESP_LOGD(TAG, "printWiFi");
+
   M5.Lcd.print("IPv6: ");
   M5.Lcd.print(WiFi.localIPv6());
   M5.Lcd.print("\n");
@@ -135,8 +92,9 @@ void wifiConnectedLoop() {
     nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
 
     int httpCode;
+
+    DemoConsole.printf("%d\n", nowMilliseconds);
 /*
-    M5.Lcd.println(nowMilliseconds);
     M5.Lcd.print("v6: begin");
     http.begin("http://v6.ipv6-test.com/api/myip.php");
     M5.Lcd.print(",GET");
@@ -159,9 +117,9 @@ export PIO_MQTT_PASSWORD=Pass@word1
     http.end();
 */
 
-    M5.Lcd.print("v4v6: begin");
+    DemoConsole.print("v4v6: begin");
     http.begin("http://v4v6.ipv6-test.com/api/myip.php");
-    M5.Lcd.print(",GET");
+    DemoConsole.print(",GET");
     httpCode = http.GET();
     M5.Lcd.printf(",%d", httpCode);
     if (httpCode > 0) {  // httpCode will be negative on error.
@@ -218,16 +176,17 @@ void setup() {
   Serial.begin(115200);
   ESP_LOGI(TAG, "** Setup **");
 
-  printHeader();
-  M5.Lcd.setCursor(0, HEADER_HEIGHT);
+  DemoConsole.begin();
   printWiFi();
 
-  M5.Lcd.printf("Connecting to %s", ssid);
-  M5.Lcd.print("\n");
+  ESP_LOGD(TAG, "First print");
+  DemoConsole.printf("Connecting to %s", ssid);
+  ESP_LOGD(TAG, "First linefeed");
+  DemoConsole.print("\n");
 
   if (ssid=="") {
-    M5.Lcd.print("SSID missing");
-    M5.Lcd.print("\n");
+    DemoConsole.print("SSID missing");
+    DemoConsole.print("\n");
     return;
   }
   if (password=="") {
@@ -235,7 +194,6 @@ void setup() {
     M5.Lcd.print("\n");
     return;
   }
-
 
   StartNetwork.begin(ssid, password);
   delay(1000);
@@ -246,12 +204,7 @@ void loop() {
   ESP_LOGI(TAG, "** Loop %d **", millis());
 
   M5.update();
-  printHeader();
-  if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
-    M5.Lcd.fillRect(0, HEADER_HEIGHT, 320, 240 - HEADER_HEIGHT, 0);
-    M5.Lcd.setCursor(0, HEADER_HEIGHT);
-    printWiFi();
-  }
+  DemoConsole.loop();
 
   if(StartNetwork.wifiConnected()){
     wifiConnectedLoop();

@@ -173,6 +173,7 @@ The details are in the source code: https://github.com/espressif/arduino-esp32/b
 
 For more about ESP32 logging (mostly not used), see: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
 
+Also of relevance: https://cpp4arduino.com/2020/02/07/how-to-format-strings-without-the-string-class.html
 
 ### Wifi
 
