@@ -209,6 +209,23 @@ export PIO_MQTT_PASSWORD=YourMQTTPassword
 pio run --target upload
 ```
 
+You can see connection attempts by logging into the Mosquitto server and following the log:
+
+```
+ssh iotadmin@mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com
+...
+sudo tail -f /var/log/mosquitto/mosquitto.log
+```
+
+You can also run a client to receive (or send messages):
+
+```
+export MQTT_PASSWORD=YourSecretPassword
+mosquitto_sub -h mqtt-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
+...
+mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m 'Hello World' -p 8883 -u mqttuser -P $MQTT_PASSWORD
+```
+
 * PubSubClient, https://github.com/knolleary/pubsubclient
 * Bundle PubSubClient & WiFi, https://github.com/plapointe6/EspMQTTClient
 * Alernative MQTT https://github.com/256dpi/arduino-mqtt

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <M5Core2.h>
-#include <WiFi.h>
+//#include <WiFi.h>
+#include <WiFiClientSecure.h>
 //#include <WiFiMulti.h>
 #include <PubSubClient.h>
 
@@ -18,6 +19,9 @@ static const int mqttPort = MQTT_PORT;
 static const char* mqttUser = MQTT_USER;
 static const char* mqttPassword = MQTT_PASSWORD;
 
+extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_ISRG_Root_X1_pem_start");
+extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_ISRG_Root_X1_pem_end");
+
 #define MESSAGE_BUFFER_SIZE (100)
 #define SEND_INTERVAL_MS (5000)
 
@@ -26,8 +30,9 @@ char message[MESSAGE_BUFFER_SIZE];
 static const char* messageTemplate = "[{\"n\":\"urn:dev:mac:%s\",\"u\":\"Cel\",\"v\":%d}]";
 int value;
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+WiFiClientSecure *wifiClientSecure = new WiFiClientSecure;
+
+PubSubClient pubSubClient(*wifiClientSecure);
 
 RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
@@ -43,23 +48,22 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void reConnect() {
-  if (!client.connected()) {
+  if (!pubSubClient.connected()) {
     DemoConsole.print("Attempting MQTT connection...");
     // Create a random client ID.  创建一个随机的客户端ID
     String clientId = "M5Stack-";
     clientId += String(random(0xffff), HEX);
-    // Attempt to connect.  尝试重新连接
-    if (client.connect(clientId.c_str(), mqttUser, mqttPassword)) {
+    if (pubSubClient.connect(clientId.c_str(), mqttUser, mqttPassword)) {
       DemoConsole.printf("\nSuccess\n");
       // Once connected, publish an announcement to the topic.  一旦连接，发送一条消息至指定话题
-      client.publish("M5Stack", "hello world");
+      pubSubClient.publish("test", "hello world");
       // ... and resubscribe.  重新订阅话题
-      client.subscribe("M5Stack");
+      pubSubClient.subscribe("test");
     } else {
       DemoConsole.print("failed, rc=");
-      DemoConsole.printf("%d", client.state());
+      DemoConsole.printf("%d", pubSubClient.state());
       DemoConsole.print(", con=");
-      DemoConsole.printf("%d", client.connected());
+      DemoConsole.printf("%d", pubSubClient.connected());
       DemoConsole.print("\n");
     }
   }
@@ -69,18 +73,19 @@ void reConnect() {
 // 0<3>3467 fffe 9acdf0
 String macToEui64(String mac) {
   byte n = (mac[1] < '9') ? mac[1] - '0' : mac[1] - '7';
-  n = n ^ 2;  
+  n = n ^ 2;
+
   return mac.substring(0,1) + "2" + mac.substring(3,2) + mac.substring(6,2)
     + "fffe" + mac.substring(9,2) + mac.substring(12,2) + mac.substring(15,2);
 }
 
 void wifiConnectedLoop(){
-  if (!client.connected()) {
+  if (!pubSubClient.connected()) {
     reConnect();
   }
   delay(100);
-  if (client.connected()) {
-    client.loop();
+  if (pubSubClient.connected()) {
+    pubSubClient.loop();
 
     unsigned long nowMilliseconds = millis();
     if (nowMilliseconds > nextMessageMilliseconds) {
@@ -91,7 +96,7 @@ void wifiConnectedLoop(){
       DemoConsole.print("Publish:");
       DemoConsole.print(message);
       DemoConsole.print("\n");
-      client.publish("M5Stack", message);
+      pubSubClient.publish("test", message);
     }
   }
 }
@@ -102,6 +107,8 @@ void setup() {
   ESP_LOGI(TAG, "** Setup **");
 
   DemoConsole.begin();
+
+  wifiClientSecure->setCACert((char *)root_ca_pem_start);
 
   DemoConsole.printf("Connecting to %s", ssid);
   DemoConsole.print("\n");
@@ -117,10 +124,10 @@ void setup() {
 
   StartNetwork.begin(ssid, password);
 
-  client.setServer(mqttServer, mqttPort);
+  pubSubClient.setServer(mqttServer, mqttPort);
   //IPAddress mqttIp = IPAddress(20,213,94,9);
   //client.setServer(mqttIp, mqttPort);
-  client.setCallback(callback); 
+  pubSubClient.setCallback(callback); 
 
   delay(1000);
 }
