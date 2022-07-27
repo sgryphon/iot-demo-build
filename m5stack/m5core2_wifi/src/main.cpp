@@ -63,27 +63,27 @@ const char* root_ca= \
 void printWiFi() {
   ESP_LOGD(TAG, "printWiFi");
 
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(WiFi.localIPv6());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("IPv6: ");
-  M5.Lcd.print(StartNetwork.globalIPv6());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("DNS: ");
-  M5.Lcd.print(StartNetwork.mainDnsIP());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("\n");
+  DemoConsole.print("IPv6: ");
+  DemoConsole.print(WiFi.localIPv6());
+  DemoConsole.print("\n");
+  DemoConsole.print("IPv6: ");
+  DemoConsole.print(StartNetwork.globalIPv6());
+  DemoConsole.print("\n");
+  DemoConsole.print("DNS: ");
+  DemoConsole.print(StartNetwork.mainDnsIP());
+  DemoConsole.print("\n");
+  DemoConsole.print("\n");
 
-  M5.Lcd.print("IPv4: ");
-  M5.Lcd.print(WiFi.localIP());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("DNS: ");
-  M5.Lcd.print(WiFi.dnsIP(0));
-  M5.Lcd.print("\n");
-  M5.Lcd.print("Gateway: ");
-  M5.Lcd.print(WiFi.gatewayIP());
-  M5.Lcd.print("\n");
-  M5.Lcd.print("\n");
+  DemoConsole.print("IPv4: ");
+  DemoConsole.print(WiFi.localIP());
+  DemoConsole.print("\n");
+  DemoConsole.print("DNS: ");
+  DemoConsole.print(WiFi.dnsIP(0));
+  DemoConsole.print("\n");
+  DemoConsole.print("Gateway: ");
+  DemoConsole.print(WiFi.gatewayIP());
+  DemoConsole.print("\n");
+  DemoConsole.print("\n");
 }
 
 void wifiConnectedLoop() {
@@ -121,17 +121,17 @@ export PIO_MQTT_PASSWORD=Pass@word1
     http.begin("http://v4v6.ipv6-test.com/api/myip.php");
     DemoConsole.print(",GET");
     httpCode = http.GET();
-    M5.Lcd.printf(",%d", httpCode);
+    DemoConsole.printf(",%d", httpCode);
     if (httpCode > 0) {  // httpCode will be negative on error.
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
-        M5.Lcd.print(",");
-        M5.Lcd.print(payload);
+        DemoConsole.print(",");
+        DemoConsole.print(payload);
       }
     } else {
-      M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+      DemoConsole.printf(",ERROR %s", http.errorToString(httpCode).c_str());
     }
-    M5.Lcd.print("\n");
+    DemoConsole.print("\n");
     http.end();
 
     // https://github.com/espressif/arduino-esp32/blob/master/libraries/HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino
@@ -143,30 +143,30 @@ export PIO_MQTT_PASSWORD=Pass@word1
       //client->setCACert(root_ca);
       {
         HTTPClient http;
-        M5.Lcd.print("begin");
+        DemoConsole.print("begin");
         if (http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php")) {
-          M5.Lcd.print(",GET");
+          DemoConsole.print(",GET");
           httpCode = http.GET();
-          M5.Lcd.printf(",%d", httpCode);
+          DemoConsole.printf(",%d", httpCode);
           if (httpCode > 0) {
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
               String payload = http.getString();
-              M5.Lcd.print(",");
-              M5.Lcd.print(payload);
+              DemoConsole.print(",");
+              DemoConsole.print(payload);
             }
+            DemoConsole.print("\n");
           } else {
-            M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+            DemoConsole.printf(",ERROR %s\n", http.errorToString(httpCode).c_str());
           }
 
           http.end();
         } else {
-          M5.Lcd.print("Unable to connect");
+          DemoConsole.print("Unable to connect\n");
         }
-        M5.Lcd.print("\n");
       }
       delete client;
     } else {
-          M5.Lcd.print("Unable to create client\n");
+          DemoConsole.print("Unable to create client\n");
     }
   } 
 }
@@ -200,8 +200,8 @@ void setup() {
 }
 
 void loop() {
-  //ESP_LOGD(TAG, "** Loop **");
-  ESP_LOGI(TAG, "** Loop %d **", millis());
+  ESP_LOGD(TAG, "** Loop %d **", millis());
+  //ESP_LOGI(TAG, "** Loop %d **", millis());
 
   M5.update();
   DemoConsole.loop();

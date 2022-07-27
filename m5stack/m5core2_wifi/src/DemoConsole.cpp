@@ -7,6 +7,13 @@ static const char* TAG = "demo";
 
 #define HEADER_HEIGHT (16)
 
+void checkPage() {
+  if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
+    M5.Lcd.fillRect(0, HEADER_HEIGHT, 320, 240 - HEADER_HEIGHT, 0);
+    M5.Lcd.setCursor(0, HEADER_HEIGHT);
+  }
+}
+
 void printHeader() {
   // Time = 8, IPv6 = 39
   // Date = 10, MAC = 17, WiFi 3, IPv4 = 15
@@ -52,50 +59,47 @@ void printHeader() {
 }
 
 void DemoConsoleClass::begin() {
-  ESP_LOGD(TAG, "printWiFi");
+  ESP_LOGD(TAG, "DemoConsole::begin");
   printHeader();
   M5.Lcd.setCursor(0, HEADER_HEIGHT);
 }
 
 void DemoConsoleClass::loop() {
   printHeader();
-
-  if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
-    M5.Lcd.fillRect(0, HEADER_HEIGHT, 320, 240 - HEADER_HEIGHT, 0);
-    M5.Lcd.setCursor(0, HEADER_HEIGHT);
-  }
 }
 
 size_t DemoConsoleClass::printf(const char * format, ...) {
-    char loc_buf[64];
-    char * temp = loc_buf;
-    va_list arg;
-    va_list copy;
-    va_start(arg, format);
-    va_copy(copy, arg);
-    int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
-    va_end(copy);
-    if(len < 0) {
-        va_end(arg);
-        return 0;
-    };
-    if(len >= sizeof(loc_buf)){
-        temp = (char*) malloc(len+1);
-        if(temp == NULL) {
-            va_end(arg);
-            return 0;
-        }
-        len = vsnprintf(temp, len+1, format, arg);
-    }
+  char loc_buf[64];
+  char * temp = loc_buf;
+  va_list arg;
+  va_list copy;
+  va_start(arg, format);
+  va_copy(copy, arg);
+  int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
+  va_end(copy);
+  if(len < 0) {
     va_end(arg);
-    
-    //len = write((uint8_t*)temp, len);
-    M5.Lcd.print(temp);
-    
-    if(temp != loc_buf){
-        free(temp);
+    return 0;
+  };
+  if(len >= sizeof(loc_buf)){
+    temp = (char*) malloc(len+1);
+    if(temp == NULL) {
+      va_end(arg);
+      return 0;
     }
-    return len;
+    len = vsnprintf(temp, len+1, format, arg);
+  }
+  va_end(arg);
+  
+  //len = write((uint8_t*)temp, len);
+  checkPage();
+  M5.Lcd.print(temp);
+  Serial.print(temp);
+  
+  if(temp != loc_buf){
+    free(temp);
+  }
+  return len;
 }
 
 //size_t DemoConsoleClass::printf_P(PGM_P format, ...) __attribute__((format(printf, 2, 3))) {
@@ -103,15 +107,21 @@ size_t DemoConsoleClass::printf(const char * format, ...) {
 //}
 
 size_t DemoConsoleClass::print(const __FlashStringHelper *ifsh) {
-    return M5.Lcd.print(ifsh);
+  checkPage();
+  M5.Lcd.print(ifsh);
+  return Serial.print(ifsh);
 }
 
 size_t DemoConsoleClass::print(const String &s) {
-    return M5.Lcd.print(s);
+  checkPage();
+  M5.Lcd.print(s);
+  return Serial.print(s);
 }
 
 size_t DemoConsoleClass::print(const Printable& x) {
-    return M5.Lcd.print(x);
+  checkPage();
+  M5.Lcd.print(x);
+  return Serial.print(x);
 }
 
 DemoConsoleClass DemoConsole;
