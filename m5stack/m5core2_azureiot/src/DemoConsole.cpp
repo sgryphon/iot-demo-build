@@ -28,10 +28,10 @@ void printHeader() {
   } else {
     headerColor = ORANGE;
   }
-  RTC_DateTypeDef rtcDateNow;
   RTC_TimeTypeDef rtcTimeNow;
-  M5.Rtc.GetDate(&rtcDateNow);
+  RTC_DateTypeDef rtcDateNow;
   M5.Rtc.GetTime(&rtcTimeNow);
+  M5.Rtc.GetDate(&rtcDateNow);
   int x = M5.Lcd.getCursorX();
   int y = M5.Lcd.getCursorY();
   M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);

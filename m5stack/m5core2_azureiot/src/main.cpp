@@ -82,7 +82,6 @@ static const char* password = WIFI_PASSWORD;
 #define STR(A) ST(A)
 
 static const char* host = STR(IOT_CONFIG_IOTHUB_FQDN);
-//static const char* mqtt_broker_uri = "mqtts://" STR(IOT_CONFIG_IOTHUB_FQDN);
 static const char* config_device_id = STR(IOT_CONFIG_DEVICE_ID);
 static char device_id[128];
 
@@ -128,7 +127,6 @@ static void connectToWiFi()
 
   StartNetwork.begin(ssid, password);
 
-  //while (WiFi.status() != WL_CONNECTED)
   while (!StartNetwork.wifiConnected())
   {
     delay(500);
@@ -141,8 +139,26 @@ static void connectToWiFi()
 
 static void initializeTime()
 {
-  DemoConsole.print("Setting time using SNTP\n");
+  DemoConsole.print("Setting time using RTC\n");
+  RTC_TimeTypeDef rtc_time;
+  RTC_DateTypeDef rtc_date;
+  // Read date after time to ensure consistency (reading time locks values until date is read) 
+  M5.Rtc.GetTime(&rtc_time);
+  M5.Rtc.GetDate(&rtc_date);
 
+  struct tm time_info = { 0 };
+  time_info.tm_year = rtc_date.Year - 1900;
+  time_info.tm_mon = rtc_date.Month - 1;
+  time_info.tm_mday = rtc_date.Date;
+  time_info.tm_hour = rtc_time.Hours;
+  time_info.tm_min = rtc_time.Minutes;
+  time_info.tm_sec = rtc_time.Seconds;
+  struct timespec time_spec = { 0 };
+  time_spec.tv_sec = mktime(&time_info);
+  clock_settime(CLOCK_REALTIME, &time_spec);
+
+/*
+  DemoConsole.print("Setting time using SNTP\n");
   configTime(GMT_OFFSET_SECS, GMT_OFFSET_SECS_DST, NTP_SERVERS);
   time_t now = time(NULL);
   while (now < UNIX_TIME_NOV_13_2017)
@@ -152,23 +168,10 @@ static void initializeTime()
     DemoConsole.print(".");
     now = time(nullptr);
   }
-  DemoConsole.print("\n");
-  DemoConsole.printf("Time initialized! %d\n", now);
-}
-
-/*
-void receivedCallback(char* topic, byte* payload, unsigned int length)
-{
-  DemoConsole.print("Received [");
-  DemoConsole.print(topic);
-  DemoConsole.print("]: ");
-  for (int i = 0; i < length; i++)
-  {
-    DemoConsole.printf("%c", (char)payload[i]);
-  }
-  DemoConsole.print("\n");
-}
 */
+
+  DemoConsole.printf("Time initialized %d (%s)\n", time_spec.tv_sec, asctime(&time_info));
+}
 
 void pubSubClientCallback(char* topic, byte* payload, unsigned int length) {
   DemoConsole.printf("Topic: %s\n", topic);
@@ -180,72 +183,6 @@ void pubSubClientCallback(char* topic, byte* payload, unsigned int length) {
   incoming_data[i] = '\0';
   DemoConsole.printf("Data: %s\n", incoming_data);
 }
-
-/*
-static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
-{
-  switch (event->event_id)
-  {
-    int i, r;
-
-    case MQTT_EVENT_ERROR:
-      DemoConsole.print("MQTT event MQTT_EVENT_ERROR\n");
-      break;
-    case MQTT_EVENT_CONNECTED:
-      DemoConsole.print("MQTT event MQTT_EVENT_CONNECTED\n");
-
-      r = esp_mqtt_client_subscribe(mqtt_client, AZ_IOT_HUB_CLIENT_C2D_SUBSCRIBE_TOPIC, 1);
-      if (r == -1)
-      {
-        DemoConsole.print("ERROR: Could not subscribe for cloud-to-device messages.\n");
-      }
-      else
-      {
-        DemoConsole.printf("Subscribed for cloud-to-device messages; message id: %d\n", r);
-      }
-
-      break;
-    case MQTT_EVENT_DISCONNECTED:
-      DemoConsole.print("MQTT event MQTT_EVENT_DISCONNECTED\n");
-      break;
-    case MQTT_EVENT_SUBSCRIBED:
-      DemoConsole.print("MQTT event MQTT_EVENT_SUBSCRIBED\n");
-      break;
-    case MQTT_EVENT_UNSUBSCRIBED:
-      DemoConsole.print("MQTT event MQTT_EVENT_UNSUBSCRIBED\n");
-      break;
-    case MQTT_EVENT_PUBLISHED:
-      DemoConsole.print("MQTT event MQTT_EVENT_PUBLISHED\n");
-      break;
-    case MQTT_EVENT_DATA:
-      DemoConsole.print("MQTT event MQTT_EVENT_DATA\n");
-
-      for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->topic_len; i++)
-      {
-        incoming_data[i] = event->topic[i]; 
-      }
-      incoming_data[i] = '\0';
-      DemoConsole.printf("Topic: %s\n", incoming_data);
-      
-      for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->data_len; i++)
-      {
-        incoming_data[i] = event->data[i]; 
-      }
-      incoming_data[i] = '\0';
-      DemoConsole.printf("Data: %s\n", incoming_data);
-
-      break;
-    case MQTT_EVENT_BEFORE_CONNECT:
-      DemoConsole.print("MQTT event MQTT_EVENT_BEFORE_CONNECT\n");
-      break;
-    default:
-      DemoConsole.print("ERROR: MQTT event UNKNOWN\n");
-      break;
-  }
-
-  return ESP_OK;
-}
-*/
 
 static void initializeIoTHubClient()
 {
@@ -296,28 +233,11 @@ static int initializeMqttClient() {
     #ifndef IOT_CONFIG_USE_X509_CERT
     DemoConsole.print("Generating SAS token\n");
 
-    time_t now = time(NULL);
-    DemoConsole.printf("Time %d\n", now);
+    ESP_LOGD(TAG, "Time %d", time(NULL));
     RTC_TimeTypeDef rtcTimeNow;
     M5.Rtc.GetTime(&rtcTimeNow);
-    M5.Lcd.printf("%02d:%02d:%02d\n", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
-
-/*
-    AzIoTSasToken localSasToken(
-      &client,
-      AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY2),
-      AZ_SPAN_FROM_BUFFER(sas_signature_buffer),
-      AZ_SPAN_FROM_BUFFER(mqtt_password));
-
-    if (localSasToken.Generate(SAS_TOKEN_DURATION_IN_MINUTES) != 0)
-    {
-      DemoConsole.print("ERROR: Failed generating SAS token\n");
-      return 1;
-    }
-    const char* connect_password = (const char*)az_span_ptr(localSasToken.Get());
-    DemoConsole.printf("\n**Got SAS password: %s\n\n", connect_password);
-    delay(500);
-*/
+    ESP_LOGD(TAG, "%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+    
     #endif
 
     DemoConsole.print("Attempting MQTT connection...\n");
@@ -362,14 +282,12 @@ static int initializeMqttClient() {
       DemoConsole.printf("Client ID %s, User %s\n", mqtt_client_id, mqtt_username);
       if (pubSubClient.connect(mqtt_client_id, mqtt_username, connect_password)) {
         DemoConsole.print("MQTT connected\n");
-        /*
         bool subscribed = pubSubClient.subscribe(AZ_IOT_HUB_CLIENT_C2D_SUBSCRIBE_TOPIC, 1);
         if (subscribed) {
           DemoConsole.printf("Subscribed for cloud-to-device messages.\n");
         } else {
-          DemoConsole.print("ERROR: Could not subscribe for cloud-to-device messages.\n");
+          //DemoConsole.print("ERROR: Could not subscribe for cloud-to-device messages.\n");
         }
-        */
       } else {
         DemoConsole.print("failed, state=");
         DemoConsole.printf("%d", pubSubClient.state());
@@ -384,69 +302,6 @@ static int initializeMqttClient() {
     }
   }
 }
-
-/*
-static int initializeMqttClient()
-{
-  #ifndef IOT_CONFIG_USE_X509_CERT
-  DemoConsole.print("Generating SAS token\n");
-  if (sasToken.Generate(SAS_TOKEN_DURATION_IN_MINUTES) != 0)
-  {
-    DemoConsole.print("ERROR: Failed generating SAS token\n");
-    return 1;
-  }
-  #endif
-
-  esp_mqtt_client_config_t mqtt_config;
-  memset(&mqtt_config, 0, sizeof(mqtt_config));
-  mqtt_config.uri = mqtt_broker_uri;
-  mqtt_config.port = mqttPort;
-  mqtt_config.client_id = mqtt_client_id;
-  mqtt_config.username = mqtt_username;
-
-  #ifdef IOT_CONFIG_USE_X509_CERT
-    DemoConsole.print("MQTT client using X509 Certificate authentication\n");
-    mqtt_config.client_cert_pem = IOT_CONFIG_DEVICE_CERT;
-    mqtt_config.client_key_pem = IOT_CONFIG_DEVICE_CERT_PRIVATE_KEY;
-  #else // Using SAS key
-    DemoConsole.print("Setting password from SAS token\n");
-    mqtt_config.password = (const char*)az_span_ptr(sasToken.Get());
-    DemoConsole.printf("Got password: %s\n", mqtt_config.password);
-  #endif
-
-  mqtt_config.keepalive = 30;
-  mqtt_config.disable_clean_session = 0;
-  mqtt_config.disable_auto_reconnect = false;
-  mqtt_config.event_handle = mqtt_event_handler;
-  mqtt_config.user_context = NULL;
-  mqtt_config.cert_pem = (const char*)ca_pem;
-
-  DemoConsole.print("Init MQTT client\n");
-  mqtt_client = esp_mqtt_client_init(&mqtt_config);
-
-  if (mqtt_client == NULL)
-  {
-    DemoConsole.print("ERROR: Failed creating mqtt client\n");
-    return 1;
-  }
-
-  DemoConsole.print("Start MQTT client\n");
-  esp_err_t start_result = esp_mqtt_client_start(mqtt_client);
-
-  DemoConsole.printf("Start result %d\n", start_result);
-
-  if (start_result != ESP_OK)
-  {
-    DemoConsole.printf("ERROR: Could not start mqtt client; error code: %d\n", start_result);
-    return 1;
-  }
-  else
-  {
-    DemoConsole.print("MQTT client started\n");
-    return 0;
-  }
-}
-*/
 
 /*
  * @brief           Gets the number of seconds since UNIX epoch until now.
