@@ -1,9 +1,9 @@
-#include <M5Core2.h>
 #include "DemoConsole.h"
 #include "StartNetwork.h"
+#include <M5Core2.h>
 
 #include "esp_log.h"
-static const char* TAG = "demo";
+static const char *TAG = "demo";
 
 #define HEADER_HEIGHT (16)
 
@@ -38,20 +38,22 @@ void printHeader() {
   M5.Lcd.setTextColor(WHITE, headerColor);
   // Time
   M5.Lcd.setCursor(0, 0);
-  M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+  M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes,
+                rtcTimeNow.Seconds);
   // Date
   M5.Lcd.setCursor(0, 8);
-  M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date);
+  M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month,
+                rtcDateNow.Date);
   // IPv6
-  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
-  //M5.Lcd.setCursor((53-39)*6, 0);
+  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0);
+  // M5.Lcd.setCursor((53-39)*6, 0);
   M5.Lcd.print(ipv6);
   // MAC & WiFi Status
-  M5.Lcd.setCursor((53-39)*6, 8);
+  M5.Lcd.setCursor((53 - 39) * 6, 8);
   M5.Lcd.printf("%s (%3d)", WiFi.macAddress().c_str(), WiFi.status());
   // IPv4
   String ipv4 = WiFi.localIP().toString();
-  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv4), 8); 
+  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv4), 8);
   M5.Lcd.print(ipv4.c_str());
 
   M5.Lcd.setCursor(x, y);
@@ -64,47 +66,46 @@ void DemoConsoleClass::begin() {
   M5.Lcd.setCursor(0, HEADER_HEIGHT);
 }
 
-void DemoConsoleClass::loop() {
-  printHeader();
-}
+void DemoConsoleClass::loop() { printHeader(); }
 
-size_t DemoConsoleClass::printf(const char * format, ...) {
+size_t DemoConsoleClass::printf(const char *format, ...) {
   char loc_buf[64];
-  char * temp = loc_buf;
+  char *temp = loc_buf;
   va_list arg;
   va_list copy;
   va_start(arg, format);
   va_copy(copy, arg);
   int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
   va_end(copy);
-  if(len < 0) {
+  if (len < 0) {
     va_end(arg);
     return 0;
   };
-  if(len >= sizeof(loc_buf)){
-    temp = (char*) malloc(len+1);
-    if(temp == NULL) {
+  if (len >= sizeof(loc_buf)) {
+    temp = (char *)malloc(len + 1);
+    if (temp == NULL) {
       va_end(arg);
       return 0;
     }
-    len = vsnprintf(temp, len+1, format, arg);
+    len = vsnprintf(temp, len + 1, format, arg);
   }
   va_end(arg);
-  
-  //len = write((uint8_t*)temp, len);
+
+  // len = write((uint8_t*)temp, len);
   checkPage();
   M5.Lcd.print(temp);
   Serial.print(temp);
-  
-  if(temp != loc_buf){
+
+  if (temp != loc_buf) {
     free(temp);
   }
   return len;
 }
 
-//size_t DemoConsoleClass::printf_P(PGM_P format, ...) __attribute__((format(printf, 2, 3))) {
-//    M5.Lcd.printf()
-//}
+// size_t DemoConsoleClass::printf_P(PGM_P format, ...)
+// __attribute__((format(printf, 2, 3))) {
+//     M5.Lcd.printf()
+// }
 
 size_t DemoConsoleClass::print(const __FlashStringHelper *ifsh) {
   checkPage();
@@ -118,7 +119,7 @@ size_t DemoConsoleClass::print(const String &s) {
   return Serial.print(s);
 }
 
-size_t DemoConsoleClass::print(const Printable& x) {
+size_t DemoConsoleClass::print(const Printable &x) {
   checkPage();
   M5.Lcd.print(x);
   return Serial.print(x);
