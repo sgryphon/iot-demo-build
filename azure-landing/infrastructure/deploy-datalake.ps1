@@ -7,9 +7,9 @@
   This creates date lake resources in your Azure subscription.
 
   See:
-  * https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/cloud-scale-analytics/tutorials/tutorial-create-data-landing-zone
-  * https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/cloud-scale-analytics/architectures/data-landing-zone
   * https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/cloud-scale-analytics/best-practices/data-lake-zones 
+  * https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/cloud-scale-analytics/architectures/data-landing-zone
+  * https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/cloud-scale-analytics/tutorials/tutorial-create-data-landing-zone
 
   Running these scripts requires the following to be installed:
   * PowerShell, https://github.com/PowerShell/PowerShell
@@ -66,8 +66,8 @@ $rgName = "rg-storage-$Environment-001".ToLowerInvariant()
 # Landing zone templates have Azure Monitor (but not app insights), KeyVault, and a diagnostics storage account
 
 $stRawName = "straw$OrgId$($Environment)001".ToLowerInvariant()
-$stEnCurName = "stencur$OrgId$($Environment)001".ToLowerInvariant()
-$stWorkName = "stwork$OrgId$($Environment)001".ToLowerInvariant()
+$stEnrichedCuratedName = "stencur$OrgId$($Environment)001".ToLowerInvariant()
+$stWorkspaceName = "stwork$OrgId$($Environment)001".ToLowerInvariant()
 
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
@@ -87,7 +87,7 @@ $rg = az group create -g $rgName -l $location --tags $tags | ConvertFrom-Json
 #$rg = az group show --name $rgName | ConvertFrom-Json
 #$rgTags = $rg.tags | Get-Member -MemberType NoteProperty | ForEach-Object { "$($_.Name)=$($rg.tags.$($_.Name))" }
 
-Write-Verbose "Creating Raw storage account $stRawName"
+Write-Verbose "Creating Raw (landing, conformance) storage account $stRawName"
 
 az storage account create --name $stRawName `
   --sku Standard_LRS `
@@ -134,14 +134,42 @@ $lifecycleRules = @"
 }
 "@
 
-$lifecycleRules
-
 az storage account management-policy create --account-name $stRawName --policy ($lifecycleRules -replace '"', '""') -g $rgName
     
 az storage container create --name 'landing' --account-name $stRawName --auth-mode login
 az storage container create --name 'conformance' --account-name $stRawName --auth-mode login
 
 
+Write-Verbose "Creating Enriched and Curated storage account $stEnrichedCuratedName"
+
+az storage account create --name $stEnrichedCuratedName `
+  --sku Standard_LRS `
+  --allow-blob-public-access $false `
+  --enable-hierarchical-namespace `
+  --resource-group $rgName `
+  -l $rg.location `
+  --tags $tags
+
+az storage account management-policy create --account-name $stEnrichedCuratedName --policy ($lifecycleRules -replace '"', '""') -g $rgName
+  
+az storage container create --name 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
+az storage container create --name 'data-products' --account-name $stEnrichedCuratedName --auth-mode login
+
+
+Write-Verbose "Creating Enriched and Curated storage account $stWorkspaceName"
+
+az storage account create --name $stWorkspaceName `
+  --sku Standard_LRS `
+  --allow-blob-public-access $false `
+  --enable-hierarchical-namespace `
+  --resource-group $rgName `
+  -l $rg.location `
+  --tags $tags
+
+az storage account management-policy create --account-name $stWorkspaceName --policy ($lifecycleRules -replace '"', '""') -g $rgName
+  
+az storage container create --name 'analytics-sandbox' --account-name $stWorkspaceName --auth-mode login
+az storage container create --name 'synapse-primary-storage' --account-name $stWorkspaceName --auth-mode login
 
 # Output
 
