@@ -315,18 +315,42 @@ static void getTelemetryPayload(az_span payload, az_span *out_payload) {
   if (az_result_failed(rc))
     ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
   rc = az_json_writer_append_begin_object(&jw);
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
 
-  if (az_result_failed(rc))
-    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+  // rc = az_json_writer_append_property_name(&jw,
+  //                                         AZ_SPAN_LITERAL_FROM_STR("msgCount"));
+  // if (az_result_failed(rc))
+  //   ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+  // rc = az_json_writer_append_int32(&jw, ++telemetry_send_count);
+  // if (az_result_failed(rc))
+  //   ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+
+  float batteryVoltage = M5.Axp.GetBatVoltage();
+  float temperature = 0.0F;
+  M5.IMU.getTempData(&temperature);
+  ESP_LOGD(TAG, "voltage=%f temperature=%f",
+    batteryVoltage, temperature);
+
   rc = az_json_writer_append_property_name(&jw,
-                                          AZ_SPAN_LITERAL_FROM_STR("msgCount"));
+                                          AZ_SPAN_LITERAL_FROM_STR("voltage"));
   if (az_result_failed(rc))
     ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
-  rc = az_json_writer_append_int32(&jw, ++telemetry_send_count);
+  rc = az_json_writer_append_double(&jw, batteryVoltage, 3);
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+
+  rc = az_json_writer_append_property_name(&jw,
+                                          AZ_SPAN_LITERAL_FROM_STR("currentTemperature"));
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+  rc = az_json_writer_append_double(&jw, temperature, 1);
   if (az_result_failed(rc))
     ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
 
   rc = az_json_writer_append_end_object(&jw);
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
 
   *out_payload = az_json_writer_get_bytes_used_in_destination(&jw);
 }
@@ -390,6 +414,7 @@ void setup() {
   ESP_LOGI(TAG, "** Setup **");
 
   M5.begin();
+  M5.IMU.Init();
   DemoConsole.begin();
 
   bool missingConfig = false;
