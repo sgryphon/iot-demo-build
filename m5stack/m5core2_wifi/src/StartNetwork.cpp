@@ -9,6 +9,7 @@ static const char* TAG = "demo";
 
 static const char* _ssid = NULL;
 static const char* _password = NULL;
+static char _eui64[17];
 
 //#define STA_SSID "**********"
 //#define STA_PASS "**********"
@@ -105,6 +106,15 @@ void StartNetworkClass::begin(const char* ssid, const char* password)
   //WiFi.begin(STA_SSID, STA_PASS);
   WiFi.begin(_ssid, _password);
 };
+
+const char * StartNetworkClass::eui64() {
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  // 01:34:67:9A:CD:F0
+  // 0<3>3467 fffe 9acdf0
+  snprintf(_eui64, sizeof(_eui64), "%02x%02x%02xfffe%02x%02x%02x", mac[0] ^ 2, mac[1], mac[2], mac[3], mac[4], mac[5]);
+  return _eui64;
+}
 
 IPv6Address StartNetworkClass::globalIPv6(){
 	esp_ip6_addr_t addr;
