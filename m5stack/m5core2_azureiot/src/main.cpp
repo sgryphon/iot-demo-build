@@ -223,7 +223,7 @@ static void initializeIoTHubClient() {
                            AZ_IOT_HUB_CLIENT_C2D_SUBSCRIBE_TOPIC);
 }
 
-static int initializeMqttClient() {
+static int16_t initializeMqttClient() {
   if (!mqtt_client.connected()) {
     DemoConsole.writeMessage("Initializing MQTT client");
     if (wifi_client_secure) {
@@ -266,7 +266,8 @@ static int initializeMqttClient() {
 
       bool client_connected = wifi_client_secure->connect(host, mqtt_port);
       if (client_connected) {
-        DemoConsole.writeMessage("Authenticating to MQTT as client ID %s", mqtt_client_id);
+        DemoConsole.writeMessage("Authenticating to MQTT as client ID %s",
+                                 mqtt_client_id);
         if (mqtt_client.connect(mqtt_client_id, mqtt_username,
                                 connect_password)) {
           DemoConsole.writeMessage("MQTT connected");
@@ -275,10 +276,13 @@ static int initializeMqttClient() {
           if (subscribed) {
             DemoConsole.writeMessage("Subscribed for cloud-to-device messages");
           } else {
-            DemoConsole.writeMessage("ERROR: Could not subscribe for cloud-to-device messages");
+            DemoConsole.writeMessage(
+                "ERROR: Could not subscribe for cloud-to-device messages");
           }
         } else {
-          DemoConsole.writeMessage("ERROR: MQTT state %d, connected %d", mqtt_client.state(), mqtt_client.connected());
+          DemoConsole.writeMessage("ERROR: MQTT state %d, connected %d",
+                                   mqtt_client.state(),
+                                   mqtt_client.connected());
           return 2;
         }
       } else {
@@ -290,6 +294,7 @@ static int initializeMqttClient() {
       return 4;
     }
   }
+  return 0;
 }
 
 static void establishConnection() {
@@ -304,31 +309,48 @@ static void establishConnection() {
 }
 
 static void getTelemetryPayload(az_span payload, az_span *out_payload) {
-  az_span original_payload = payload;
+  az_result rc;
+  az_json_writer jw;
+  rc = az_json_writer_init(&jw, payload, NULL);
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+  rc = az_json_writer_append_begin_object(&jw);
 
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("{ \"msgCount\": "));
-  (void)az_span_u32toa(payload, ++telemetry_send_count, &payload);
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
-  payload = az_span_copy_u8(payload, '\0');
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+  rc = az_json_writer_append_property_name(&jw,
+                                          AZ_SPAN_LITERAL_FROM_STR("msgCount"));
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
+  rc = az_json_writer_append_int32(&jw, ++telemetry_send_count);
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry payload failed %d", rc);
 
-  *out_payload =
-      az_span_slice(original_payload, 0,
-                    az_span_size(original_payload) - az_span_size(payload) - 1);
+  rc = az_json_writer_append_end_object(&jw);
+
+  *out_payload = az_json_writer_get_bytes_used_in_destination(&jw);
 }
 
 static void sendTelemetry() {
+  az_result rc;
   az_span telemetry = AZ_SPAN_FROM_BUFFER(telemetry_payload);
 
   uint8_t property_buffer[64];
   az_span property_span = AZ_SPAN_FROM_BUFFER(property_buffer);
   az_iot_message_properties props;
-  az_iot_message_properties_init(&props, property_span, 0);
-  az_iot_message_properties_append(
+  rc = az_iot_message_properties_init(&props, property_span, 0);
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry failed %d", rc);
+  rc = az_iot_message_properties_append(
       &props, AZ_SPAN_FROM_STR(AZ_IOT_MESSAGE_PROPERTIES_CONTENT_TYPE),
       AZ_SPAN_LITERAL_FROM_STR("application/json"));
-  az_iot_message_properties_append(
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry failed %d", rc);
+  rc = az_iot_message_properties_append(
       &props, AZ_SPAN_FROM_STR(AZ_IOT_MESSAGE_PROPERTIES_CONTENT_ENCODING),
       AZ_SPAN_LITERAL_FROM_STR("utf-8"));
+  if (az_result_failed(rc))
+    ESP_LOGE(TAG, "Telemetry failed %d", rc);
 
   // The topic could be obtained just once during setup,
   // however if properties are used the topic need to be generated again to
@@ -407,19 +429,19 @@ void setup() {
 }
 #endif
 
-  if (config_device_id == "") {
-    snprintf(device_id, sizeof(device_id), "eui-%s", StartNetwork.eui64());
-    DemoConsole.writeMessage("Using default Device ID: %s", device_id);
-  } else {
-    snprintf(device_id, sizeof(device_id), "%s", config_device_id);
-    DemoConsole.writeMessage("Using configured Device ID: %s", device_id);
-  }
+if (config_device_id == "") {
+  snprintf(device_id, sizeof(device_id), "eui-%s", StartNetwork.eui64().c_str());
+  DemoConsole.writeMessage("Using default Device ID: %s", device_id);
+} else {
+  snprintf(device_id, sizeof(device_id), "%s", config_device_id);
+  DemoConsole.writeMessage("Using configured Device ID: %s", device_id);
+}
 
-  if (missingConfig) {
-    return;
-  }
+if (missingConfig) {
+  return;
+}
 
-  establishConnection();
+establishConnection();
 }
 
 void loop() {
@@ -435,7 +457,8 @@ void loop() {
     }
 #ifndef IOT_CONFIG_USE_X509_CERT
     else if (sas_token.IsExpired()) {
-      DemoConsole.writeMessage("SAS token expired; reconnecting with a new one");
+      DemoConsole.writeMessage(
+          "SAS token expired; reconnecting with a new one");
       //(void)esp_mqtt_client_destroy(mqtt_client);
       mqtt_client.disconnect();
       initializeMqttClient();
