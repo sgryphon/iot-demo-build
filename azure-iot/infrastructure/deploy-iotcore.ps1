@@ -79,6 +79,11 @@ $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 $iotName = "iot-hub001-$OrgId-$Environment".ToLowerInvariant()
 $dpsName = "provs-$appName-$OrgId-$Environment".ToLowerInvariant()
 
+$stRawName = "straw$OrgId$($Environment)001".ToLowerInvariant()
+$storageRgName = "rg-storage-$Environment-001".ToLowerInvariant()
+$stEndpointName = "RawStorageEndpoint001"
+$stRouteName = "RawStorageRoute001"
+
 $dtName = "dt-$appName-$OrgId-$Environment".ToLowerInvariant()
 $dtUser = $(az account show --query user.name --output tsv)
 
@@ -157,6 +162,39 @@ if (-not $SkipIotHub) {
     -g $rgName `
     --dps-name $dpsName `
     --hub-name $iotName
+
+  Write-Verbose "Creating route $stRouteName to storage $stRawName"
+
+  # Default format is AVRO
+  az iot hub routing-endpoint create `
+  --connection-string (az storage account show-connection-string --name $stRawName --query connectionString -o tsv) `
+  --endpoint-name $stEndpointName `
+  --endpoint-resource-group $storageRgName `
+  --endpoint-subscription-id (az account show --query id -o tsv) `
+  --endpoint-type azurestoragecontainer `
+  --hub-name $iotName `
+  --container 'landing' `
+  --file-name-format 'Landing/Telemetry/{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}'
+
+  az iot hub route create `
+  --name $stRouteName `
+  --hub-name $iotName `
+  --source devicemessages `
+  --endpoint-name $stEndpointName `
+  --enabled true
+
+  # To use "--encoding json", need to set contentType and contentEncoding
+  # See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
+  
+  # TODO: Create a storage endpoint for JSON and a route with condition for type & encoding (and update above route to exclude them)
+
+  # Default route is RouteToEventGrid.
+  az iot hub route create `
+  --name 'BuiltInEventsRoute' `
+  --hub-name $iotName `
+  --source devicemessages `
+  --endpoint-name 'events' `
+  --enabled true
 }
 
 if (-not $SkipAdt) {
