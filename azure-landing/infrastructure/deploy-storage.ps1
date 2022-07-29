@@ -135,10 +135,19 @@ $lifecycleRules = @"
 "@
 
 az storage account management-policy create --account-name $stRawName --policy ($lifecycleRules -replace '"', '""') -g $rgName
-    
-az storage container create --name 'landing' --account-name $stRawName --auth-mode login
-az storage container create --name 'conformance' --account-name $stRawName --auth-mode login
 
+az storage fs create --name 'landing' --account-name $stRawName --auth-mode login
+az storage fs create --name 'conformance' --account-name $stRawName --auth-mode login
+
+az storage fs directory create --name 'Landing/Log' -f 'landing' --account-name $stRawName --auth-mode login
+az storage fs directory create --name 'Landing/Master and Reference' -f 'landing' --account-name $stRawName --auth-mode login
+az storage fs directory create --name 'Landing/Telemetry' -f 'landing' --account-name $stRawName --auth-mode login
+az storage fs directory create --name 'Landing/Transactional' -f 'landing' --account-name $stRawName --auth-mode login
+
+az storage fs directory create --name 'Conformance/Log' -f 'conformance' --account-name $stRawName --auth-mode login
+az storage fs directory create --name 'Conformance/Master and Reference' -f 'conformance' --account-name $stRawName --auth-mode login
+az storage fs directory create --name 'Conformance/Telemetry' -f 'conformance' --account-name $stRawName --auth-mode login
+az storage fs directory create --name 'Conformance/Transactional' -f 'conformance' --account-name $stRawName --auth-mode login
 
 Write-Verbose "Creating Enriched and Curated storage account $stEnrichedCuratedName"
 
@@ -152,9 +161,13 @@ az storage account create --name $stEnrichedCuratedName `
 
 az storage account management-policy create --account-name $stEnrichedCuratedName --policy ($lifecycleRules -replace '"', '""') -g $rgName
   
-az storage container create --name 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
-az storage container create --name 'data-products' --account-name $stEnrichedCuratedName --auth-mode login
+az storage fs create --name 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
+az storage fs create --name 'data-products' --account-name $stEnrichedCuratedName --auth-mode login
 
+az storage fs directory create --name 'Standardized/Log' -f 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
+az storage fs directory create --name 'Standardized/Master and Reference' -f 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
+az storage fs directory create --name 'Standardized/Telemetry' -f 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
+az storage fs directory create --name 'Standardized/Transactional' -f 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
 
 Write-Verbose "Creating Enriched and Curated storage account $stWorkspaceName"
 
@@ -168,12 +181,9 @@ az storage account create --name $stWorkspaceName `
 
 az storage account management-policy create --account-name $stWorkspaceName --policy ($lifecycleRules -replace '"', '""') -g $rgName
   
-az storage container create --name 'analytics-sandbox' --account-name $stWorkspaceName --auth-mode login
-az storage container create --name 'synapse-primary-storage' --account-name $stWorkspaceName --auth-mode login
+az storage fs create --name 'analytics-sandbox' --account-name $stWorkspaceName --auth-mode login
+az storage fs create --name 'synapse-primary-storage' --account-name $stWorkspaceName --auth-mode login
 
 # Output
-
-Write-Verbose "Client App Instrumentation Key: $aiKey"
-Write-Verbose "Client App Connection String: $aiConnectionString"
 
 Write-Verbose "Deployment Complete"
