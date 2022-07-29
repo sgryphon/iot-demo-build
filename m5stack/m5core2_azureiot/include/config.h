@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // SPDX-License-Identifier: MIT
+#ifndef config_h
+#define config_h
 
 // Wifi
 #define ST(A) #A
@@ -68,3 +70,5 @@
 
 // Publish 1 message every 2 seconds
 #define TELEMETRY_FREQUENCY_MILLISECS 5000
+
+#endif

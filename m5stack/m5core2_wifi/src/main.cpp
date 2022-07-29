@@ -93,7 +93,7 @@ void wifiConnectedLoop() {
 
     int httpCode;
 
-    DemoConsole.printf("%d\n", nowMilliseconds);
+    DemoConsole.writeMessage("%d\n", nowMilliseconds);
 /*
     M5.Lcd.print("v6: begin");
     http.begin("http://v6.ipv6-test.com/api/myip.php");
@@ -121,7 +121,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
     http.begin("http://v4v6.ipv6-test.com/api/myip.php");
     DemoConsole.print(",GET");
     httpCode = http.GET();
-    DemoConsole.printf(",%d", httpCode);
+    DemoConsole.writeMessage(",%d", httpCode);
     if (httpCode > 0) {  // httpCode will be negative on error.
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
@@ -129,7 +129,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
         DemoConsole.print(payload);
       }
     } else {
-      DemoConsole.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+      DemoConsole.writeMessage(",ERROR %s", http.errorToString(httpCode).c_str());
     }
     DemoConsole.print("\n");
     http.end();
@@ -147,7 +147,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
         if (http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php")) {
           DemoConsole.print(",GET");
           httpCode = http.GET();
-          DemoConsole.printf(",%d", httpCode);
+          DemoConsole.writeMessage(",%d", httpCode);
           if (httpCode > 0) {
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
               String payload = http.getString();
@@ -156,7 +156,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
             }
             DemoConsole.print("\n");
           } else {
-            DemoConsole.printf(",ERROR %s\n", http.errorToString(httpCode).c_str());
+            DemoConsole.writeMessage(",ERROR %s\n", http.errorToString(httpCode).c_str());
           }
 
           http.end();
@@ -180,7 +180,7 @@ void setup() {
   printWiFi();
 
   ESP_LOGD(TAG, "First print");
-  DemoConsole.printf("Connecting to %s", ssid);
+  DemoConsole.writeMessage("Connecting to %s", ssid);
   ESP_LOGD(TAG, "First linefeed");
   DemoConsole.print("\n");
 

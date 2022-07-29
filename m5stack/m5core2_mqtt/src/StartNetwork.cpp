@@ -7,9 +7,9 @@ static const char* TAG = "demo";
 
 #define START_NETWORK_MD5_LCD 1
 
-static const char* _ssid = NULL;
-static const char* _password = NULL;
-static char _eui64[17];
+static const char* wifi_ssid = NULL;
+static const char* wifi_password = NULL;
+static char eui64_buffer[17];
 
 //#define STA_SSID "**********"
 //#define STA_PASS "**********"
@@ -19,7 +19,7 @@ static volatile bool wifi_connected = false;
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
 
-void wifiOnConnect(){
+void wifiOnGotIPv4(){
 #ifdef START_NETWORK_MD5_LCD
   DemoConsole.print("STA Connected\n");
   DemoConsole.print("STA IPv4: ");
@@ -37,10 +37,10 @@ void wifiOnDisconnect(){
   DemoConsole.print("STA Disconnected\n");
 #endif
   delay(1000);
-  WiFi.begin(_ssid, _password);
+  WiFi.begin(wifi_ssid, wifi_password);
 }
 
-void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
+void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info){
     switch(event) {
         case ARDUINO_EVENT_WIFI_AP_START:
             //can set ap hostname here
@@ -69,7 +69,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
             ESP_LOGD(TAG, "WIFI STA_GOT_IP6: " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
 #ifdef START_NETWORK_MD5_LCD
             DemoConsole.print("STA IPv6: ");
-            DemoConsole.printf(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+            DemoConsole.writeMessage(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
             //M5.Lcd.print(WiFi.localIPv6());
             DemoConsole.print("\n");
 #endif
@@ -82,7 +82,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
 #endif
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-            wifiOnConnect();
+            wifiOnGotIPv4();
             wifi_connected = true;
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -97,14 +97,14 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
 void StartNetworkClass::begin(const char* ssid, const char* password)
 {
   // TODO: Should copy these strings, but we know they are referencing constants
-  _ssid = ssid;
-  _password = password;
+  wifi_ssid = ssid;
+  wifi_password = password;
   WiFi.disconnect(true);
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(wifiOnEvent);
   //WiFi.mode(WIFI_MODE_APSTA);
   //WiFi.softAP(AP_SSID);
   //WiFi.begin(STA_SSID, STA_PASS);
-  WiFi.begin(_ssid, _password);
+  WiFi.begin(wifi_ssid, wifi_password);
 };
 
 const char * StartNetworkClass::eui64() {
@@ -112,8 +112,8 @@ const char * StartNetworkClass::eui64() {
   WiFi.macAddress(mac);
   // 01:34:67:9A:CD:F0
   // 0<3>3467 fffe 9acdf0
-  snprintf(_eui64, sizeof(_eui64), "%02x%02x%02xfffe%02x%02x%02x", mac[0] ^ 2, mac[1], mac[2], mac[3], mac[4], mac[5]);
-  return _eui64;
+  snprintf(eui64_buffer, sizeof(eui64_buffer), "%02x%02x%02xfffe%02x%02x%02x", mac[0] ^ 2, mac[1], mac[2], mac[3], mac[4], mac[5]);
+  return eui64_buffer;
 }
 
 IPv6Address StartNetworkClass::globalIPv6(){
