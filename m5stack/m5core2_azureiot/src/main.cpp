@@ -352,11 +352,20 @@ static void sendTelemetry() {
 
   DemoConsole.print("Sending telemetry ...\n");
 
+  uint8_t property_buffer[64];
+  az_span property_span = AZ_SPAN_FROM_BUFFER(property_buffer);
+  az_iot_message_properties props;
+  az_iot_message_properties_init(&props, property_span, 0);
+  az_iot_message_properties_append(
+      &props, AZ_SPAN_FROM_STR(AZ_IOT_MESSAGE_PROPERTIES_CONTENT_TYPE), AZ_SPAN_LITERAL_FROM_STR("application/json"));
+  az_iot_message_properties_append(
+      &props, AZ_SPAN_FROM_STR(AZ_IOT_MESSAGE_PROPERTIES_CONTENT_ENCODING), AZ_SPAN_LITERAL_FROM_STR("utf-8"));
+  
   // The topic could be obtained just once during setup,
   // however if properties are used the topic need to be generated again to
   // reflect the current values of the properties.
   if (az_result_failed(az_iot_hub_client_telemetry_get_publish_topic(
-          &client, NULL, telemetry_topic, sizeof(telemetry_topic), NULL))) {
+          &client, &props, telemetry_topic, sizeof(telemetry_topic), NULL))) {
     DemoConsole.print(
         "ERROR: Failed az_iot_hub_client_telemetry_get_publish_topic\n");
     return;
