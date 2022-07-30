@@ -69,6 +69,8 @@ $stRawName = "straw$OrgId$($Environment)001".ToLowerInvariant()
 $stEnrichedCuratedName = "stencur$OrgId$($Environment)001".ToLowerInvariant()
 $stWorkspaceName = "stwork$OrgId$($Environment)001".ToLowerInvariant()
 
+$stUser = $(az account show --query user.name --output tsv)
+
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
 
@@ -148,6 +150,14 @@ az storage fs directory create --name 'Conformance/Log' -f 'conformance' --accou
 az storage fs directory create --name 'Conformance/Master and Reference' -f 'conformance' --account-name $stRawName --auth-mode login
 az storage fs directory create --name 'Conformance/Telemetry' -f 'conformance' --account-name $stRawName --auth-mode login
 az storage fs directory create --name 'Conformance/Transactional' -f 'conformance' --account-name $stRawName --auth-mode login
+
+$stRaw = az storage account show --name $stRawName | ConvertFrom-Json
+
+az role assignment create `
+    --role "Storage Blob Data Contributor" `
+    --assignee $stUser `
+    --scope $stRaw.id
+
 
 Write-Verbose "Creating Enriched and Curated storage account $stEnrichedCuratedName"
 
