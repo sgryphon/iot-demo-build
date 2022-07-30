@@ -30,7 +30,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-shared.ps1
+   ./deploy-storage.ps1
 #>
 [CmdletBinding()]
 param (
@@ -72,7 +72,7 @@ $stWorkspaceName = "stwork$OrgId$($Environment)001".ToLowerInvariant()
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
 
-$TagDictionary = @{WorkloadName = 'data'; DataClassification = 'Non-business'; Criticality = 'Low';
+$TagDictionary = @{ WorkloadName = 'data'; DataClassification = 'Non-business'; Criticality = 'Low';
   BusinessUnit = 'IoT'; Env = $Environment }
 
 # Create

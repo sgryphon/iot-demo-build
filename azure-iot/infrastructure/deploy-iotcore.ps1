@@ -39,10 +39,6 @@ param (
     [string]$IoTHubSku = $ENV:DEPLOY_IOTHUB_SKU ?? 'F1',
     ## DPS SKU (currently only value is S1)
     [string]$DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1',
-    ## Data Explorer cluster SKU name (default 'Dev(No SLA)_Standard_E2a_v4')
-    [string]$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4",
-    ## Data Explorer cluster SKU name (default 'Developer')
-    [string]$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic",
     [switch]$SkipGroup,
     [switch]$SkipDps,
     [switch]$SkipIotHub,
@@ -91,6 +87,7 @@ $stName = "st$appName$OrgId$Environment".ToLowerInvariant()
 $funcName = "func-$appName-$OrgId-$Environment-001".ToLowerInvariant()
 
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
+$dataRgName = "rg-shared-data-$Environment-001".ToLowerInvariant()
 $dedbName = "dedb-$appName-$Environment-001".ToLowerInvariant()
 
 $sharedRgName = "rg-shared-$Environment-001".ToLowerInvariant()
@@ -195,6 +192,8 @@ if (-not $SkipIotHub) {
   --source devicemessages `
   --endpoint-name 'events' `
   --enabled true
+} else {
+  $iotHub = az iot hub show --name $iotName | ConvertFrom-Json
 }
 
 if (-not $SkipAdt) {
@@ -246,20 +245,14 @@ if (-not $SkipAdt) {
 }
 
 if (-not $SkipAdx) {
-  Write-Verbose "Deploy Azure Data Explorer $decName"
+  Write-Verbose "Create Azure Data Explorer database $dedbName"
 
   az extension add -n kusto
-
-  az kusto cluster create `
-    --resource-group $rgName `
-    -l $rg.location `
-    --name $decName `
-    --sku name=$DecSkuName tier=$DecSkuTier
 
   az kusto database create `
     --cluster-name $decName `
     --database-name $dedbName `
-    --resource-group $rgName `
+    --resource-group $dataRgName `
     --read-write-database soft-delete-period=P365D hot-cache-period=P31D location=$($rg.location)
 
   # Following Microsoft Iot Architecture recommendations:  
@@ -275,7 +268,7 @@ if (-not $SkipAdx) {
   az kusto script create --cluster-name $decName `
                         --database-name $dedbName `
                         --name CreateIotHubRawTable `
-                        --resource-group $rgName `
+                        --resource-group $dataRgName `
                         --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
                         --script-content $createTable
 
@@ -284,7 +277,7 @@ if (-not $SkipAdx) {
   az kusto script create --cluster-name $decName `
                         --database-name $dedbName `
                         --name CreateIotHubRawMapping `
-                        --resource-group $rgName `
+                        --resource-group $dataRgName `
                         --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
                         --script-content $createMapping
 
@@ -300,7 +293,7 @@ if (-not $SkipAdx) {
   az kusto data-connection iot-hub create --cluster-name $decName `
     --data-connection-name IotHub001 `
     --database-name $dedbName `
-    --resource-group $rgName `
+    --resource-group $dataRgName `
     --iot-hub-resource-id $iotHub.id `
     --consumer-group $consumerGroup `
     --shared-access-policy-name iothubowner `

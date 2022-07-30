@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
 <# .SYNOPSIS
-  Stops the data explorer.
+  Starts the data explorer.
 #>
 [CmdletBinding()]
 param (
@@ -16,9 +16,7 @@ $ErrorActionPreference="Stop"
 $SubscriptionId = $(az account show --query id --output tsv)
 Write-Verbose "Using subscription ID $SubscriptionId"
 
-$appName = 'iotcore'
-$rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
+$rgName = "rg-shared-data-$Environment-001".ToLowerInvariant()
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
 
-az kusto cluster stop --name $decName -g $rgName
-  
+az kusto cluster start --name $decName -g $rgName

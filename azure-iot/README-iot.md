@@ -6,13 +6,13 @@ Creates the following Azure resources (in resource group `rg-iotcore-dev-001`):
 * IoT Hub, `iot-hub001-<OrgId>-dev`
 * Device Provisioning Service, `dps-iotcore-<OrgId>-dev`
 * Digital Twins, `dt-iotcore-<OrgId>-dev`
-* Data Explorer Cluster, `dec<OrgId>dev`
+* Connection to the Azure Data Explorer Cluster, `dec<OrgId>dev`
 
 IoT Hub diagnostics are sent to Azure Monitor from the `azure-landing` shared services.
 
 The IoT Hub is configured as a linked hub with DPS.
 
-Azure Data Explorer (ADX) is configured with a database `dedb-iotcore-<OrgId>-dev`, with raw ingestion table `IotHub001-raw`, and a data connection configured to a consumer group on the hub.
+Azure Data Explorer (ADX) is configured with a database `dedb-iotcore-<OrgId>-dev`, with raw ingestion table `IotHub001-raw`, and a data connection configured to a consumer group on the hub. (The ADX cluster must be running to deploy this.)
 
 All messages from the hub are ingested into the table as raw JSON.
 
@@ -28,7 +28,7 @@ Requirements:
 
 The deployment also relies on the landing zone Azure Monitor components, so deploy that first.
 
-Deploy via PowerShell:
+Deploy via PowerShell (must have the ADX cluster running for deployment):
 
 ```powershell
 az login
@@ -39,18 +39,13 @@ $VerbosePreference = 'Continue'
 
 ### Azure Data Explorer cost management
 
-The ADX compute cluster can be shut down when not needed to save costs when running an Azure developer subscription. (You still pay for storage.)
+
+The ADX compute cluster can be shut down when not needed to save costs when running an Azure developer subscription. (You still pay for storage.) 
 
 To shut down:
 
 ```powershell
-./infrastructure/stop-dataexplorer.ps1
-```
-
-To restart when needed:
-
-```powershell
-./infrastructure/start-dataexplorer.ps1
+.../azure-landing/infrastructure/stop-dataexplorer.ps1
 ```
 
 ### Cleanup

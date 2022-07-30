@@ -30,6 +30,23 @@ for client authentication);
 `iot_configs.h` file.
  */
 
+
+
+/*
+Plan:
+  EventLogger : base just logs, Core2Console has fancy implementation.
+
+  NetworkManager : WiFiNetworkManager.
+
+  dependency injection
+
+  MqttAdapter : PubSubClientMqttAdapter
+
+  AzIotDeviceBase : has the state matchine, with virtual functions for application....
+  See https://github.com/Azure/azure-sdk-for-c/blob/main/sdk/docs/iot/mqtt_state_machine.md
+
+*/
+
 #include "DemoConsole.h"
 #include "StartNetwork.h"
 #include "config.h"
