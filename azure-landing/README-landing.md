@@ -92,6 +92,16 @@ For more information see:
 ### Shared data services resource group (rg-shared-data-dev-001)
 
 * Azure Data Explorer (ADX) Cluster, `dec<OrgId>dev`
+* Azure Synapse
+  - linked to the workspace `synapse-primary-storage`
+
+TODO:
+
+* Add a linked service to connect to other storage accounts:
+
+```powershell
+az synapse linked-service show --workspace-name $synWorkspaceName --name AzureDataLakeRaw001
+```
 
 Cost management
 ---------------
