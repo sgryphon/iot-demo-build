@@ -30,6 +30,23 @@ for client authentication);
 `iot_configs.h` file.
  */
 
+
+
+/*
+Plan:
+  EventLogger : base just logs, Core2Console has fancy implementation.
+
+  NetworkManager : WiFiNetworkManager.
+
+  dependency injection
+
+  MqttAdapter : PubSubClientMqttAdapter
+
+  AzIotDeviceBase : has the state matchine, with virtual functions for application....
+  See https://github.com/Azure/azure-sdk-for-c/blob/main/sdk/docs/iot/mqtt_state_machine.md
+
+*/
+
 #include "DemoConsole.h"
 #include "StartNetwork.h"
 #include "config.h"
@@ -76,25 +93,24 @@ for client authentication);
 #define GMT_OFFSET_SECS_DST                                                    \
   ((PST_TIME_ZONE + PST_TIME_ZONE_DAYLIGHT_SAVINGS_DIFF) * 3600)
 
-static const char *TAG = "demo";
-
-// Translate iot_configs.h defines into variables used by the sample
-static const char *ssid = WIFI_SSID;
-static const char *password = WIFI_PASSWORD;
-
-static const char *host = STR(IOT_CONFIG_IOTHUB_FQDN);
 static const char *config_device_id = STR(IOT_CONFIG_DEVICE_ID);
-static char device_id[128];
-
 #ifndef IOT_CONFIG_USE_X509_CERT
-static const char *device_key = STR(IOT_CONFIG_DEVICE_KEY);
+  static const char *device_key = STR(IOT_CONFIG_DEVICE_KEY);
 #endif
-
+static const char *host = STR(IOT_CONFIG_IOTHUB_FQDN);
 static const int mqtt_port = AZ_IOT_DEFAULT_MQTT_CONNECT_PORT;
+// Translate iot_configs.h defines into variables used by the sample
+static const char *password = WIFI_PASSWORD;
+static const char *ssid = WIFI_SSID;
+static const char *TAG = "demo";
+static const char *version = STR(PIO_VERSION);
 
-// Memory allocated for the sample's variables and structures.
+#define INCOMING_DATA_BUFFER_SIZE 128
+
 static az_iot_hub_client client;
-
+static char device_id[128];
+static char incoming_data[INCOMING_DATA_BUFFER_SIZE];
+PubSubClient mqtt_client;
 static char mqtt_client_id[128];
 static char mqtt_username[200];
 static char mqtt_password[250];
@@ -103,23 +119,21 @@ static unsigned long next_telemetry_send_time_ms = 0;
 static char telemetry_topic[128];
 static uint8_t telemetry_payload[100];
 static uint32_t telemetry_send_count = 0;
+WiFiClientSecure *wifi_client_secure = NULL;
 
-#define INCOMING_DATA_BUFFER_SIZE 128
-static char incoming_data[INCOMING_DATA_BUFFER_SIZE];
+#define IOT_CONFIG_DEVICE_KEY2 "m5Dy2sMY9C4x15VhjZT0//Wpe/7GHkNZ4+HgUW96I4g="
+//#define IOT_CONFIG_DEVICE_KEY2 "cEnip1AOSJ34v3oqf8lb5mxoU3+rmVFFTZMWU0n4jh0="
 
-//#define IOT_CONFIG_DEVICE_KEY2 "m5Dy2sMY9C4x15VhjZT0//Wpe/7GHkNZ4+HgUW96I4g="
-#define IOT_CONFIG_DEVICE_KEY2 "cEnip1AOSJ34v3oqf8lb5mxoU3+rmVFFTZMWU0n4jh0="
 // Auxiliary functions
 #ifndef IOT_CONFIG_USE_X509_CERT
 static AzIoTSasToken
-    sas_token(&client, AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY2),
+    sas_token(&client,
+              AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY2),
+              //AZ_SPAN_FROM_STR(STR(IOT_CONFIG_DEVICE_KEY)),
               // az_span_create((uint8_t*)device_key, strlen(device_key)),
               AZ_SPAN_FROM_BUFFER(sas_signature_buffer),
               AZ_SPAN_FROM_BUFFER(mqtt_password));
 #endif // IOT_CONFIG_USE_X509_CERT
-
-WiFiClientSecure *wifi_client_secure = NULL;
-PubSubClient mqtt_client;
 
 static void connectToWiFi() {
   DemoConsole.writeMessage("Connecting to WIFI SSID %s", ssid);
@@ -411,11 +425,13 @@ static void sendTelemetry() {
 
 void setup() {
   Serial.begin(115200);
-  ESP_LOGI(TAG, "** Setup **");
+  ESP_LOGI(TAG, "Setup, version %s", version);
 
   M5.begin();
   M5.IMU.Init();
   DemoConsole.begin();
+
+  DemoConsole.writeMessage("Azure IoT demo v%s", version);
 
   bool missingConfig = false;
   if (ssid == "") {

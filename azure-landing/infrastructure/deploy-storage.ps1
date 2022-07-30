@@ -30,7 +30,7 @@
    az login
    az account set --subscription <subscription id>
    $VerbosePreference = 'Continue'
-   ./deploy-shared.ps1
+   ./deploy-storage.ps1
 #>
 [CmdletBinding()]
 param (
@@ -69,10 +69,12 @@ $stRawName = "straw$OrgId$($Environment)001".ToLowerInvariant()
 $stEnrichedCuratedName = "stencur$OrgId$($Environment)001".ToLowerInvariant()
 $stWorkspaceName = "stwork$OrgId$($Environment)001".ToLowerInvariant()
 
+$stUser = $(az account show --query user.name --output tsv)
+
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
 
-$TagDictionary = @{WorkloadName = 'data'; DataClassification = 'Non-business'; Criticality = 'Low';
+$TagDictionary = @{ WorkloadName = 'data'; DataClassification = 'Non-business'; Criticality = 'Low';
   BusinessUnit = 'IoT'; Env = $Environment }
 
 # Create
@@ -149,6 +151,14 @@ az storage fs directory create --name 'Conformance/Master and Reference' -f 'con
 az storage fs directory create --name 'Conformance/Telemetry' -f 'conformance' --account-name $stRawName --auth-mode login
 az storage fs directory create --name 'Conformance/Transactional' -f 'conformance' --account-name $stRawName --auth-mode login
 
+$stRaw = az storage account show --name $stRawName | ConvertFrom-Json
+
+az role assignment create `
+    --role "Storage Blob Data Contributor" `
+    --assignee $stUser `
+    --scope $stRaw.id
+
+
 Write-Verbose "Creating Enriched and Curated storage account $stEnrichedCuratedName"
 
 az storage account create --name $stEnrichedCuratedName `
@@ -169,7 +179,15 @@ az storage fs directory create --name 'Standardized/Master and Reference' -f 'st
 az storage fs directory create --name 'Standardized/Telemetry' -f 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
 az storage fs directory create --name 'Standardized/Transactional' -f 'standardized' --account-name $stEnrichedCuratedName --auth-mode login
 
-Write-Verbose "Creating Enriched and Curated storage account $stWorkspaceName"
+$stEnrichedCurated= az storage account show --name $stEnrichedCuratedName | ConvertFrom-Json
+
+az role assignment create `
+    --role "Storage Blob Data Contributor" `
+    --assignee $stUser `
+    --scope $stEnrichedCurated.id
+
+
+Write-Verbose "Creating Workspace (dev) storage account $stWorkspaceName"
 
 az storage account create --name $stWorkspaceName `
   --sku Standard_LRS `
@@ -183,6 +201,14 @@ az storage account management-policy create --account-name $stWorkspaceName --po
   
 az storage fs create --name 'analytics-sandbox' --account-name $stWorkspaceName --auth-mode login
 az storage fs create --name 'synapse-primary-storage' --account-name $stWorkspaceName --auth-mode login
+
+$stWorkspace= az storage account show --name $stWorkspaceName | ConvertFrom-Json
+
+az role assignment create `
+    --role "Storage Blob Data Contributor" `
+    --assignee $stUser `
+    --scope $stWorkspace.id
+
 
 # Output
 

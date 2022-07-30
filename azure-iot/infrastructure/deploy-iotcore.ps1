@@ -39,10 +39,6 @@ param (
     [string]$IoTHubSku = $ENV:DEPLOY_IOTHUB_SKU ?? 'F1',
     ## DPS SKU (currently only value is S1)
     [string]$DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1',
-    ## Data Explorer cluster SKU name (default 'Dev(No SLA)_Standard_E2a_v4')
-    [string]$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4",
-    ## Data Explorer cluster SKU name (default 'Developer')
-    [string]$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic",
     [switch]$SkipGroup,
     [switch]$SkipDps,
     [switch]$SkipIotHub,
@@ -60,8 +56,6 @@ $Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast'
 $OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))"
 $IoTHubSku = $ENV:DEPLOY_IOTHUB_SKU ?? 'F1'
 $DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1'
-$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4"
-$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic"
 #>
 
 $ErrorActionPreference="Stop"
@@ -91,6 +85,7 @@ $stName = "st$appName$OrgId$Environment".ToLowerInvariant()
 $funcName = "func-$appName-$OrgId-$Environment-001".ToLowerInvariant()
 
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
+$dataRgName = "rg-shared-data-$Environment-001".ToLowerInvariant()
 $dedbName = "dedb-$appName-$Environment-001".ToLowerInvariant()
 
 $sharedRgName = "rg-shared-$Environment-001".ToLowerInvariant()
@@ -166,6 +161,8 @@ if (-not $SkipIotHub) {
   Write-Verbose "Creating route $stRouteName to storage $stRawName"
 
   # Default format is AVRO
+  # To use "--encoding json", need to set contentType and contentEncoding
+  # See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
   az iot hub routing-endpoint create `
   --connection-string (az storage account show-connection-string --name $stRawName --query connectionString -o tsv) `
   --endpoint-name $stEndpointName `
@@ -174,7 +171,8 @@ if (-not $SkipIotHub) {
   --endpoint-type azurestoragecontainer `
   --hub-name $iotName `
   --container 'landing' `
-  --file-name-format 'Landing/Telemetry/{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}'
+  --encoding json `
+  --file-name-format 'Landing/Telemetry/{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.jsonl'
 
   az iot hub route create `
   --name $stRouteName `
@@ -182,11 +180,8 @@ if (-not $SkipIotHub) {
   --source devicemessages `
   --endpoint-name $stEndpointName `
   --enabled true
-
-  # To use "--encoding json", need to set contentType and contentEncoding
-  # See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
   
-  # TODO: Create a storage endpoint for JSON and a route with condition for type & encoding (and update above route to exclude them)
+  # TODO: Create separate storage endpoints for JSON and AVRO with route conditions on content-type
 
   # Default route is RouteToEventGrid.
   az iot hub route create `
@@ -195,6 +190,8 @@ if (-not $SkipIotHub) {
   --source devicemessages `
   --endpoint-name 'events' `
   --enabled true
+} else {
+  $iotHub = az iot hub show --name $iotName | ConvertFrom-Json
 }
 
 if (-not $SkipAdt) {
@@ -246,20 +243,18 @@ if (-not $SkipAdt) {
 }
 
 if (-not $SkipAdx) {
-  Write-Verbose "Deploy Azure Data Explorer $decName"
+  Write-Verbose "Create Azure Data Explorer database $dedbName"
+
+  $rawTableName = 'IotHub001-raw'
+  $rawMappingName = 'IotHub001-raw-mapping'
+  $consumerGroup = 'DataExplorer'
 
   az extension add -n kusto
-
-  az kusto cluster create `
-    --resource-group $rgName `
-    -l $rg.location `
-    --name $decName `
-    --sku name=$DecSkuName tier=$DecSkuTier
 
   az kusto database create `
     --cluster-name $decName `
     --database-name $dedbName `
-    --resource-group $rgName `
+    --resource-group $dataRgName `
     --read-write-database soft-delete-period=P365D hot-cache-period=P31D location=$($rg.location)
 
   # Following Microsoft Iot Architecture recommendations:  
@@ -270,21 +265,19 @@ if (-not $SkipAdx) {
   # az kusto script show -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
   # az kusto script delete -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
 
-  $rawTableName = 'IotHub001-raw'
   $createTable = ".create table ['$rawTableName'] (rawevent: dynamic)"
   az kusto script create --cluster-name $decName `
                         --database-name $dedbName `
                         --name CreateIotHubRawTable `
-                        --resource-group $rgName `
+                        --resource-group $dataRgName `
                         --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
                         --script-content $createTable
 
-  $rawMappingName = 'IotHub001-raw-mapping'
   $createMapping = ".create table ['$rawTableName'] ingestion json mapping '$rawMappingName' '[{ """"column"""": """"rawevent"""", """"path"""": """"`$"""", """"datatype"""": """"dynamic"""" }]'"
   az kusto script create --cluster-name $decName `
                         --database-name $dedbName `
                         --name CreateIotHubRawMapping `
-                        --resource-group $rgName `
+                        --resource-group $dataRgName `
                         --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
                         --script-content $createMapping
 
@@ -292,7 +285,6 @@ if (-not $SkipAdx) {
 
   Write-Verbose "Create consumer grop in IoT Hub $iotName for Data Explorer"
 
-  $consumerGroup = 'DataExplorer'
   az iot hub consumer-group create --hub-name $iotName --name $consumerGroup
 
   Write-Verbose "Connect IoT Hub $iotName to Data Explorer $decName"
@@ -300,11 +292,12 @@ if (-not $SkipAdx) {
   az kusto data-connection iot-hub create --cluster-name $decName `
     --data-connection-name IotHub001 `
     --database-name $dedbName `
-    --resource-group $rgName `
+    --resource-group $dataRgName `
     --iot-hub-resource-id $iotHub.id `
     --consumer-group $consumerGroup `
     --shared-access-policy-name iothubowner `
     --data-format JSON `
+    --event-system-properties "iothub-enqueuedtime" "iothub-connection-device-id" "iothub-creation-time-utc" "message-id" `
     --table-name $rawTableName `
     --mapping-rule-name $rawMappingName
 }

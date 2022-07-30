@@ -280,7 +280,8 @@ export PIO_WIFI_PASSWORD=YourWifiPassword
 export IOT_CONFIG_DEVICE_ID=
 export IOT_CONFIG_IOTHUB_FQDN=YourAzureIotHostName.azure-devices.net
 export IOT_CONFIG_DEVICE_KEY=YourAzureIoTDeviceKey
-pio run --target upload
+
+(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
 ```
 
 While running, to monitor the IoT Hub events:
