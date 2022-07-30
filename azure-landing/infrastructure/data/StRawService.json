@@ -1,0 +1,28 @@
+{
+  "etag": "7f00aeb7-0000-1a00-0000-62e534e10000",
+  "id": "/subscriptions/acc54a93-d63e-4462-953e-dbeba4387b12/resourceGroups/rg-shared-data-dev-001/providers/Microsoft.Synapse/workspaces/syn-0xacc5-dev/linkedservices/AzureDataLakeRaw001",
+  "name": "AzureDataLakeRaw001",
+  "properties": {
+    "accountKey": null,
+    "additionalProperties": null,
+    "annotations": [],
+    "azureCloudType": null,
+    "connectVia": {
+      "parameters": null,
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    },
+    "description": null,
+    "encryptedCredential": "ew0KICA...NiZjc4ZCINCn0=",
+    "parameters": null,
+    "servicePrincipalCredential": null,
+    "servicePrincipalCredentialType": null,
+    "servicePrincipalId": null,
+    "servicePrincipalKey": null,
+    "tenant": null,
+    "type": "AzureBlobFS",
+    "url": "https://straw0xacc5dev001.dfs.core.windows.net/"
+  },
+  "resourceGroup": "rg-shared-data-dev-001",
+  "type": "Microsoft.Synapse/workspaces/linkedservices"
+}
