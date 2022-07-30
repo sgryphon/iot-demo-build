@@ -31,6 +31,8 @@
 #>
 [CmdletBinding()]
 param (
+    ## Authentication password for MQTT access
+    [string]$SynapseSqlPassword = $ENV:DEPLOY_SYNAPSE_SQL_PASSWORD,
     ## Deployment environment, e.g. Prod, Dev, QA, Stage, Test.
     [string]$Environment = $ENV:DEPLOY_ENVIRONMENT ?? 'Dev',
     ## The Azure region where the resource is deployed.
@@ -48,10 +50,17 @@ To run interactively, start with:
 
 $VerbosePreference = 'Continue'
 
+$SynapseSqlPassword = ...
+
 $Environment = $ENV:DEPLOY_ENVIRONMENT ?? 'Dev'
 $Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast'
 $OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))"
+$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4"
+$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic"
+
 #>
+
+if (!$SynapseSqlPassword) { throw 'You must supply a value for -SynapseSqlPassword or set environment variable DEPLOY_SYNAPSE_SQL_PASSWORD' }
 
 $ErrorActionPreference="Stop"
 
@@ -65,6 +74,10 @@ Write-Verbose "Deploying scripts for environment '$Environment' in subscription 
 $rgName = "rg-shared-data-$Environment-001".ToLowerInvariant()
 
 $decName = "dec$OrgId$Environment".ToLowerInvariant()
+
+$synWorkspaceName = "syn-$OrgId-$Environment".ToLowerInvariant()
+$stWorkspaceName = "stwork$OrgId$($Environment)001".ToLowerInvariant()
+$synSqlAdmin = "synadmin"
 
 # Following standard tagging conventions from  Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
@@ -94,10 +107,51 @@ az kusto cluster create `
   --name $decName `
   --sku name=$DecSkuName tier=$DecSkuTier
 
-# Output
+Write-Verbose "Stopping Azure Data Explorer cluster for cost management; use ./start-dataexplorer.ps1 to start"
 
 az kusto cluster stop --name $decName -g $rgName
 
-Write-Verbose "Azure Data Explorer cluster is stopped for cost management; use ./start-dataexplorer.ps1 to start"
+  
+Write-Verbose "Create Synapse Analytics workspace $synWorkspaceName"
+
+# https://docs.microsoft.com/en-us/azure/synapse-analytics/quickstart-create-workspace-cli
+
+az provider register --namespace Microsoft.Sql
+# Note: may take a while to register
+Start-Sleep -Seconds 10
+
+az synapse workspace create `
+  --name $synWorkspaceName `
+  --resource-group $rgName `
+  --storage-account $stWorkspaceName `
+  --file-system 'synapse-primary-storage' `
+  --sql-admin-login-user $synSqlAdmin `
+  --sql-admin-login-password $SynapseSqlPassword `
+  --location $Location `
+  --tags $tags
+
+$workspace = az synapse workspace show --name $synWorkspaceName --resource-group $rgName | ConvertFrom-Json
+
+$connectivityResult = Invoke-WebRequest -Uri $workspace.connectivityEndpoints.dev -Headers @{ "Accept" = "application/json" } -SkipHttpErrorCheck
+if ($connectivityResult.StatusCode -eq 403) {
+  $connectivityContent = $connectivityResult.Content | ConvertFrom-Json
+  if ($connectivityContent.message.StartsWith('Client Ip address : ')) {
+    $clientIp = $connectivityContent.message.Substring(20)
+    Write-Verbose "Creating a firewall rule to enable access for IP address: $clientIp"
+
+    az synapse workspace firewall-rule create `
+      --end-ip-address $clientIp `
+      --start-ip-address $clientIp `
+      --name "Allow Client IP" `
+      --resource-group $rgName `
+      --workspace-name $synWorkspaceName
+  } else {
+    Write-Warning("Unexpected message: $($connectivityContent.message)")
+  }
+}
+
+# Output
+
+Write-Verbose "Synapse workspace: $($workspace.connectivityEndpoints.web)"
 
 Write-Verbose "Deployment Complete"
