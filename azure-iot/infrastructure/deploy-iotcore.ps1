@@ -161,6 +161,8 @@ if (-not $SkipIotHub) {
   Write-Verbose "Creating route $stRouteName to storage $stRawName"
 
   # Default format is AVRO
+  # To use "--encoding json", need to set contentType and contentEncoding
+  # See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
   az iot hub routing-endpoint create `
   --connection-string (az storage account show-connection-string --name $stRawName --query connectionString -o tsv) `
   --endpoint-name $stEndpointName `
@@ -169,6 +171,7 @@ if (-not $SkipIotHub) {
   --endpoint-type azurestoragecontainer `
   --hub-name $iotName `
   --container 'landing' `
+  --encoding json `
   --file-name-format 'Landing/Telemetry/{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}'
 
   az iot hub route create `
@@ -177,11 +180,8 @@ if (-not $SkipIotHub) {
   --source devicemessages `
   --endpoint-name $stEndpointName `
   --enabled true
-
-  # To use "--encoding json", need to set contentType and contentEncoding
-  # See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
   
-  # TODO: Create a storage endpoint for JSON and a route with condition for type & encoding (and update above route to exclude them)
+  # TODO: Create separate storage endpoints for JSON and AVRO with route conditions on content-type
 
   # Default route is RouteToEventGrid.
   az iot hub route create `
