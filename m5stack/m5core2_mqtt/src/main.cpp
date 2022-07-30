@@ -15,7 +15,7 @@ static const char* TAG = "demo";
 static const char* ssid = WIFI_SSID;
 static const char* password = WIFI_PASSWORD;
 static const char* mqttServer = MQTT_SERVER;
-static const int mqttPort = MQTT_PORT;
+static const int mqtt_port = MQTT_PORT;
 static const char* mqttUser = MQTT_USER;
 static const char* mqttPassword = MQTT_PASSWORD;
 
@@ -50,8 +50,8 @@ const char* messageTemplate2 = \
   "{\"n\":\"/3/0/8/0\",\"v\":%.0f}," \
   "{\"n\":\"/3303/0/5700\",\"v\":%.2f}]";
 
-WiFiClientSecure *wifiClientSecure = NULL;
-PubSubClient pubSubClient;
+WiFiClientSecure *wifi_client_secure = NULL;
+PubSubClient mqtt_client;
 
 RTC_DateTypeDef rtcDateNow;
 RTC_TimeTypeDef rtcTimeNow;
@@ -61,40 +61,40 @@ void callback(char* topic, byte* payload, unsigned int length) {
   DemoConsole.print(topic);
   DemoConsole.print("] ");
   for (int i = 0; i < length; i++) {
-    DemoConsole.printf("%c", payload[i]);
+    DemoConsole.writeMessage("%c", payload[i]);
   }
   DemoConsole.print("\n");
 }
 
 void reConnect() {
-  if (!pubSubClient.connected()) {
+  if (!mqtt_client.connected()) {
     DemoConsole.print("Attempting MQTT connection...");
-    if (wifiClientSecure) {
+    if (wifi_client_secure) {
       ESP_LOGD(TAG, "Deleting wifClientSecure");
-      delete wifiClientSecure;
+      delete wifi_client_secure;
     }
-    wifiClientSecure = new WiFiClientSecure;
-    if (wifiClientSecure) {
+    wifi_client_secure = new WiFiClientSecure;
+    if (wifi_client_secure) {
       ESP_LOGD(TAG, "Created new wifiClientSecure");
 
-      wifiClientSecure->setCACert((char *)root_ca_pem_start);
+      wifi_client_secure->setCACert((char *)root_ca_pem_start);
 
-      pubSubClient.setClient(*wifiClientSecure);
+      mqtt_client.setClient(*wifi_client_secure);
 
       // Create a random client ID.  创建一个随机的客户端ID
       char clientId[21];
       snprintf(clientId, sizeof(clientId), "eui-%s", StartNetwork.eui64());
-      if (pubSubClient.connect(clientId, mqttUser, mqttPassword)) {
-        DemoConsole.printf("\nSuccess\n");
+      if (mqtt_client.connect(clientId, mqttUser, mqttPassword)) {
+        DemoConsole.writeMessage("\nSuccess\n");
         // Once connected, publish an announcement to the topic.  一旦连接，发送一条消息至指定话题
-        pubSubClient.publish("test", "{\"m\"=\"client_connected\"}");
+        mqtt_client.publish("test", "{\"m\"=\"client_connected\"}");
         // ... and resubscribe.  重新订阅话题
-        pubSubClient.subscribe("test");
+        mqtt_client.subscribe("test");
       } else {
         DemoConsole.print("failed, rc=");
-        DemoConsole.printf("%d", pubSubClient.state());
+        DemoConsole.writeMessage("%d", mqtt_client.state());
         DemoConsole.print(", con=");
-        DemoConsole.printf("%d", pubSubClient.connected());
+        DemoConsole.writeMessage("%d", mqtt_client.connected());
         DemoConsole.print("\n");
       }
     } else {
@@ -104,12 +104,12 @@ void reConnect() {
 }
 
 void wifiConnectedLoop(){
-  if (!pubSubClient.connected()) {
+  if (!mqtt_client.connected()) {
     reConnect();
   }
   delay(100);
-  if (pubSubClient.connected()) {
-    pubSubClient.loop();
+  if (mqtt_client.connected()) {
+    mqtt_client.loop();
 
     unsigned long nowMilliseconds = millis();
     if (nowMilliseconds > nextMessageMilliseconds) {
@@ -145,7 +145,7 @@ void wifiConnectedLoop(){
       DemoConsole.print("Publish:");
       DemoConsole.print(message);
       DemoConsole.print("\n");
-      pubSubClient.publish("test", message);
+      mqtt_client.publish("test", message);
     }
   }
 }
@@ -159,7 +159,7 @@ void setup() {
 
   DemoConsole.begin();
 
-  DemoConsole.printf("Connecting to %s", ssid);
+  DemoConsole.writeMessage("Connecting to %s", ssid);
   DemoConsole.print("\n");
 
   if (ssid=="") {
@@ -173,10 +173,10 @@ void setup() {
 
   StartNetwork.begin(ssid, password);
 
-  pubSubClient.setServer(mqttServer, mqttPort);
+  mqtt_client.setServer(mqttServer, mqtt_port);
   //IPAddress mqttIp = IPAddress(20,213,94,9);
   //client.setServer(mqttIp, mqttPort);
-  pubSubClient.setCallback(callback); 
+  mqtt_client.setCallback(callback); 
 
   delay(1000);
 }

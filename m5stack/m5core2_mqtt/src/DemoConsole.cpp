@@ -68,7 +68,7 @@ void DemoConsoleClass::loop() {
   printHeader();
 }
 
-size_t DemoConsoleClass::printf(const char * format, ...) {
+size_t DemoConsoleClass::writeMessage(const char * format, ...) {
   char loc_buf[64];
   char * temp = loc_buf;
   va_list arg;

@@ -1,8 +1,9 @@
 #include "DemoConsole.h"
 #include "StartNetwork.h"
-#include <M5Core2.h>
 
-#include "esp_log.h"
+#include <M5Core2.h>
+#include <esp_log.h>
+
 static const char *TAG = "demo";
 
 #define HEADER_HEIGHT (16)
@@ -17,33 +18,33 @@ void checkPage() {
 void printHeader() {
   // Time = 8, IPv6 = 39
   // Date = 10, MAC = 17, WiFi 3, IPv4 = 15
-  uint16_t headerColor;
+  uint16_t header_color;
   String ipv6 = StartNetwork.globalIPv6().toString();
   if (StartNetwork.wifiConnected()) {
     if (ipv6 != "0000:0000:0000:0000:0000:0000:0000:0000") {
-      headerColor = DARKGREEN;
+      header_color = DARKGREEN;
     } else {
-      headerColor = BLUE;
+      header_color = BLUE;
     }
   } else {
-    headerColor = ORANGE;
+    header_color = ORANGE;
   }
-  RTC_TimeTypeDef rtcTimeNow;
-  RTC_DateTypeDef rtcDateNow;
-  M5.Rtc.GetTime(&rtcTimeNow);
-  M5.Rtc.GetDate(&rtcDateNow);
+  RTC_TimeTypeDef rtc_time_now;
+  RTC_DateTypeDef rtc_date_now;
+  M5.Rtc.GetTime(&rtc_time_now);
+  M5.Rtc.GetDate(&rtc_date_now);
   int x = M5.Lcd.getCursorX();
   int y = M5.Lcd.getCursorY();
-  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);
-  M5.Lcd.setTextColor(WHITE, headerColor);
+  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, header_color);
+  M5.Lcd.setTextColor(WHITE, header_color);
   // Time
   M5.Lcd.setCursor(0, 0);
-  M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes,
-                rtcTimeNow.Seconds);
+  M5.Lcd.printf("%02d:%02d:%02d", rtc_time_now.Hours, rtc_time_now.Minutes,
+                rtc_time_now.Seconds);
   // Date
   M5.Lcd.setCursor(0, 8);
-  M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month,
-                rtcDateNow.Date);
+  M5.Lcd.printf("%04d-%02d-%02d", rtc_date_now.Year, rtc_date_now.Month,
+                rtc_date_now.Date);
   // IPv6
   M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0);
   // M5.Lcd.setCursor((53-39)*6, 0);
@@ -68,38 +69,38 @@ void DemoConsoleClass::begin() {
 
 void DemoConsoleClass::loop() { printHeader(); }
 
-size_t DemoConsoleClass::printf(const char *format, ...) {
-  char loc_buf[64];
-  char *temp = loc_buf;
+void DemoConsoleClass::writeMessage(const char *format, ...) {
+  char local_buffer[64];
+  char *output = local_buffer;
   va_list arg;
   va_list copy;
   va_start(arg, format);
   va_copy(copy, arg);
-  int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
+  int16_t len = vsnprintf(output, sizeof(local_buffer), format, copy);
   va_end(copy);
   if (len < 0) {
     va_end(arg);
-    return 0;
+    return;
   };
-  if (len >= sizeof(loc_buf)) {
-    temp = (char *)malloc(len + 1);
-    if (temp == NULL) {
+  // if too big for local_buffer, then allocate space and do it all again
+  if (len >= sizeof(local_buffer)) {
+    output = (char *)malloc(len + 1);
+    if (output == NULL) {
       va_end(arg);
-      return 0;
+      return;
     }
-    len = vsnprintf(temp, len + 1, format, arg);
+    len = vsnprintf(output, len + 1, format, arg);
   }
   va_end(arg);
 
   // len = write((uint8_t*)temp, len);
   checkPage();
-  M5.Lcd.print(temp);
-  Serial.print(temp);
+  M5.Lcd.println(output);
+  ESP_LOGI(TAG, "%s", output);
 
-  if (temp != loc_buf) {
-    free(temp);
+  if (output != local_buffer) {
+    free(output);
   }
-  return len;
 }
 
 // size_t DemoConsoleClass::printf_P(PGM_P format, ...)
@@ -107,22 +108,22 @@ size_t DemoConsoleClass::printf(const char *format, ...) {
 //     M5.Lcd.printf()
 // }
 
-size_t DemoConsoleClass::print(const __FlashStringHelper *ifsh) {
-  checkPage();
-  M5.Lcd.print(ifsh);
-  return Serial.print(ifsh);
-}
+// size_t DemoConsoleClass::print(const __FlashStringHelper *ifsh) {
+//   check_page();
+//   M5.Lcd.print(ifsh);
+//   return Serial.print(ifsh);
+// }
 
-size_t DemoConsoleClass::print(const String &s) {
-  checkPage();
-  M5.Lcd.print(s);
-  return Serial.print(s);
-}
+// size_t DemoConsoleClass::print(const String &s) {
+//   check_page();
+//   M5.Lcd.print(s);
+//   return Serial.print(s);
+// }
 
-size_t DemoConsoleClass::print(const Printable &x) {
-  checkPage();
-  M5.Lcd.print(x);
-  return Serial.print(x);
-}
+// size_t DemoConsoleClass::print(const Printable &x) {
+//   check_page();
+//   M5.Lcd.print(x);
+//   return Serial.print(x);
+// }
 
 DemoConsoleClass DemoConsole;
