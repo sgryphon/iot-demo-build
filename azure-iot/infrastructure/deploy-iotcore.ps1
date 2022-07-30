@@ -172,7 +172,7 @@ if (-not $SkipIotHub) {
   --hub-name $iotName `
   --container 'landing' `
   --encoding json `
-  --file-name-format 'Landing/Telemetry/{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}'
+  --file-name-format 'Landing/Telemetry/{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.jsonl'
 
   az iot hub route create `
   --name $stRouteName `

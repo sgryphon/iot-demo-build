@@ -58,6 +58,61 @@ This will remove the resource groups, deleting all resources in them.
 ./remove-iotcore.ps1
 ```
 
+Azure Synapse
+-------------
+
+Raw data files, in JSON Line format (.jsonl), contain rows of JSON.
+
+You can open these files as tab-separated values (using CSV format with field terminator '\t'), which will have a single column, and then use `JSON_VALUE()` to extract out JSON fields as columns.
+
+```sql
+SELECT
+    TOP 100 
+        JSON_VALUE(rawevent, '$.EnqueuedTimeUtc') as EnqueuedTimeUtc, 
+        JSON_VALUE(rawevent, '$.SystemProperties.connectionDeviceId') as DeviceId,
+        JSON_VALUE(rawevent, '$.Body.voltage') as Voltage,
+        JSON_VALUE(rawevent, '$.Body.currentTemperature') as CurrentTemperature,
+        rawevent
+FROM
+    OPENROWSET(
+        BULK 'https://straw0xacc5dev001.dfs.core.windows.net/landing/Landing/Telemetry/iot-hub001-0xacc5-dev/**',
+        FORMAT = 'CSV',
+        FIELDTERMINATOR = '\t',
+        FIELDQUOTE = '\0',
+        MAXERRORS = 1000,
+        PARSER_VERSION = '1.0'
+    )
+    WITH ( [rawevent] VARCHAR(MAX) )
+    AS [result]
+ORDER BY EnqueuedTimeUtc DESC
+```
+
+Azure Data Explorer
+-------------------
+
+Query raw data:
+
+```kusto
+['IotHub001-raw'] | take 10
+```
+
+Convert raw data and extract some values:
+
+```kusto
+['IotHub001-raw']
+| where tostring(rawevent.uplink_message.version_ids.model_id) == 'ldds75'
+| project
+    ReceivedAt = todatetime(rawevent.uplink_message.received_at),
+    DeviceId = tostring(rawevent.end_device_ids.device_id),
+    TtnApplication = tostring(rawevent.end_device_ids.application_ids.application_id),
+    ModelId = tostring(rawevent.uplink_message.version_ids.model_id),
+    DistanceM = toreal(rawevent.uplink_message.decoded_payload.distance_metres),
+    BatteryV = toreal(rawevent.uplink_message.decoded_payload.battery_volts),
+    RawData = base64_decode_toarray(tostring(rawevent.uplink_message.frm_payload))
+| take 10
+```
+
+
 IoT Endpoints
 -------------
 
@@ -81,6 +136,8 @@ IoT Hub also integrates with and can publish event messages to:
 
 See: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-endpoints
 And: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c
+
+
 
 Events
 ------
