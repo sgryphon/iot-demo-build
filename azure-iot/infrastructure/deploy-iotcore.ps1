@@ -56,8 +56,6 @@ $Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast'
 $OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))"
 $IoTHubSku = $ENV:DEPLOY_IOTHUB_SKU ?? 'F1'
 $DpsSku = $ENV:DEPLOY_DPS_SKU ?? 'S1'
-$DecSkuName = $ENV:DEPLOY_DEC_SKU_NAME ?? "Dev(No SLA)_Standard_E2a_v4"
-$DecSkuTier = $ENV:DEPLOY_DEC_SKU_TIER ?? "Basic"
 #>
 
 $ErrorActionPreference="Stop"
@@ -247,6 +245,10 @@ if (-not $SkipAdt) {
 if (-not $SkipAdx) {
   Write-Verbose "Create Azure Data Explorer database $dedbName"
 
+  $rawTableName = 'IotHub001-raw'
+  $rawMappingName = 'IotHub001-raw-mapping'
+  $consumerGroup = 'DataExplorer'
+
   az extension add -n kusto
 
   az kusto database create `
@@ -263,7 +265,6 @@ if (-not $SkipAdx) {
   # az kusto script show -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
   # az kusto script delete -n CreateIotHubRawMapping --cluster-name $decName --database-name $dedbName -g $rgName
 
-  $rawTableName = 'IotHub001-raw'
   $createTable = ".create table ['$rawTableName'] (rawevent: dynamic)"
   az kusto script create --cluster-name $decName `
                         --database-name $dedbName `
@@ -272,7 +273,6 @@ if (-not $SkipAdx) {
                         --force-update-tag $([DateTimeOffset]::Now.ToUnixTimeSeconds()) `
                         --script-content $createTable
 
-  $rawMappingName = 'IotHub001-raw-mapping'
   $createMapping = ".create table ['$rawTableName'] ingestion json mapping '$rawMappingName' '[{ """"column"""": """"rawevent"""", """"path"""": """"`$"""", """"datatype"""": """"dynamic"""" }]'"
   az kusto script create --cluster-name $decName `
                         --database-name $dedbName `
@@ -285,7 +285,6 @@ if (-not $SkipAdx) {
 
   Write-Verbose "Create consumer grop in IoT Hub $iotName for Data Explorer"
 
-  $consumerGroup = 'DataExplorer'
   az iot hub consumer-group create --hub-name $iotName --name $consumerGroup
 
   Write-Verbose "Connect IoT Hub $iotName to Data Explorer $decName"
@@ -298,6 +297,7 @@ if (-not $SkipAdx) {
     --consumer-group $consumerGroup `
     --shared-access-policy-name iothubowner `
     --data-format JSON `
+    --event-system-properties "iothub-enqueuedtime" "iothub-connection-device-id" "iothub-creation-time-utc" "message-id" `
     --table-name $rawTableName `
     --mapping-rule-name $rawMappingName
 }

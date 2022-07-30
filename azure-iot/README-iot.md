@@ -16,6 +16,8 @@ Azure Data Explorer (ADX) is configured with a database `dedb-iotcore-<OrgId>-de
 
 All messages from the hub are ingested into the table as raw JSON.
 
+You should at least include the system properties "iothub-enqueuedtime" and "iothub-connection-device-id", otherwise you may not know when the message arrived or where it came from ("iothub-creation-time-utc" is also important when messages are batched).
+
 Individual applications can then use ADX update policy to split and parse the specific messages they are interested in to a relevant schema table and materialized views. (This recommended approach comes from the Microsoft Azure IoT Architecture summit.)
 
 For a quick demonstration, the raw ingestion table can also be queried directly, e.g. to build an ADX dashboard.
