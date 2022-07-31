@@ -94,6 +94,7 @@ For more information see:
 * Azure Data Explorer (ADX) Cluster, `dec<OrgId>dev`
 * Azure Synapse
   - linked to the workspace `synapse-primary-storage`
+  - Spark pool `sparkpool001`, with auto-pause after 15 minutes
 
 TODO:
 

@@ -150,6 +150,27 @@ if ($connectivityResult.StatusCode -eq 403) {
   }
 }
 
+Write-Verbose "Create Synapse linked service to raw storage account"
+
+az synapse linked-service create --workspace-name $synWorkspaceName --name AzureDataLakeRaw001 --file '@"data/AzureDataLakeRaw001.json"'
+
+Write-Verbose "Create Synapse linked service to enriched and curated storage account"
+
+az synapse linked-service create --workspace-name $synWorkspaceName --name AzureDataLakeEnrichedCurated001 --file '@"data/AzureDataLakeEnrichedCurated001.json"'
+
+
+Write-Verbose "Create Synapse Spark pool"
+
+az synapse spark pool create --name sparkpool001 `
+                             --node-count 3 `
+                             --node-size Small `
+                             --resource-group $rgName `
+                             --spark-version 3.2 `
+                             --workspace-name $synWorkspaceName `
+                             --enable-auto-pause true `
+                             --delay 15 `
+                             --tags $tags
+
 # Output
 
 Write-Verbose "Synapse workspace: $($workspace.connectivityEndpoints.web)"

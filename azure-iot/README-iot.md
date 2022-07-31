@@ -63,6 +63,8 @@ Azure Synapse
 
 Raw data files, in JSON Line format (.jsonl), contain rows of JSON.
 
+### SQL
+
 You can open these files as tab-separated values (using CSV format with field terminator '\t'), which will have a single column, and then use `JSON_VALUE()` to extract out JSON fields as columns.
 
 ```sql
@@ -85,6 +87,35 @@ FROM
     WITH ( [rawevent] VARCHAR(MAX) )
     AS [result]
 ORDER BY EnqueuedTimeUtc DESC
+```
+
+### Spark Notebook
+
+A notebook can also be used to load, query, and plot the data, using a Spark serverless cluster.
+
+```python
+%%pyspark
+import matplotlib.pyplot as plt
+from pyspark.sql.functions import *
+
+events_df = spark.read.option("recursiveFileLookup", True)\
+    .json('abfss://landing@straw0xacc5dev001.dfs.core.windows.net/Landing/Telemetry/iot-hub001-0xacc5-dev/01/2022/07/31/**')
+history_df = events_df.select(to_timestamp(col("EnqueuedTimeUtc")).alias("EnqueuedTime"), "SystemProperties.connectionDeviceId", "Body.voltage", "Body.currentTemperature")
+#df3 = history_df.select(to_timestamp(col("EnqueuedTimeUtc")))
+#history_df.printSchema()
+#display(history_df.limit(5))
+history_pd_df = history_df.where("EnqueuedTime > current_timestamp - interval 2 hours").toPandas()
+#history_pd_df.printSchema()
+
+ax1 = history_pd_df['voltage'].plot()
+ax1.set_title('Battery last 2 hours')
+ax1.set_xlabel('Sample')
+#ax1.set_xticks()
+ax1.set_ylabel('Voltage')
+
+#plt.xticks(range(len(history_pd_df['EnqueuedTime'])), history_pd_df['EnqueuedTime'])
+plt.suptitle('')
+plt.show()
 ```
 
 Azure Data Explorer
