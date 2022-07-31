@@ -134,6 +134,8 @@ pio run --target upload
 
 In Git you can see the changes to the libraries and configuration changes that you have made. Slightly more complicated than the Arduino IDE as there are ~5 project files (instead of one) and a few extra directories and instructions. This is to support different libraries per project, as well as multi-board targetting, and other features.
 
+![M5Stack Core2 Hello](pics/m5core2-hello.jpg)
+
 ### Logging
 
 The LCD screen is 320x240, with 0,0 in the top left.
@@ -283,6 +285,8 @@ export IOT_CONFIG_DEVICE_KEY=YourAzureIoTDeviceKey
 
 (export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
 ```
+
+![M5Stack Core2 Azure IoT](pics/m5core2-azure-iot.jpg)
 
 While running, to monitor the IoT Hub events:
 

@@ -118,6 +118,9 @@ plt.suptitle('')
 plt.show()
 ```
 
+![Synapse displaying raw IoT data](pics/synapse-raw-iot.png)
+
+
 Azure Data Explorer
 -------------------
 

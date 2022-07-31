@@ -91,18 +91,20 @@ For more information see:
 
 ### Shared data services resource group (rg-shared-data-dev-001)
 
-* Azure Data Explorer (ADX) Cluster, `dec<OrgId>dev`
-* Azure Synapse
-  - linked to the workspace `synapse-primary-storage`
-  - Spark pool `sparkpool001`, with auto-pause after 15 minutes
+* Azure Data Explorer (ADX) Cluster, `dec<OrgId>dev`, for hot path time series analysis
+  - ADX is expensive to keep running, so the script stops it after creation
+  - There are scripts to start and stop as needed
+* Azure Synapse, for cold/warm path analysis, pipelines/integration, reporting, and machine learning
+  - Linked to the workspace `synapse-primary-storage`
+  - Has built in serverless SQL pool.
+  - Spark serverless pool `sparkpool001` created, with auto-pause after 15 minutes.
+  - No dedicated pools (would be expensive).
 
-TODO:
+Note:
 
-* Add a linked service to connect to other storage accounts:
+* ADX has a direct connection from IoT Hub, et up in the IoT core section.
+* Synapse reads from the data storage accounts, which IoT Hub is set up to write to.
 
-```powershell
-az synapse linked-service show --workspace-name $synWorkspaceName --name AzureDataLakeRaw001
-```
 
 Cost management
 ---------------
