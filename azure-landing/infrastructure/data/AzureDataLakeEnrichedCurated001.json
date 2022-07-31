@@ -1,0 +1,11 @@
+{
+  "name": "AzureDataLakeRaw001",
+  "properties": {
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    },
+    "type": "AzureBlobFS",
+    "url": "https://stencur0xacc5dev001.dfs.core.windows.net/"
+  }
+}

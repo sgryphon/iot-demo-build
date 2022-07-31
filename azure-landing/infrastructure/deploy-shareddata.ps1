@@ -150,6 +150,14 @@ if ($connectivityResult.StatusCode -eq 403) {
   }
 }
 
+Write-Verbose "Create Synapse linked service to raw storage account"
+
+az synapse linked-service create --workspace-name $synWorkspaceName --name AzureDataLakeRaw001 --file '@"data/AzureDataLakeRaw001.json"'
+
+Write-Verbose "Create Synapse linked service to enriched and curated storage account"
+
+az synapse linked-service create --workspace-name $synWorkspaceName --name AzureDataLakeEnrichedCurated001 --file '@"data/AzureDataLakeEnrichedCurated001.json"'
+
 # Output
 
 Write-Verbose "Synapse workspace: $($workspace.connectivityEndpoints.web)"
