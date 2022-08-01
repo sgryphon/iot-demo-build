@@ -359,6 +359,28 @@ pio run --target upload
 pio device monitor --baud 115200
 ```
 
+### Wifi
+
+Initial project creation:
+
+```shell
+mkdir m5atom_hello
+cd m5atom_hello
+pio project init --board m5stack-atom
+pio pkg install --library m5atom
+pio pkg install --library fastled/FastLED
+pio pkg install --library arduino-libraries/WiFi
+```
+
+To run:
+
+```shell
+export PIO_WIFI_SSID=YourWifiName
+export PIO_WIFI_PASSWORD=YourWifiPassword
+
+(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
+pio device monitor --baud 115200
+```
 
 Library references
 ------------------
