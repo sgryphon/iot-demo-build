@@ -306,6 +306,60 @@ Device ID notes:
 * RFC7254 The GSM and IEI URN, e.g. "urn:gsma:imei:90420156-025763-0;vers=0"
 
 
+M5 Atom
+-------
+
+### Quick start
+
+With PlatformIO installed you can create a new project for the M5 Atom called m5atom_hello, and add the M5Atom library.
+
+Using the CLI:
+
+```shell
+mkdir m5atom_hello
+cd m5atom_hello
+pio project init --board m5stack-atom
+pio pkg install --library m5atom
+pio pkg install --library fastled/FastLED
+```
+
+You then need to create a `src/main.cpp` file (if using the IDE new project a file may already have been created) with a simple Hello World example:
+
+```cpp
+#include <M5Atom.h>
+#include <Arduino.h>
+
+bool led = true;
+
+void setup() {
+  M5.begin(true, true, true);
+  delay(10);
+  Serial.println("Atom started");
+  M5.dis.fillpix(CRGB::Green); 
+}
+
+void loop() {
+  M5.update();
+  if (M5.Btn.wasPressed()) {
+    led = !led;
+    Serial.printf("Button was pressed %s\n", led ? "on" : "off");
+    if (led) {
+      M5.dis.fillpix(CRGB::Blue);
+    } else {
+      M5.dis.clear();
+    }
+  }
+}
+```
+
+To deploy (upload) to your device, and then monitor the serial output:
+
+```shell
+pio run --target upload
+pio device monitor --baud 115200
+```
+
+
 Library references
 ------------------
 
