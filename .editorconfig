@@ -9,7 +9,7 @@ indent_style = space
 # (Please don't specify an indent_size here; that has too many unintended consequences.)
 
 # IoT Code files
-[*.{cpp,jx}]
+[*.{h,cpp,jx}]
 indent_size = 2
 insert_final_newline = true
 charset = utf-8-bom
