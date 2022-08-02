@@ -8,9 +8,11 @@ class EventLogger
 public:
   EventLogger();
   virtual void begin();
-  virtual void loop();
-  virtual void information(const char *format, ...) __attribute__((format(printf, 2, 3)));
   virtual void error(const char *format, ...) __attribute__((format(printf, 2, 3)));
+  virtual void information(const char *format, ...) __attribute__((format(printf, 2, 3)));
+  virtual void loop();
+  virtual void pending();
+  virtual void ready();
 protected:
   virtual void log(esp_log_level_t level, const char *message);
 };

@@ -72,7 +72,14 @@ void EventLogger::information(const char *format, ...) {
   }
 }
 
-void EventLogger::loop() {
+void EventLogger::loop() { }
+
+void EventLogger::pending() { 
+    ESP_LOGI(TAG, "Pending");
+}
+
+void EventLogger::ready() { 
+    ESP_LOGI(TAG, "Ready");
 }
 
 // Protected

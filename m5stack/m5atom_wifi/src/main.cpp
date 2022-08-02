@@ -30,6 +30,7 @@ void setup() {
 void loop() {
   M5.update();
   logger->loop();
+  network->loop();
   if (M5.Btn.wasPressed()) {
     ++count;
     if (count % 5 == 0) {

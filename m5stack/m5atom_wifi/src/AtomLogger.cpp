@@ -27,8 +27,9 @@ void ledOn(unsigned long now) {
   M5.dis.fillpix(led_color);
 }
 
-void startLed(CRGB color, int16_t count) {
+void startLed(CRGB color, int16_t count, int16_t time_on_ms = 100) {
   led_color = color;
+  led_time_on_ms = time_on_ms;
   led_count_remaining = count > 0 ? count - 1 : count;
   ledOn(millis());
 }
@@ -44,6 +45,16 @@ void AtomLogger::loop() {
   if (led_on_at_millis > 0 && now > led_on_at_millis) {
     ledOn(now);
   }
+}
+
+void AtomLogger::pending() { 
+  startLed(CRGB::Yellow, -1);
+  ESP_LOGI(TAG, "Pending");
+}
+
+void AtomLogger::ready() { 
+  startLed(CRGB::Green, 2, 500);
+  ESP_LOGI(TAG, "Ready");
 }
 
 // Protected
