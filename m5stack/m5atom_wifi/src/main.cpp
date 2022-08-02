@@ -1,6 +1,7 @@
 #include "AtomLogger.h"
 #include "WiFiNetworkManager.h"
 
+#include <WiFi.h>
 #include <M5Atom.h>
 
 #define ST(A) #A
@@ -28,7 +29,7 @@ void setup() {
   network->begin();
 }
 
-void loop() {
+void loop() {  
   M5.update();
   logger->loop();
   network->loop();
