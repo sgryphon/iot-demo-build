@@ -6,6 +6,7 @@
 #define ST(A) #A
 #define STR(A) ST(A)
 
+const char *ap_password = STR(PIO_AP_PASSWORD);
 int16_t count = 0;
 //EventLogger *logger = new EventLogger();
 EventLogger *logger = new AtomLogger();
@@ -22,7 +23,7 @@ void setup() {
 
   WiFiNetworkManager *wiFiNetwork = new WiFiNetworkManager();
   wiFiNetwork->setEventLogger(logger);
-  wiFiNetwork->setCredentials(wifi_ssid, wifi_password);
+  wiFiNetwork->setCredentials(ap_password, wifi_ssid, wifi_password);
   network = wiFiNetwork;
   network->begin();
 }

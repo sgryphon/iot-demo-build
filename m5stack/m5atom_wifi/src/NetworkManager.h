@@ -10,8 +10,7 @@ public:
   virtual void begin();
   virtual bool isConnected();
   virtual void loop();
-  EventLogger *eventLogger();
-  void setEventLogger(EventLogger *eventLogger);
+  virtual void setEventLogger(EventLogger *eventLogger);
 };
 
 #endif

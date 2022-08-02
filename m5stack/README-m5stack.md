@@ -370,6 +370,7 @@ pio project init --board m5stack-atom
 pio pkg install --library m5atom
 pio pkg install --library fastled/FastLED
 pio pkg install --library arduino-libraries/WiFi
+pio pkg install --library arduino-libraries/WiFiManager
 ```
 
 To run:

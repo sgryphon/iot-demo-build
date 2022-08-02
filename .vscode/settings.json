@@ -2,6 +2,7 @@
     "files.associations": {
         "string": "cpp",
         "cstdio": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "functional": "cpp"
     }
 }

@@ -10,7 +10,8 @@ public:
   virtual void begin();
   virtual bool isConnected();
   virtual void loop();
-  void setCredentials(const char *ssid, const char *password);
+  void setCredentials(const char *ap_password, const char *ssid, const char *password);
+  virtual void setEventLogger(EventLogger *eventLogger);
 };
 
 #endif
