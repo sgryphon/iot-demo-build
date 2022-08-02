@@ -11,7 +11,7 @@ int16_t led_count_remaining = 0;
 int16_t led_interval_ms = 500;
 unsigned long led_on_at_millis = 0;
 unsigned long led_off_at_millis = 0;
-int16_t led_time_on_ms = 100;
+int16_t led_time_on_ms = 200;
 
 void ledOn(unsigned long now) {
   led_off_at_millis = now + led_time_on_ms;
@@ -24,10 +24,11 @@ void ledOn(unsigned long now) {
       led_count_remaining--;
     }
   }
+  ESP_LOGD(TAG, "LED on %08x (off %d)", led_color, led_off_at_millis);
   M5.dis.fillpix(led_color);
 }
 
-void startLed(CRGB color, int16_t count, int16_t time_on_ms = 100) {
+void startLed(CRGB color, int16_t count, int16_t time_on_ms = 200) {
   led_color = color;
   led_time_on_ms = time_on_ms;
   led_count_remaining = count > 0 ? count - 1 : count;
@@ -40,6 +41,7 @@ void AtomLogger::loop() {
   unsigned long now = millis();
   if (led_off_at_millis > 0 && now > led_off_at_millis) {
     led_off_at_millis = 0;
+    ESP_LOGD(TAG, "LED off");
     M5.dis.clear();
   }
   if (led_on_at_millis > 0 && now > led_on_at_millis) {
@@ -52,9 +54,14 @@ void AtomLogger::pending() {
   ESP_LOGI(TAG, "Pending");
 }
 
-void AtomLogger::ready() { 
+void AtomLogger::success() { 
   startLed(CRGB::Green, 2, 500);
-  ESP_LOGI(TAG, "Ready");
+  ESP_LOGI(TAG, "Success");
+}
+
+void AtomLogger::warning() { 
+  startLed(CRGB::Orange, 1, 400);
+  ESP_LOGW(TAG, "Warning");
 }
 
 // Protected

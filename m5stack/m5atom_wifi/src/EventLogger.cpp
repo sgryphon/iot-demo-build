@@ -78,8 +78,12 @@ void EventLogger::pending() {
     ESP_LOGI(TAG, "Pending");
 }
 
-void EventLogger::ready() { 
-    ESP_LOGI(TAG, "Ready");
+void EventLogger::success() { 
+    ESP_LOGI(TAG, "Success");
+}
+
+void EventLogger::warning() { 
+    ESP_LOGI(TAG, "Warning");
 }
 
 // Protected

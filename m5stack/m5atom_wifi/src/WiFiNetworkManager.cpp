@@ -14,7 +14,7 @@ static const char *TAG = "Network";
 
 const char *ap_password_ = { 0 };
 static char eui64_buffer[17];
-EventLogger *event_logger_ = nullptr;
+EventLogger *_logger = nullptr;
 const char *ssid_ = { 0 };
 const char *password_ = { 0 };
 uint16_t retry_count = 0;
@@ -24,6 +24,7 @@ NetworkStatus status_ = NOT_CONNECTED;
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  esp_ip6_addr_type_t ip6_address_type;
   switch (event) {
   case ARDUINO_EVENT_WIFI_AP_START:
     ESP_LOGD(TAG, "WiFi AP start, enabling IPv6");
@@ -41,22 +42,28 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
     WiFi.enableIpV6();
     break;
   case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-    event_logger_->information("WiFi station IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+    _logger->information("WiFi station IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+    ip6_address_type = esp_netif_ip6_get_addr_type(&info.got_ip6.ip6_info.ip);
+    ESP_LOGD(TAG, "IPv6 address type %d", ip6_address_type);
+    if (ip6_address_type == ESP_IP6_ADDR_IS_GLOBAL) {
+      delay(100);
+      _logger->success();
+    }
     break;
   case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
-    event_logger_->information("WiFi AP IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+    _logger->information("WiFi AP IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
     break;
   case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     delay(100);
     status_ = CONNECTED;
-    event_logger_->information("WiFi station connected IPv4 %s", WiFi.localIP().toString().c_str());
-    event_logger_->ready();
+    _logger->information("WiFi station connected IPv4 %s", WiFi.localIP().toString().c_str());
+    _logger->success();
     break;
   case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-    event_logger_->error("WiFi station disconnected");
+    _logger->error("WiFi station disconnected");
     delay(100);
 //    retry_count++;
-//    event_logger_->error("Connection failed %d", retry_count);
+//    _logger->error("Connection failed %d", retry_count);
 //    status_ = NOT_CONNECTED;
 //    retry_at_millis = millis() + 1000;
     break;
@@ -69,9 +76,9 @@ WiFiNetworkManager::WiFiNetworkManager() {
 }
 
 void WiFiNetworkManager::begin() {
-  event_logger_->information("Begin WiFi Network Manager, SSID: <%s>", ssid_);
+  _logger->information("Begin WiFi Network Manager, SSID: <%s>", ssid_);
   //ESP_LOGV(TAG, "WiFi password <%s>", password_);
-  event_logger_->pending();
+  _logger->pending();
   WiFi.onEvent(wifiOnEvent);
 }
 
@@ -108,7 +115,7 @@ void WiFiNetworkManager::loop() {
       ESP_LOGD(TAG, "WiFi begin status %d", rc);
       switch (rc) {
         case WL_NO_SSID_AVAIL:
-          event_logger_->error("No SSID available");
+          _logger->error("No SSID available");
           break;
       }
 
@@ -149,5 +156,5 @@ void WiFiNetworkManager::setCredentials(const char *ap_password, const char *ssi
 }
 
 void WiFiNetworkManager::setEventLogger(EventLogger *eventLogger) {
-    event_logger_ = eventLogger;
+    _logger = eventLogger;
 }

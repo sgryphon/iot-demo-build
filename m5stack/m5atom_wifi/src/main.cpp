@@ -45,7 +45,12 @@ void testNetwork() {
   }
 
   String payload = http.getString();
-  logger->information("ipv6-test: %s", payload.c_str());
+  logger->information("v4v6.ipv6-test.com=<%s>", payload.c_str());
+  if (payload.indexOf(":") >= 0) {
+    logger->success();
+  } else {
+    logger->warning();
+  }
   delete client;
 }
 
