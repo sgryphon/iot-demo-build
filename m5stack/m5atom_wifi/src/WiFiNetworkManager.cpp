@@ -13,12 +13,15 @@ typedef enum {
 static const char *TAG = "Network";
 
 const char *ap_password_ = { 0 };
+static char eui64_buffer[17];
 EventLogger *event_logger_ = nullptr;
 const char *ssid_ = { 0 };
 const char *password_ = { 0 };
 uint16_t retry_count = 0;
 unsigned long retry_at_millis = 0;
 NetworkStatus status_ = NOT_CONNECTED;
+
+esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   switch (event) {
@@ -72,6 +75,26 @@ void WiFiNetworkManager::begin() {
   WiFi.onEvent(wifiOnEvent);
 }
 
+const char * WiFiNetworkManager::eui64() {
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  // 01:34:67:9A:CD:F0
+  // 0<3>3467 fffe 9acdf0
+  snprintf(eui64_buffer, sizeof(eui64_buffer), "%02x%02x%02xfffe%02x%02x%02x", mac[0] ^ 2, mac[1], mac[2], mac[3], mac[4], mac[5]);
+  return eui64_buffer;
+}
+
+IPv6Address WiFiNetworkManager::globalIPv6(){
+	esp_ip6_addr_t addr;
+  if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    return IPv6Address();
+  }
+  if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
+    return IPv6Address();
+  }
+  return IPv6Address(addr.addr);
+}
+
 bool WiFiNetworkManager::isConnected() { return status_ == CONNECTED; }
 
 void WiFiNetworkManager::loop() {
@@ -101,6 +124,21 @@ void WiFiNetworkManager::loop() {
       }
       */
     }
+  }
+}
+
+String WiFiNetworkManager::mainDnsIP(){
+	esp_netif_dns_info_t dns;
+  if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    return "";
+  }
+  if(esp_netif_get_dns_info(get_esp_interface_netif(ESP_IF_WIFI_STA), ESP_NETIF_DNS_MAIN, &dns)) {
+    return "ERROR";
+  }
+  if(dns.ip.type == ESP_IPADDR_TYPE_V6) {
+    return IPv6Address(dns.ip.u_addr.ip6.addr).toString();
+  } else {
+    return IPAddress(dns.ip.u_addr.ip4.addr).toString();
   }
 }
 
