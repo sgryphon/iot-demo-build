@@ -7,6 +7,7 @@ class AtomLogger : public EventLogger
 {
 public:
   AtomLogger();
+  virtual void loop();
 protected:
   virtual void log(esp_log_level_t level, const char *message);
 };
