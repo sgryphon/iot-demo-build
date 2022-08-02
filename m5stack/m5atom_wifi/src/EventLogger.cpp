@@ -78,10 +78,10 @@ void EventLogger::loop() {
 // Protected
 
 void EventLogger::log(esp_log_level_t level, const char *message) {
-    if (level == ESP_LOG_ERROR) {
-        ESP_LOGE(TAG, "%s", message);
-    } else {
-        ESP_LOGI(TAG, "%s", message);
-    }
+  if (level == ESP_LOG_ERROR) {
+    ESP_LOGE(TAG, "%s", message);
+  } else {
+    ESP_LOGI(TAG, "%s", message);
+  }
 }
 
