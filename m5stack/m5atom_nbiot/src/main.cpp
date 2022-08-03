@@ -19,7 +19,8 @@ void testNetwork() {
   _logger->information("Button %d", _count);
   //logger->information("Button %d, IPv6 %s, IPv4 %s", count, network->globalIPv6().toString().c_str(), WiFi.localIP().toString().c_str());
 
-  Client *client = _network->createClient();
+  //Client *client = _network->createClient();
+  Client *client = _network->createSecureClient((char *)_root_ca_pem_start);
   //WiFiClientSecure *client = new WiFiClientSecure;
   if (client == nullptr) {
     _logger->error("Unable to create secure client");
@@ -27,8 +28,10 @@ void testNetwork() {
   }
   //client->setCACert((char *)root_ca_pem_start);
 
-  const char *server = "v4v6.ipv6-test.com";
-  const int port = 80;
+  const char server[] = "v4v6.ipv6-test.com";
+  //const int port = 80;
+  const int port = 443;
+  const char path[] = "/api/myip.php";
   HttpClient *http = new HttpClient(*client, server, port);
   //bool success = http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php");
   if (http == nullptr) {
@@ -37,7 +40,8 @@ void testNetwork() {
     return;
   }
 
-  int rc = http->get("/api/myip.php");
+  http->connectionKeepAlive();  // Currently, this is needed for HTTPS
+  int rc = http->get(path);
   if (rc != 0) {
     _logger->error("HTTP GET error %d", rc);
     delete client;

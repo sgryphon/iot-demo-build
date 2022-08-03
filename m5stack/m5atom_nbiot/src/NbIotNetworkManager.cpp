@@ -27,6 +27,10 @@ void nbConnect(void) {
   while (!modem.init()) {
     ESP_LOGD(TAG, "Initializing modem %ds", (millis() - start) / 1000);
   };
+  String modem_info = modem.getModemInfo();
+  String imei = modem.getIMEI();
+  String imsi = modem.getIMSI();
+  ESP_LOGI(TAG, "Modem: %s, IMEI %s, IMSI %s", modem_info.c_str(), imei.c_str(), imsi.c_str());
 
   start = millis();
   ESP_LOGD(TAG, "Waiting for network");
@@ -50,13 +54,15 @@ void NbIotNetworkManager::begin() {
 }
 
 Client *NbIotNetworkManager::createClient() {
-  TinyGsmClient *tcp_client = new TinyGsmClient(modem);
-  return tcp_client;
-  //return tcpClient;
+  //TinyGsmClient *tcp_client = new TinyGsmClient(modem);
+  //return tcp_client;
+  return nullptr;
 }
 
-Client *NbIotNetworkManager::createSecureClient(const char *rootCA) {
-  return nullptr;
+Client *NbIotNetworkManager::createSecureClient(const char *root_ca) {
+  TinyGsmClient *tcp_client = new TinyGsmClient(modem, root_ca);
+  return tcp_client;
+  //return nullptr;
 }
 
 bool NbIotNetworkManager::isConnected() { return _status == CONNECTED; }
@@ -74,6 +80,6 @@ void NbIotNetworkManager::setApn(const char *apn) {
   strcpy(_apn, apn);
 }
 
-void NbIotNetworkManager::setEventLogger(EventLogger *eventLogger) {
-    _network_logger = eventLogger;
+void NbIotNetworkManager::setEventLogger(EventLogger *event_logger) {
+    _network_logger = event_logger;
 }

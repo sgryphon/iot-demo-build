@@ -10,11 +10,11 @@ class NetworkManager
 public:
   NetworkManager();
   virtual Client *createClient();
-  virtual Client *createSecureClient(const char *rootCA);
+  virtual Client *createSecureClient(const char *root_ca);
   virtual void begin();
   virtual bool isConnected();
   virtual void loop();
-  virtual void setEventLogger(EventLogger *eventLogger);
+  virtual void setEventLogger(EventLogger *event_logger);
 };
 
 #endif
