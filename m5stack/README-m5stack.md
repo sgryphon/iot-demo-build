@@ -369,8 +369,6 @@ cd m5atom_hello
 pio project init --board m5stack-atom
 pio pkg install --library m5atom
 pio pkg install --library fastled/FastLED
-pio pkg install --library arduino-libraries/WiFi
-pio pkg install --library arduino-libraries/WiFiManager
 ```
 
 To run:
@@ -382,6 +380,12 @@ export PIO_WIFI_PASSWORD=YourWifiPassword
 (export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
 pio device monitor --baud 115200
 ```
+
+### Atom DTU NB-IoT
+
+See: https://github.com/m5stack/ATOM_DTU_NB
+
+
 
 Library references
 ------------------
