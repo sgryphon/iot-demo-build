@@ -1,34 +1,34 @@
 #include "AtomLogger.h"
-#include "WiFiNetworkManager.h"
+#include "NbIotNetworkManager.h"
 
 #include <HTTPClient.h>
-#include <WiFi.h>
 #include <M5Atom.h>
 
 #define ST(A) #A
 #define STR(A) ST(A)
 
-const char *ap_password = STR(PIO_AP_PASSWORD);
-int16_t count = 0;
-//EventLogger *logger = new EventLogger();
-EventLogger *logger = new AtomLogger();
-WiFiNetworkManager *network = nullptr;
-extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
-extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
-const char *version = STR(PIO_VERSION);
-const char *wifi_password = STR(PIO_WIFI_PASSWORD);
-const char *wifi_ssid = STR(PIO_WIFI_SSID);
+int16_t _count = 0;
+EventLogger *_logger = new AtomLogger();
+const char *_nbiot_apn = STR(PIO_NBIOT_APN);
+NbIotNetworkManager *_network = nullptr;
+extern const uint8_t _root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
+extern const uint8_t _root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
+const char *_version = STR(PIO_VERSION);
 
 void testNetwork() {
-  logger->information("Button %d, IPv6 %s, IPv4 %s", count, network->globalIPv6().toString().c_str(), WiFi.localIP().toString().c_str());
+  _logger->information("Button %d", _count);
+  //logger->information("Button %d, IPv6 %s, IPv4 %s", count, network->globalIPv6().toString().c_str(), WiFi.localIP().toString().c_str());
 
+/*
   WiFiClientSecure *client = new WiFiClientSecure;
   if (!client) {
     logger->error("Unable to create secure client");
     return;
   }
   client->setCACert((char *)root_ca_pem_start);
+*/
 
+/*
   HTTPClient http;
   bool success = http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php");
   if (!success) {
@@ -52,29 +52,30 @@ void testNetwork() {
     logger->warning();
   }
   delete client;
+  */
 }
 
 void setup() {
   M5.begin(true, true, true);
   delay(10);
-  logger->begin();
-  logger->information("Atom started, v%s", version);
+  _logger->begin();
+  _logger->information("Atom started, v%s", _version);
 
-  WiFiNetworkManager *wiFiNetwork = new WiFiNetworkManager();
-  wiFiNetwork->setEventLogger(logger);
-  wiFiNetwork->setCredentials(ap_password, wifi_ssid, wifi_password);
-  network = wiFiNetwork;
-  network->begin();
+  NbIotNetworkManager *nb_iot_network = new NbIotNetworkManager();
+  nb_iot_network->setEventLogger(_logger);
+  nb_iot_network->setApn(_nbiot_apn);
+  _network = nb_iot_network;
+  _network->begin();
 }
 
 void loop() {  
   M5.update();
-  logger->loop();
-  network->loop();
+  _logger->loop();
+  _network->loop();
   if (M5.Btn.wasPressed()) {
-    ++count;
-    if (count % 5 == 0) {
-      logger->error("Too many button presses");
+    ++_count;
+    if (_count % 5 == 0) {
+      _logger->error("Too many button presses");
       return;
     }
     testNetwork();
