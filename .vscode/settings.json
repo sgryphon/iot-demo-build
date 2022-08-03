@@ -1,6 +1,14 @@
 {
     "files.associations": {
         "string": "cpp",
-        "cstdio": "cpp"
+        "cstdio": "cpp",
+        "chrono": "cpp",
+        "functional": "cpp",
+        "array": "cpp",
+        "compare": "cpp",
+        "ratio": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp"
     }
 }
