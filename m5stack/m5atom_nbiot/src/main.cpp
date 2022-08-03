@@ -1,8 +1,8 @@
 #include "AtomLogger.h"
 #include "NbIotNetworkManager.h"
 
-#include <HTTPClient.h>
 #include <M5Atom.h>
+#include <ArduinoHttpClient.h>
 
 #define ST(A) #A
 #define STR(A) ST(A)
@@ -19,40 +19,46 @@ void testNetwork() {
   _logger->information("Button %d", _count);
   //logger->information("Button %d, IPv6 %s, IPv4 %s", count, network->globalIPv6().toString().c_str(), WiFi.localIP().toString().c_str());
 
-/*
-  WiFiClientSecure *client = new WiFiClientSecure;
-  if (!client) {
-    logger->error("Unable to create secure client");
+  Client *client = _network->createClient();
+  //WiFiClientSecure *client = new WiFiClientSecure;
+  if (client == nullptr) {
+    _logger->error("Unable to create secure client");
     return;
   }
-  client->setCACert((char *)root_ca_pem_start);
-*/
+  //client->setCACert((char *)root_ca_pem_start);
 
-/*
-  HTTPClient http;
-  bool success = http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php");
-  if (!success) {
-    logger->error("Unable to begin HTTP");
+  const char *server = "v4v6.ipv6-test.com";
+  const int port = 80;
+  HttpClient *http = new HttpClient(*client, server, port);
+  //bool success = http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php");
+  if (http == nullptr) {
+    _logger->error("Unable to create HTTP");
     delete client;
     return;
   }
 
-  int httpCode = http.GET();
-  if (httpCode != HTTP_CODE_OK && httpCode != HTTP_CODE_MOVED_PERMANENTLY) {
-    logger->error("HTTP GET error %d: %s", httpCode, http.errorToString(httpCode).c_str());
+  int rc = http->get("/api/myip.php");
+  if (rc != 0) {
+    _logger->error("HTTP GET error %d", rc);
     delete client;
     return;
   }
 
-  String payload = http.getString();
-  logger->information("v4v6.ipv6-test.com=<%s>", payload.c_str());
+  int httpCode = http->responseStatusCode();
+  if (httpCode != 200 && httpCode != 301) {
+    _logger->error("HTTP GET error %d", httpCode);
+    delete client;
+    return;
+  }
+
+  String payload = http->responseBody();
+  _logger->information("v4v6.ipv6-test.com=<%s>", payload.c_str());
   if (payload.indexOf(":") >= 0) {
-    logger->success();
+    _logger->success();
   } else {
-    logger->warning();
+    _logger->warning();
   }
   delete client;
-  */
 }
 
 void setup() {
