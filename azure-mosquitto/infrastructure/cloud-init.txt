@@ -38,7 +38,7 @@ write_files:
       allow_anonymous false
       password_file /etc/mosquitto/passwd
 
-      listener 1883 localhost
+      listener 1883 #INIT_LIMIT_INSECURE_HOST#
 
       listener 8883
       certfile /etc/mosquitto/certs/server.pem
@@ -46,12 +46,16 @@ write_files:
   - path: /etc/mosquitto/passwd
     content: |
       mqttuser:#INIT_PASSWORD_INPUT#
+      mqttservice:#INIT_PASSWORD_INPUT#2
+      mqttdevice1:#INIT_PASSWORD_INPUT#3
+      mqttdevice2:#INIT_PASSWORD_INPUT#4
 runcmd:
   - ufw allow ssh
   - ufw allow http
   - ufw allow https
   - ufw allow 8883
   - ufw allow 8083
+  - #INIT_UFW_ALLOW_INSECURE#
   - ufw enable
   - systemctl stop mosquitto
   - mosquitto_passwd -U /etc/mosquitto/passwd

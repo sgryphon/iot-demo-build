@@ -50,14 +50,16 @@ param (
     [string]$VmSize = $ENV:DEPLOY_VM_SIZE ?? 'Standard_B2s',
     ## Linux admin account name (authentication via SSH)
     [string]$AdminUsername = $ENV:DEPLOY_ADMIN_USERNAME ?? 'iotadmin',
-    ## Static server address suffix
-    [string]$PrivateIpSuffix = $ENV:DEPLOY_PRIVATE_IP ?? "100c",
+    ## Numeric suffix for the server
+    [int]$ServerNumber = $ENV:DEPLOY_SERVER_NUMBER ?? 1,
     ## Auto-shutdown time in UTC, default 0900 is 19:00 in Brisbane
     [string]$ShutdownUtc = $ENV:DEPLOY_SHUTDOWN_UTC ?? '0900',
     ## Email to send auto-shutdown notification to (optional)
     [string]$ShutdownEmail = $ENV:DEPLOY_SHUTDOWN_EMAIL ?? '',
     ## Add a public IPv4 (if needed; uses the last byte of the static address)
-    [switch]$AddPublicIpv4 = $true
+    [switch]$AddPublicIpv4 = $true,
+    ## Allow access to the server via insecure MQTT (port 1883), without TLS
+    [switch]$AllowInsecure
 )
 
 <#
@@ -96,13 +98,19 @@ $vnetName = "vnet-$Environment-$Location-001".ToLowerInvariant()
 $dmzSnetName = "snet-dmz-$Environment-$Location-001".ToLowerInvariant()
 $dmzNsgName = "nsg-dmz-$Environment-001".ToLowerInvariant()
 
+$numericSuffix = $serverNumber.ToString("000")
 
-$vmName = 'vmmosquitto001'
-$vmOsDisk = 'osdiskvmmosquitto001'
-$pipDnsName = "mqtt-$OrgId-$Environment".ToLowerInvariant()
-$pipName = "pip-$vmName-$Environment-$Location-001".ToLowerInvariant()
+$vmName = "vmmosquitto$numericSuffix"
+$vmOsDisk = "osdiskvmmosquitto$numericSuffix"
 $nicName = "nic-01-$vmName-$Environment-001".ToLowerInvariant()
 $ipcName = "ipc-01-$vmName-$Environment-001".ToLowerInvariant()
+
+$pipName = "pip-$vmName-$Environment-$Location-001".ToLowerInvariant()
+$pipDnsName = "mqtt$numericSuffix-$OrgId-$Environment".ToLowerInvariant()
+
+$pipv4Name = "pipv4-$vmName-$Environment-$Location-001".ToLowerInvariant()
+$pipv4DnsName = "mqtt$numericSuffix-$OrgId-$Environment-ipv4".ToLowerInvariant()
+
 #$dataDiskSize = 20
 
 $vmImage = 'UbuntuLTS'
@@ -123,15 +131,16 @@ $dmzSnet = az network vnet subnet show --name $dmzSnetName -g $networkRgName --v
 
 if (!$dmzSnet) { throw 'Landing zone network subnet $dmzSnetName not found; see scripts in azure-landing to create' }
 
+$privateIpSuffix = "12$serverNumber"
+$privateIPv4Suffix = 20 + $ServerNumber
+
 # Assumption: ends in "/64"
 $dmzUlaPrefix = $dmzSnet.addressPrefixes | Where-Object { $_.StartsWith('fd') } | Select-Object -First 1
-$vmIpAddress = "$($dmzUlaPrefix.Substring(0, $dmzUlaPrefix.Length - 3))$PrivateIpSuffix"
+$vmIpAddress = "$($dmzUlaPrefix.Substring(0, $dmzUlaPrefix.Length - 3))$privateIpSuffix"
 
 # Assumption: ends in "0/24"
 $dmzIPv4Prefix = $dmzSnet.addressPrefixes | Where-Object { $_.StartsWith('10.') } | Select-Object -First 1
-$privateIPv4Suffix = [int]"0x$($PrivateIpSuffix.Substring($PrivateIpSuffix.Length -2))"
 $vmIPv4 = "$($dmzIPv4Prefix.Substring(0, $dmzIPv4Prefix.Length - 4))$privateIPv4Suffix"
-
 
 # Create
 
@@ -145,6 +154,19 @@ az network nsg rule create --name AllowMQTT `
                            --source-port-ranges "*" `
                            --direction Inbound `
                            --destination-port-ranges 8883 8083
+
+if ($AllowInsecure) {
+Write-Verbose "Adding Network security group rule 'AllowInsecureMQTT' for port 1883 to $dmzNsgName"
+  az network nsg rule create --name AllowInsecureMQTT `
+                            --nsg-name $dmzNsgName `
+                            --priority 2201 `
+                            --resource-group $networkRgName `
+                            --access Allow `
+                            --source-address-prefixes "*" `
+                            --source-port-ranges "*" `
+                            --direction Inbound `
+                            --destination-port-ranges 1883
+}
 
 Write-Verbose "Creating resource group $rgName"
 az group create --name $rgName -l $Location --tags $tags
@@ -184,9 +206,6 @@ $hostNames = $(az network public-ip show --name $pipName --resource-group $rgNam
 $certEmail = "postmaster@$hostNames" # Using the main host name
 
 if ($AddPublicIpv4) {
-  $pipv4Name = "pipv4-$vmName-$Environment-$Location-001".ToLowerInvariant()
-  $pipv4DnsName = "mqtt-$OrgId-$Environment-ipv4".ToLowerInvariant()
-
   Write-Verbose "Creating Public IPv4 addresses $pipv4Name (DNS $pipv4DnsName)"
   az network public-ip create `
     --name $pipv4Name  `
@@ -207,13 +226,15 @@ if ($AddPublicIpv4) {
 
     $hostNames = "$hostNames,$(az network public-ip show --name $pipv4Name --resource-group $rgName --query dnsSettings.fqdn --output tsv)"
 }
-   
+
 # See: https://docs.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-string-substitutions?view=powershell-7.2#find-and-replace-tokens
 Write-Verbose "Configurating cloud-init.txt~ file with host names: $hostNames"
 (Get-Content -Path (Join-Path $PSScriptRoot cloud-init.txt) -Raw) `
   -replace '#INIT_HOST_NAMES#',$hostNames `
   -replace '#INIT_CERT_EMAIL#',$certEmail `
   -replace '#INIT_PASSWORD_INPUT#',$MqttPassword `
+  -replace '#INIT_LIMIT_INSECURE_HOST#',($AllowInsecure ? '' : 'localhost') `
+  -replace '#INIT_UFW_ALLOW_INSECURE#',($AllowInsecure ? 'ufw allow 1883' : '') `
   | Set-Content -Path (Join-Path $PSScriptRoot cloud-init.txt~)
 
 Write-Verbose "Creating Virtual machine $vmName (size $vmSize)"

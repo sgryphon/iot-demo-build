@@ -5,7 +5,9 @@
 [CmdletBinding()]
 param (
     ## Deployment environment, e.g. Prod, Dev, QA, Stage, Test.
-    [string]$Environment = 'Dev'
+    [string]$Environment = 'Dev',
+    ## Numeric suffix for the server
+    [int]$ServerNumber = $ENV:DEPLOY_SERVER_NUMBER ?? 1
 )
 
 $ErrorActionPreference="Stop"
@@ -15,6 +17,7 @@ Write-Verbose "Using subscription ID $SubscriptionId"
 
 $appName = 'mqtt'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
-$vmName = 'vmmosquitto001'
+$numericSuffix = $serverNumber.ToString("000")
+$vmName = 'vmmosquitto$numericSuffix'
 
 az vm deallocate --name $vmName -g $rgName
