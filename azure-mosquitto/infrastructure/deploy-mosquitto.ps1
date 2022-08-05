@@ -84,7 +84,7 @@ if (!$MqttPassword) { throw 'You must supply a value for -MqttPassword or set en
 $ErrorActionPreference="Stop"
 
 $SubscriptionId = $(az account show --query id --output tsv)
-Write-Verbose "Deploying scripts for environment '$Environment' in subscription '$SubscriptionId'$($AddPublicIpv4 ? ' with IPv4' : '')"
+Write-Verbose "Deploying server $ServerNumber for environment '$Environment' in subscription '$SubscriptionId'$($AddPublicIpv4 ? ' with IPv4' : '')$($AllowInsecure ? ' with AllowInsecure' : '')"
 
 # Following standard naming conventions from Azure Cloud Adoption Framework
 # https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
@@ -131,7 +131,7 @@ $dmzSnet = az network vnet subnet show --name $dmzSnetName -g $networkRgName --v
 
 if (!$dmzSnet) { throw 'Landing zone network subnet $dmzSnetName not found; see scripts in azure-landing to create' }
 
-$privateIpSuffix = "12$serverNumber"
+$privateIpSuffix = (0x1200 + $serverNumber).ToString("x")
 $privateIPv4Suffix = 20 + $ServerNumber
 
 # Assumption: ends in "/64"

@@ -26,6 +26,7 @@ The public adddresses of the machine are given a unique name, using the subscrip
 
 After deployment, the fully qualified domain name (fqdns) is shown, and can be used to access the MQTT server using an MQTT client, with the username 'mqttuser' and the password you specified when running the script.
 
+The script also creates additional users 'mqttsystem', 'mqttdevice1', and 'mqttdevice2', with the password you specified with the suffix '2', '3', or '4', repectively.
 
 Testing the Mosquitto server
 ----------------------------
@@ -46,14 +47,14 @@ First, in one terminal, subscribe:
 
 ```shell
 export MQTT_PASSWORD=YourSecretPassword
-mosquitto_sub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
+mosquitto_sub -h mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
 ```
 
-Then use another terminal to publish a message:
+Then use another terminal to publish a message (note that mqttdevice1 has the password suffix '3'):
 
 ```shell
-export MQTT_PASSWORD=YourSecretPassword
-mosquitto_pub -h mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m '[{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]' -p 8883 -u mqttuser -P $MQTT_PASSWORD
+export MQTT_DEVICE1_PASSWORD=YourSecretPassword3
+mosquitto_pub -h mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m '[{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]' -p 8883 -u mqttdevice1 -P $MQTT_DEVICE1_PASSWORD
 ```
 
 Example output (also showing the log tail on the server):
@@ -69,7 +70,7 @@ Server management
 You can also SSH into the server, to check the application (the script automatically assigns your local SSH key with access):
 
 ```
-ssh iotadmin@mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com
+ssh iotadmin@mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com
 ```
 
 You can then follow the Mosquitto logs with:
@@ -103,7 +104,38 @@ that were deployed.
 If you do not have IPv6 available, then there is also an IPv4 endpoint:
 
 ```shell
-mosquitto_sub -h mqtt-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
+mosquitto_sub -h mqtt001-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
+```
+
+Insecure server
+---------------
+
+Some devices are not capable of MQTTS (TLS) connections; they only support insecure connections.
+
+To safely deploy such devices, you can use private networks -- and for NB-IoT devices a private APN (Access Point Name) -- to make them secure.
+
+In those case you may want to test with an insecure MQTT server that does allow connection on port 1883.
+
+The script allows you create additional servers (e.g. number 002), and configure them to allow insecure access.
+
+```powershell
+az login
+$VerbosePreference = 'Continue'
+./deploy-mosquitto.ps1 -MqttPassword YourInsecurePassword -ServerNumber 2 -AllowInsecure
+```
+
+To test your connection:
+
+```shell
+export MQTT_PASSWORD=YourInsecurePassword
+mosquitto_sub -h mqtt002-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 1883 -u mqttuser -P $MQTT_PASSWORD
+```
+
+And then send:
+
+```shell
+export MQTT_DEVICE_PASSWORD=YourInsecurePassword3
+mosquitto_pub -h mqtt002-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m "Insecure" -p 1883 -u mqttdevice1 -P $MQTT_DEVICE_PASSWORD
 ```
 
 
@@ -129,8 +161,8 @@ mosquitto_pub -h localhost -t test -m "hello world" -u mqttuser -P YourSecretPas
 From a client you can also test if you can connect to the port, and if SSL is working.
 
 ```shell
-nc -vz mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com 8883
-echo "Q" | openssl s_client -showcerts mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com:8883
+nc -vz mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com 8883
+echo "Q" | openssl s_client -showcerts mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com:8883
 ```
 
 
