@@ -73,10 +73,11 @@ $Location = $ENV:DEPLOY_LOCATION ?? 'australiaeast'
 $OrgId = $ENV:DEPLOY_ORGID ?? "0x$((az account show --query id --output tsv).Substring(0,4))"
 $VmSize = $ENV:DEPLOY_VM_SIZE ?? 'Standard_B2s'
 $AdminUsername = $ENV:DEPLOY_ADMIN_USERNAME ?? 'iotadmin'
+$ServerNumber = $ENV:DEPLOY_SERVER_NUMBER ?? 1
 $ShutdownUtc = $ENV:DEPLOY_SHUTDOWN_UTC ?? '0900'
 $ShutdownEmail = $ENV:DEPLOY_SHUTDOWN_UTC ?? ''
-$PrivateIpSuffix = $ENV:DEPLOY_PRIVATE_IP ?? "100c"
 $AddPublicIpv4 = $true
+$AllowInsecure
 #>
 
 if (!$MqttPassword) { throw 'You must supply a value for -MqttPassword or set environment variable DEPLOY_MQTT_PASSWORD' }
