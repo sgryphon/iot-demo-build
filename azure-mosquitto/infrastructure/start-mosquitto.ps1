@@ -18,6 +18,6 @@ Write-Verbose "Using subscription ID $SubscriptionId"
 $appName = 'mqtt'
 $rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
 $numericSuffix = $serverNumber.ToString("000")
-$vmName = 'vmmosquitto$numericSuffix'
+$vmName = "vmmosquitto$numericSuffix"
 
 az vm start --name $vmName -g $rgName
