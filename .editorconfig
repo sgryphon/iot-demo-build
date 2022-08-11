@@ -6,6 +6,33 @@ root = true
 [*]
 indent_style = space
 
+###############################
+# Custom
+###############################
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# Powershell files
+[*.ps1]
+indent_size = 2
+
+# Shell script files
+[*.sh]
+end_of_line = lf
+indent_size = 2
+
+# IoT Code files
+[*.{h,cpp,jx}]
+indent_size = 2
+insert_final_newline = true
+charset = utf-8-bom
+
+###############################
+# Microsoft default: https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options
+###############################
+
 # XML project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
 indent_size = 2
