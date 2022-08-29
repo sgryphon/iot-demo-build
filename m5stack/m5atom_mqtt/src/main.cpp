@@ -6,7 +6,8 @@
 #define STR(A) ST(A)
 
 const char apn[] = "telstra.iot";
-const char server[] = "mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com";
+//const char server[] = "mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com";
+const char server[] = "mqtt001-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com";
 const int16_t port = 8883;
 const char mqtt_user[] = "mqttdevice1";
 const char mqtt_password[] = STR(PIO_MQTT_PASSWORD);
@@ -40,6 +41,7 @@ char message_buffer[2000] = { 0 };
 int32_t counter = 0;
 
 bool ready = false;
+bool failed = false;
 int32_t led_off_ms = -1;
 int32_t next_message_ms = -1;
 int32_t disconnect_ms = -1;
@@ -72,8 +74,11 @@ void loop() {
   M5.update();
   modem.loop();
 
+  if (failed) return;
+
   if (!modem.isActive()) {
     Serial.println("Fatal error - modem is not active");
+    failed = true;
     M5.dis.fillpix(CRGB::Red); 
     return;
   }
@@ -85,10 +90,11 @@ void loop() {
       bool ca_success = modem.setRootCA(root_ca);
       if (!ca_success) {
         Serial.println("Certificate failed");
+        failed = true;
         M5.dis.fillpix(CRGB::Red); 
         return;
       }
-      client_id = "dev" + modem.IMEI();
+      client_id = "imei-" + modem.IMEI();
       Serial.printf("Setting client ID to: %s\n", client_id.c_str());
       M5.dis.fillpix(CRGB::Green);
       led_off_ms = now + 500;
@@ -105,8 +111,9 @@ void loop() {
   if (next_message_ms > 0 && millis() > next_message_ms) {
     int8_t rc = mqtt.connect(client_id.c_str(), mqtt_user, mqtt_password);
     if (rc != 0) {
-      Serial.println("Certificate failed");
+      Serial.println("Connect failed");
       M5.dis.fillpix(CRGB::Red); 
+      failed = true;
       return;
     }
     mqtt.subscribe(subscribe_topic);
