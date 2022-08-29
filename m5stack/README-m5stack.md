@@ -388,8 +388,6 @@ See: https://github.com/m5stack/ATOM_DTU_NB
 
 ### Atom MQTT
 
-### Quick start
-
 With PlatformIO installed you can create a new project for the M5 Atom called m5atom_hello, and add the M5Atom library.
 
 Using the CLI:
@@ -432,10 +430,30 @@ void loop() {
 }
 ```
 
-To deploy (upload) to your device, and then monitor the serial output:
+
+**Testing**
+
+In one console, start the Mosquitto server, and then SSH into it, and then follow the logs:
+
+```powershell
+./start-mosquitto.ps1
+ssh iotadmin@mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com
+
+sudo tail -f /var/log/mosquitto/mosquitto.log
+```
+
+In another shell, start a mosquitto client listening on all topics:
+
+```powershell
+$mqttPassword = 'YourSecretPassword'
+mosquitto_sub -h mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com -t '#' -F '%I %t [%l] %p' -p 8883 -u mqttuser -P $mqttPassword
+```
+
+Then, in the PIO shell, deploy (upload) to your device, and then monitor the serial output:
 
 ```shell
-pio run --target upload
+export PIO_MQTT_PASSWORD=YourMqttPassword3
+(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
 pio device monitor --baud 115200
 ```
 
