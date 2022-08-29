@@ -401,34 +401,7 @@ pio pkg install --library fastled/FastLED
 pio pkg install --library https://github.com/sgryphon/AdvancedGsmClient
 ```
 
-You then need to create a `src/main.cpp` file (if using the IDE new project a file may already have been created) with a simple Hello World example:
-
-```cpp
-#include <M5Atom.h>
-#include <Arduino.h>
-
-bool led = true;
-
-void setup() {
-  M5.begin(true, true, true);
-  delay(10);
-  Serial.println("Atom started");
-  M5.dis.fillpix(CRGB::Green); 
-}
-
-void loop() {
-  M5.update();
-  if (M5.Btn.wasPressed()) {
-    led = !led;
-    Serial.printf("Button was pressed %s\n", led ? "on" : "off");
-    if (led) {
-      M5.dis.fillpix(CRGB::Blue);
-    } else {
-      M5.dis.clear();
-    }
-  }
-}
-```
+You then need to create a `src/main.cpp` file (if using the IDE new project a file may already have been created) with basic code to connect the modem, then connect to MQTT.
 
 
 **Testing**
@@ -437,7 +410,7 @@ In one console, start the Mosquitto server, and then SSH into it, and then follo
 
 ```powershell
 ./start-mosquitto.ps1
-ssh iotadmin@mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com
+ssh iotadmin@mqdev01-0xacc5.australiaeast.cloudapp.azure.com
 
 sudo tail -f /var/log/mosquitto/mosquitto.log
 ```
@@ -446,7 +419,7 @@ In another shell, start a mosquitto client listening on all topics:
 
 ```powershell
 $mqttPassword = 'YourSecretPassword'
-mosquitto_sub -h mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com -t '#' -F '%I %t [%l] %p' -p 8883 -u mqttuser -P $mqttPassword
+mosquitto_sub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t '#' -F '%I %t [%l] %p' -p 8883 -u mqttuser -P $mqttPassword
 ```
 
 Then, in the PIO shell, deploy (upload) to your device, and then monitor the serial output:

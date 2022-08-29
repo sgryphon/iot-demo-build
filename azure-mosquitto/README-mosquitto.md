@@ -48,14 +48,14 @@ First, in one terminal, subscribe:
 
 ```shell
 export MQTT_PASSWORD=YourSecretPassword
-mosquitto_sub -h mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
+mosquitto_sub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P $MQTT_PASSWORD
 ```
 
 Then use another terminal to publish a message (note that mqttdevice1 has the password suffix '3'):
 
 ```shell
 export MQTT_DEVICE1_PASSWORD=YourSecretPassword3
-mosquitto_pub -h mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m '[{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]' -p 8883 -u mqttdevice1 -P $MQTT_DEVICE1_PASSWORD
+mosquitto_pub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t test -m '[{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]' -p 8883 -u mqttdevice1 -P $MQTT_DEVICE1_PASSWORD
 ```
 
 Example output (also showing the log tail on the server):
@@ -71,7 +71,7 @@ Server management
 You can also SSH into the server, to check the application (the script automatically assigns your local SSH key with access):
 
 ```
-ssh iotadmin@mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com
+ssh iotadmin@mqdev01-0xacc5.australiaeast.cloudapp.azure.com
 ```
 
 You can then follow the Mosquitto logs with:
@@ -105,7 +105,7 @@ that were deployed.
 If you do not have IPv6 available, then there is also an IPv4 endpoint:
 
 ```shell
-mosquitto_sub -h mqtt001-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
+mosquitto_sub -h mqdev01v4-0xacc5.australiaeast.cloudapp.azure.com -t test -p 8883 -u mqttuser -P YourSecretPassword
 ```
 
 Insecure server
@@ -129,14 +129,14 @@ To test your connection:
 
 ```shell
 export MQTT_PASSWORD=YourInsecurePassword
-mosquitto_sub -h mqtt002-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -p 1883 -u mqttuser -P $MQTT_PASSWORD
+mosquitto_sub -h mqdev02-0xacc5.australiaeast.cloudapp.azure.com -t test -p 1883 -u mqttuser -P $MQTT_PASSWORD
 ```
 
 And then send:
 
 ```shell
 export MQTT_DEVICE_PASSWORD=YourInsecurePassword3
-mosquitto_pub -h mqtt002-0xacc5-dev.australiaeast.cloudapp.azure.com -t test -m "Insecure" -p 1883 -u mqttdevice1 -P $MQTT_DEVICE_PASSWORD
+mosquitto_pub -h mqdev02-0xacc5.australiaeast.cloudapp.azure.com -t test -m "Insecure" -p 1883 -u mqttdevice1 -P $MQTT_DEVICE_PASSWORD
 ```
 
 
@@ -162,8 +162,8 @@ mosquitto_pub -h localhost -t test -m "hello world" -u mqttuser -P YourSecretPas
 From a client you can also test if you can connect to the port, and if SSL is working.
 
 ```shell
-nc -vz mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com 8883
-echo "Q" | openssl s_client -showcerts mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com:8883
+nc -vz mqdev01-0xacc5.australiaeast.cloudapp.azure.com 8883
+echo "Q" | openssl s_client -showcerts mqdev01-0xacc5.australiaeast.cloudapp.azure.com:8883
 ```
 
 

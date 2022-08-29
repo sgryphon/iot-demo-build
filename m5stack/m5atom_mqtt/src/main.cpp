@@ -6,10 +6,14 @@
 #define STR(A) ST(A)
 
 const char apn[] = "telstra.iot";
-//const char server[] = "mqtt001-0xacc5-dev.australiaeast.cloudapp.azure.com";
-const char server[] = "mqtt001-0xacc5-dev-ipv4.australiaeast.cloudapp.azure.com";
+const char server[] = "mqdev01-0xacc5.australiaeast.cloudapp.azure.com";
+//const char server[] = "mqdev01v4-0xacc5.australiaeast.cloudapp.azure.com";
 const int16_t port = 8883;
+//const char server[] = "mqdev02-0xacc5.australiaeast.cloudapp.azure.com";
+//const char server[] = "test.mosquitto.org";
+//const int16_t port = 1883;
 const char mqtt_user[] = "mqttdevice1";
+//const char mqtt_user[] = "";
 const char mqtt_password[] = STR(PIO_MQTT_PASSWORD);
 const char version[] = STR(PIO_VERSION);
 
@@ -26,6 +30,7 @@ SIM7020GsmModem sim7020(debugger);
 
 SIM7020TcpClient sim7020tcp(sim7020);
 SIM7020MqttClient sim7020mqtt(sim7020tcp, server, port, true);
+//SIM7020MqttClient sim7020mqtt(sim7020tcp, server, port, false);
 
 GsmModem& modem = sim7020;
 MqttClient& mqtt = sim7020mqtt;
