@@ -1,6 +1,8 @@
 #include <M5Atom.h>
 #include <Arduino.h>
 
+static const char *TAG = "Hello";
+
 bool led = true;
 
 void setup() {
@@ -13,6 +15,7 @@ void setup() {
 void loop() {
   M5.update();
   if (M5.Btn.wasPressed()) {
+    ESP_LOGD(TAG, "Button pressed");
     led = !led;
     Serial.printf("Button was pressed %s\n", led ? "on" : "off");
     if (led) {
