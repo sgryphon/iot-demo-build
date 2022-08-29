@@ -386,6 +386,69 @@ pio device monitor --baud 115200
 See: https://github.com/m5stack/ATOM_DTU_NB
 
 
+### Atom MQTT
+
+### Quick start
+
+With PlatformIO installed you can create a new project for the M5 Atom called m5atom_hello, and add the M5Atom library.
+
+Using the CLI:
+
+```shell
+mkdir m5atom_hello
+cd m5atom_hello
+pio project init --board m5stack-atom
+pio pkg install --library m5atom
+pio pkg install --library fastled/FastLED
+pio pkg install --library https://github.com/sgryphon/AdvancedGsmClient
+```
+
+You then need to create a `src/main.cpp` file (if using the IDE new project a file may already have been created) with a simple Hello World example:
+
+```cpp
+#include <M5Atom.h>
+#include <Arduino.h>
+
+bool led = true;
+
+void setup() {
+  M5.begin(true, true, true);
+  delay(10);
+  Serial.println("Atom started");
+  M5.dis.fillpix(CRGB::Green); 
+}
+
+void loop() {
+  M5.update();
+  if (M5.Btn.wasPressed()) {
+    led = !led;
+    Serial.printf("Button was pressed %s\n", led ? "on" : "off");
+    if (led) {
+      M5.dis.fillpix(CRGB::Blue);
+    } else {
+      M5.dis.clear();
+    }
+  }
+}
+```
+
+To deploy (upload) to your device, and then monitor the serial output:
+
+```shell
+pio run --target upload
+pio device monitor --baud 115200
+```
+
+**Troubleshooting:**
+
+In `platformio.ini` we can add some build flags to enable debugging:
+
+```yaml
+build_flags =
+  '-D CORE_DEBUG_LEVEL=ARDUHAL_LOG_LEVEL_DEBUG'
+	'-D ADVGSM_LOG_SEVERITY=5'
+```
+
 
 Library references
 ------------------
