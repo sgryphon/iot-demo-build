@@ -386,6 +386,83 @@ pio device monitor --baud 115200
 See: https://github.com/m5stack/ATOM_DTU_NB
 
 
+### Atom MQTT
+
+With PlatformIO installed you can create a new project for the M5 Atom called m5atom_mqtt, and add the M5Atom library, as well as the FastLED library, and the Advanced GSM library for the SIM7020 MQTT client.
+
+Using the CLI:
+
+```shell
+mkdir m5atom_hello
+cd m5atom_hello
+pio project init --board m5stack-atom
+pio pkg install --library m5atom
+pio pkg install --library fastled/FastLED
+pio pkg install --library https://github.com/sgryphon/AdvancedGsmClient
+```
+
+You then need to create a `src/main.cpp` file (if using the IDE new project a file may already have been created) with basic code to connect the modem, then connect to MQTT. (See the example code)
+
+The example code starts the modem and waits for it to initialise, then sets the root certificate, queries the IMEI number to use as the device ID, and marks the application ready.
+
+It then connects every 60 seconds, subscribes, and then publishes a telemetry message, waiting 5 seconds for any incoming messages, then disconnects.
+
+The LED on the Atom starts yellow during initialisation, then flashes green; it flashes blue when a message is sent or received, and turns red if a fatal error occurs.
+
+
+**Testing**
+
+
+
+In one console, start the Mosquitto server, and then SSH into it, and then follow the logs:
+
+```powershell
+./start-mosquitto.ps1
+ssh iotadmin@mqdev01-0xacc5.australiaeast.cloudapp.azure.com
+
+sudo tail -f /var/log/mosquitto/mosquitto.log
+```
+
+In another shell, start a mosquitto client listening on all topics:
+
+```powershell
+$mqttPassword = 'YourSecretPassword'
+mosquitto_sub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t '#' -F '%I %t [%l] %p' -p 8883 -u mqttuser -P $mqttPassword
+```
+
+Then, in the PIO shell, deploy (upload) to your device, and then monitor the serial output:
+
+```shell
+export PIO_MQTT_PASSWORD=YourMqttPassword3
+(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
+pio device monitor --baud 115200
+```
+
+**Troubleshooting:**
+
+You can output the GSM logs via setting up the print destination during `setup()`:
+
+```c++
+void setup() {
+  AdvancedGsmLog.Log = &Serial;
+```
+
+You can then change the debugging level via build flags in `platformio.ini`:
+
+```yaml
+build_flags =
+  '-D CORE_DEBUG_LEVEL=ARDUHAL_LOG_LEVEL_DEBUG'
+	'-D ADVGSM_LOG_SEVERITY=5'
+```
+
+You can also debug the AT commands by adding the `vshymanskyy/StreamDebugger` library and configuring it on startup:
+
+```c++
+#include <StreamDebugger.h>
+StreamDebugger debugger(Serial1, Serial);
+SIM7020GsmModem sim7020(debugger);
+```
+
 
 Library references
 ------------------

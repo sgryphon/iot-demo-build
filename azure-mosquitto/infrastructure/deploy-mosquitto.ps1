@@ -92,25 +92,25 @@ Write-Verbose "Deploying server $ServerNumber for environment '$Environment' in 
 # With an additional organisation or subscription identifier (after app name) in global names to make them unique 
 
 $appName = 'mqtt'
-$rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
+$rgName = "rg-$appName-$Environment-01".ToLowerInvariant()
 
 $networkRgName = "rg-network-$Environment-001".ToLowerInvariant()
 $vnetName = "vnet-$Environment-$Location-001".ToLowerInvariant()
 $dmzSnetName = "snet-dmz-$Environment-$Location-001".ToLowerInvariant()
 $dmzNsgName = "nsg-dmz-$Environment-001".ToLowerInvariant()
 
-$numericSuffix = $serverNumber.ToString("000")
+$numericSuffix = $serverNumber.ToString("00")
 
 $vmName = "vmmosquitto$numericSuffix"
 $vmOsDisk = "osdiskvmmosquitto$numericSuffix"
-$nicName = "nic-01-$vmName-$Environment-001".ToLowerInvariant()
-$ipcName = "ipc-01-$vmName-$Environment-001".ToLowerInvariant()
+$nicName = "nic-01-$vmName-$Environment-01".ToLowerInvariant()
+$ipcName = "ipc-01-$vmName-$Environment-01".ToLowerInvariant()
 
-$pipName = "pip-$vmName-$Environment-$Location-001".ToLowerInvariant()
-$pipDnsName = "mqtt$numericSuffix-$OrgId-$Environment".ToLowerInvariant()
+$pipName = "pip-$vmName-$Environment-$Location-01".ToLowerInvariant()
+$pipDnsName = "mq$Environment$numericSuffix-$OrgId".ToLowerInvariant()
 
-$pipv4Name = "pipv4-$vmName-$Environment-$Location-001".ToLowerInvariant()
-$pipv4DnsName = "mqtt$numericSuffix-$OrgId-$Environment-ipv4".ToLowerInvariant()
+$pipv4Name = "pipv4-$vmName-$Environment-$Location-01".ToLowerInvariant()
+$pipv4DnsName = "mq$Environment$($numericSuffix)v4-$OrgId".ToLowerInvariant()
 
 #$dataDiskSize = 20
 
@@ -269,4 +269,4 @@ $vm = (az vm show --name $vmName -g $rgName -d) | ConvertFrom-Json
 $vm | Format-List name, fqdns, publicIps, privateIps, location, hardwareProfile
 
 Write-Verbose "Deployment Complete"
-# ssh iotadmin@mqtt-0xacc5-dev.australiaeast.cloudapp.azure.com
+# ssh iotadmin@mqdev01-0xacc5.australiaeast.cloudapp.azure.com
