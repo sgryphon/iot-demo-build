@@ -6,14 +6,11 @@
 #define STR(A) ST(A)
 
 const char apn[] = "telstra.iot";
+
+// NOTE: Maximum server name length is 50 characters
 const char server[] = "mqdev01-0xacc5.australiaeast.cloudapp.azure.com";
-//const char server[] = "mqdev01v4-0xacc5.australiaeast.cloudapp.azure.com";
 const int16_t port = 8883;
-//const char server[] = "mqdev02-0xacc5.australiaeast.cloudapp.azure.com";
-//const char server[] = "test.mosquitto.org";
-//const int16_t port = 1883;
 const char mqtt_user[] = "mqttdevice1";
-//const char mqtt_user[] = "";
 const char mqtt_password[] = STR(PIO_MQTT_PASSWORD);
 const char version[] = STR(PIO_VERSION);
 
@@ -23,14 +20,13 @@ const char version[] = STR(PIO_VERSION);
 #define GSM_RX_PIN 19
 
 
-#include <StreamDebugger.h>
-StreamDebugger debugger(Serial1, Serial);
-SIM7020GsmModem sim7020(debugger);
-//SIM7020GsmModem sim7020(Serial1);
+// #include <StreamDebugger.h>
+// StreamDebugger debugger(Serial1, Serial);
+// SIM7020GsmModem sim7020(debugger);
+SIM7020GsmModem sim7020(Serial1);
 
 SIM7020TcpClient sim7020tcp(sim7020);
 SIM7020MqttClient sim7020mqtt(sim7020tcp, server, port, true);
-//SIM7020MqttClient sim7020mqtt(sim7020tcp, server, port, false);
 
 GsmModem& modem = sim7020;
 MqttClient& mqtt = sim7020mqtt;
@@ -65,10 +61,10 @@ void buildMessage() {
 }
 
 void setup() {
-  AdvancedGsmLog.Log = &Serial;
+  // AdvancedGsmLog.Log = &Serial;
   M5.begin(true, true, true);
   delay(1000);
-  Serial.printf("MQTT example started, v.%s", version);
+  Serial.printf("MQTT example started, v.%s\n", version);
   M5.dis.fillpix(CRGB::Yellow); 
   Serial1.begin(GSM_BAUDRATE, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);
   modem.begin(apn);
@@ -92,6 +88,9 @@ void loop() {
     if (modem.modemStatus() >= ModemStatus::PacketDataReady) {
       Serial.println("Modem is ready");
       ready = true;
+      String ip_addresses[4];
+      modem.getLocalIPs(ip_addresses, 4);
+      Serial.printf("Device IP address: %s\n", ip_addresses[0].c_str());
       bool ca_success = modem.setRootCA(root_ca);
       if (!ca_success) {
         Serial.println("Certificate failed");
@@ -102,8 +101,8 @@ void loop() {
       client_id = "imei-" + modem.IMEI();
       Serial.printf("Setting client ID to: %s\n", client_id.c_str());
       M5.dis.fillpix(CRGB::Green);
-      led_off_ms = now + 500;
-      next_message_ms = now + 1000;
+      led_off_ms = millis() + 500;
+      next_message_ms = millis() + 1000;
     }
     return;
   }
@@ -121,14 +120,15 @@ void loop() {
       failed = true;
       return;
     }
+    Serial.printf("Subscribing to %s\n", subscribe_topic);
     mqtt.subscribe(subscribe_topic);
     buildMessage();
     Serial.printf("Publishing: %s\n", message_buffer);
     mqtt.publish(publish_topic, message_buffer);
     M5.dis.fillpix(CRGB::Blue); 
-    led_off_ms = now + 200;
-    disconnect_ms = now + 5000;
-    next_message_ms = now + 30000;
+    led_off_ms = millis() + 200;
+    disconnect_ms = millis() + 5000;
+    next_message_ms = now + 60000;
   }
 
   String receive_topic = mqtt.receiveTopic();
@@ -140,6 +140,7 @@ void loop() {
   }
 
   if (disconnect_ms > 0 && now > disconnect_ms) {
+    Serial.print("Disconnecting\n");
     mqtt.disconnect();
     disconnect_ms = -1;
   }
