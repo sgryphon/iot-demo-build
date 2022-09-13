@@ -16,8 +16,8 @@ $SubscriptionId = $(az account show --query id --output tsv)
 Write-Verbose "Using subscription ID $SubscriptionId"
 
 $appName = 'mqtt'
-$rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
-$numericSuffix = $serverNumber.ToString("000")
+$rgName = "rg-$appName-$Environment-01".ToLowerInvariant()
+$numericSuffix = $serverNumber.ToString("00")
 $vmName = "vmmosquitto$numericSuffix"
 
 az vm start --name $vmName -g $rgName
