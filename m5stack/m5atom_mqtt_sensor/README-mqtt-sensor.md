@@ -57,3 +57,13 @@ You can see the device IP address (2001:8004...46dc) appear in the Mosquitto log
 The connection is to port 8883, over TLS, with an MQTT user and password for authentication.
 
 You can see the device to cloud messages (counter 1, 2, etc), as well as a cloud to device message (e.g. set the interval) appear in the device log.
+
+
+Troubleshooting
+---------------
+
+If the AdvancedGsm library has been updated you need to manually refresh it:
+
+```shell
+pio pkg update
+```

@@ -61,7 +61,7 @@ void buildMessage() {
 }
 
 void setup() {
-  // AdvancedGsmLog.Log = &Serial;
+  AdvancedGsmLog.Log = &Serial;
   M5.begin(true, true, true);
   delay(1000);
   Serial.printf("MQTT example started, v.%s\n", version);
