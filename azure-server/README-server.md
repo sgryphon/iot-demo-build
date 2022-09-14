@@ -62,4 +62,32 @@ that were deployed.
 Notes
 -------------------------
 
+pwsh
+./start-server.ps1
+ssh iotadmin@wsdev01-0xacc5.australiaeast.cloudapp.azure.com
+cd /opt/iot-demo-build/telstra-digital-twins/demo-data/tdt-simulator
+sudo dotnet run
+
+https://wsdev01-0xacc5.australiaeast.cloudapp.azure.com/OccupancyGenerator?api_key=hV9N1J4vDY46h19r
+
+https://wsdev01v4-0xacc5.australiaeast.cloudapp.azure.com/OccupancyGenerator?api_key=hV9N1J4vDY46h19r
+
+
+**Troubleshoot: Caddy logs**
+
+journalctl -f -u caddy
+
+sudo systemctl restart caddy
+
+sudo systemctl stop caddy
+sudo systemctl start caddy
+
+
+wget -O - localhost:5000/OccupancyGenerator?api_key=hV9N1J4vDY46h19r
+
+
+**References:**
+
 https://stackoverflow.com/questions/60054951/running-multiple-asp-net-core-3-1x-latest-websites-on-port-80-with-kestrel
+
+https://davemateer.com/2020/01/09/Publishing-ASP-NET-Core-3-App-to-Ubuntu
