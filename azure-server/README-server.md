@@ -1,0 +1,65 @@
+Linux server on Azure
+======================
+
+Server is running dual-stack, as Azure needs IPv4 to access repositories for package install.
+
+The server uses Caddy to automatically provision a TLS certificate for the server host address, with HTTPS traffic forwarded to port 5000. Port 80 is also open, so that Caddy can use Let's Encrypt to automatically get a certificate.
+
+The server is configured to automatically shutdown at 19:00+10 (Brisbane time) each night, to save costs if you are running it
+in a limited developer subscription. You can adjust this for your timezone.
+
+Requirements:
+* PowerShell
+* Azure CLI
+
+To deploy, login to Azure CLI, and then run the deployment script. Setting a password is required, with other values set to
+reasonable defaults (for Australia, where I am based; you may want to change location).
+
+```powershell
+az login
+$VerbosePreference = 'Continue'
+./deploy-server.ps1
+```
+
+The public adddresses of the machine are given a unique name, using the subscription prefix by default (but you can use a different OrgId if you want).
+
+After deployment, the fully qualified domain name (fqdns) is shown, and can be used to access the web interface using HTTPS (once you have an application running on it), e.g.
+
+```
+https://wsdev01-0xacc5.australiaeast.cloudapp.azure.com/
+```
+
+Caddy is set up to forward to port 5000, so if you run a .NET web application on that port it will be served up on the configured public address.
+
+### SSH access
+
+You can also SSH into the server, to check the application:
+
+```
+ssh iotadmin@wsdev01-0xacc5.australiaeast.cloudapp.azure.com
+```
+
+
+### Stop and start
+
+There are script to stop (to save money) and restart (e.g. each day after the automatic shutdown) the server.
+
+```powershell
+./stop-server.ps1
+./start-server.ps1
+```
+
+### Cleanup
+
+When you are finished, you can remove the resource group, which removes the server, network, IP addresses, and other Azure resources
+that were deployed.
+
+```powershell
+./remove-server.ps1
+```
+
+
+Notes
+-------------------------
+
+https://stackoverflow.com/questions/60054951/running-multiple-asp-net-core-3-1x-latest-websites-on-port-80-with-kestrel
