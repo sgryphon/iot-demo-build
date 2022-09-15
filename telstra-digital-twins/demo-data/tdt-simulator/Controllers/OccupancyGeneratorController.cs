@@ -15,7 +15,7 @@ public class OccupancyGeneratorController : ControllerBase
             new Workspace("W.9.001", "242-exhibition-melb", "Level-9"),
             new Workspace("W.9.002", "242-exhibition-melb", "Level-9"),
             new Workspace("W.9.003", "242-exhibition-melb", "Level-9"),
-            new Workspace("W.9.001", "242-exhibition-melb", "Level-9")
+            new Workspace("W.9.004", "242-exhibition-melb", "Level-9")
         }
     );
 
@@ -29,21 +29,29 @@ public class OccupancyGeneratorController : ControllerBase
     [HttpGet(Name = "GetOccupancy")]
     public ActionResult<Occupancy> Get()
     {
-        string apiKey = string.Empty;
-        if (HttpContext.Request.Headers.TryGetValue("X-API-Key", out var apiKeyHeaders)) {
-            apiKey = apiKeyHeaders.First();
-        } else {
-            if (HttpContext.Request.Query.TryGetValue("api_key", out var apiKeyValues)) {
-                apiKey = apiKeyValues.First();
+        _logger.LogInformation(new EventId(2001, "Event"), null, "Get data requested. {0}", HttpContext.Connection.RemoteIpAddress);
+        try {
+            string apiKey = string.Empty;
+            if (HttpContext.Request.Headers.TryGetValue("X-API-Key", out var apiKeyHeaders)) {
+                apiKey = apiKeyHeaders.First();
+            } else {
+                if (HttpContext.Request.Query.TryGetValue("api_key", out var apiKeyValues)) {
+                    apiKey = apiKeyValues.First();
+                }
             }
-        }
-        if (apiKey != ExpectedApiKey) {
-            return Unauthorized();
-        }
+            if (apiKey != ExpectedApiKey) {
+                return Unauthorized();
+            }
 
-        foreach (var workspace in Occupancy.Workspaces) {
-            workspace.Occupied = Random.Shared.NextDouble() < OccupancyFactor;
+            foreach (var workspace in Occupancy.Workspaces) {
+                workspace.Occupied = Random.Shared.NextDouble() < OccupancyFactor;
+            }
+            return Occupancy;
         }
-        return Occupancy;
+        catch (Exception ex)
+        {
+            _logger.LogError(new EventId(5001, "Error"), ex, "Get data failed: {0}", ex.Message);
+            throw;
+        }
     }
 }
