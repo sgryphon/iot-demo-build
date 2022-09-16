@@ -1,0 +1,42 @@
+{
+    "@context": "dtmi:dtdl:context;2",
+    "@id": "dtmi:M5Stack:sensor:enviii;1",
+    "@type": "Interface",
+    "displayName": "M5Stack Env III Sensor",
+    "description": "Sensor with temperature, humidity, and barometric pressure",
+    "contents": [
+        {
+            "@type": [
+                "Telemetry",
+                "Temperature"
+            ],
+            "name": "temperature",
+            "displayName": "Temperature",
+            "description": "Temperature measured by the ENV sensor.",
+            "schema": "double",
+            "unit": "degreeCelsius"
+        },
+        {
+            "@type": [
+                "Telemetry",
+                "Pressure"
+            ],
+            "name": "pressure",
+            "displayName": "Atmospheric Pressure",
+            "description": "Atmospheric pressure measured by the ENV sensor.",
+            "schema": "double",
+            "unit": "pascal"
+        },
+        {
+            "@type": [
+                "Telemetry",
+                "RelativeHumidity"
+            ],
+            "name": "humidity",
+            "displayName": "Humidity",
+            "description": "Humidity measured by the ENV sensor.",
+            "schema": "double",
+            "unit": "percent"
+        }
+    ]
+}

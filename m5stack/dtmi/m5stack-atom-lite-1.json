@@ -1,0 +1,16 @@
+{
+    "@context": "dtmi:dtdl:context;2",
+    "@id": "dtmi:M5Stack:atom:lite;1",
+    "@type": "Interface",
+    "displayName": "M5Stack Atom Lite",
+    "description": "ESP32-based with WiFi, RGB LED, programmable button, and 4MB of flash memory.",
+    "contents": [
+        {
+            "@type": "Component",
+            "name": "deviceInformation",
+            "displayName": "Device Information interface",
+            "description": "Basic device hardware information.",
+            "schema": "dtmi:azure:DeviceManagement:DeviceInformation;1"
+        }
+    ]
+}

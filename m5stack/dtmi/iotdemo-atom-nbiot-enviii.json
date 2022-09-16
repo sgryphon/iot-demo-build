@@ -1,0 +1,48 @@
+{
+    "@context": "dtmi:dtdl:context;2",
+    "@id": "dtmi:iotdemo:atom:nbiot:enviii;1",
+    "@type": "Interface",
+    "extends": "dtmi:M5Stack:atom:lite;1",
+    "displayName": "IoT Demo Atom NB-IoT Env III",
+    "description": "M5Stack Atom, on Atom DTU NB-IoT base, with Env III sensor",
+    "contents": [
+        {
+            "@type": "Component",
+            "name": "connectivity",
+            "displayName": "NB-IoT Connection",
+            "description": "NB-IoT connection details component",
+            "schema": "dtmi:M5Stack:atomdtu:nbiot;1"
+        },
+        {
+            "@type": "Component",
+            "name": "sensor",
+            "displayName": "NB-IoT Connection",
+            "description": "NB-IoT connection details component",
+            "schema": "dtmi:M5Stack:sensor:enviii;1"
+        },
+        /*
+        {
+            "@type": [
+                "Property",
+                "TimeSpan"
+            ],
+            "displayName": {
+                "en": "Telemetry Interval (seconds)"
+            },
+            "name": "telemetryInterval",
+            "schema": "integer",
+            "unit": "seconds",
+            "writable": true
+        },
+        */
+        {
+            "@type": "Property",
+            "displayName": {
+                "en": "Telemetry Interval (seconds)"
+            },
+            "name": "telemetryInterval",
+            "schema": "TimeSpan",
+            "writable": true
+        }
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "@context": "dtmi:dtdl:context;2",
+    "@id": "dtmi:M5Stack:atomdtu:nbiot;1",
+    "@type": "Interface",
+    "displayName": "M5Stack Atom Lite",
+    "description": "ESP 32 based .",
+    "contents": [
+        {
+            "@type": "Property",
+            "name": "imei",
+            "displayName": "IMEI",
+            "description": "Serial number of the equipment",
+            "schema": "string"
+        },
+        {
+            "@type": "Property",
+            "name": "ipAddress",
+            "displayName": "IP Address",
+            "description": "Primary IP Address of the device",
+            "schema": "string"
+        },
+        {
+            "@type": "Telemetry",
+            "name": "signalStrength",
+            "displayName": "Signal Strength (dBm)",
+            "description": "Signal Strength (dB relative to 1 mW)",
+            "schema": "double",
+            "unit": "decibel"
+        }
+    ]
+}
