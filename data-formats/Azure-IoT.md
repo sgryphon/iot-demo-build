@@ -15,35 +15,41 @@ Device models are specified in Digital Twin Definition Language (DTDL), which is
 Device twin definition
 ----------------------
 
+The information schema for devices is expressed in DTDL.
+
+* Plug and play model repository, Mhttps://github.com/Azure/iot-plugandplay-models>
+
 ```json
 {
-  "@id": "dtmi:sensor;1",
-  "@type": "Interface",
-  "contents": [
-    {
-      "@type": ["Property", "Force"],
-      "name": "Force",
-      "schema": "double",
-      "unit": "newton",
-      "writable": true
-    },
-    {
-      "@type": ["Property", "Frequency"],
-      "name": "Vibration",
-      "schema": "double",
-      "unit": "hertz",
-      "writable": true
-    }
-  ],
-  "description": {
-    "en": ""
-  },
-  "displayName": {
-    "en": "Grinding equipment"
-  },
-  "extends": "dtmi:digitaltwins:s4inma:ProductionEquipment;1",
-  "@context": "dtmi:dtdl:context;2"
-}```
+    "@context": "dtmi:dtdl:context;2",
+    "@id": "dtmi:azure:DeviceManagement:DeviceInformation;1",
+    "@type": "Interface",
+    "displayName": "Device Information",
+    "contents": [
+        {
+            "@type": "Property",
+            "name": "manufacturer",
+            "displayName": "Manufacturer",
+            "schema": "string",
+            "description": "Company name of the device manufacturer. This could be the same as the name of the original equipment manufacturer (OEM). Ex. Contoso."
+        },
+        {
+            "@type": "Property",
+            "name": "model",
+            "displayName": "Device model",
+            "schema": "string",
+            "description": "Device model name or ID. Ex. Surface Book 2."
+        },
+        {
+            "@type": "Property",
+            "name": "swVersion",
+            "displayName": "Software version",
+            "schema": "string",
+            "description": "Version of the software on your device. This could be the version of your firmware. Ex. 1.3.45"
+        }
+    ]
+}
+```
 
 Telemetry and device data
 -------------------------

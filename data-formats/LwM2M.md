@@ -132,12 +132,44 @@ Batched data is supported for where observations are stored while offline. LwM2M
 ]
 ```
 
+MQTT transport
+--------------
+
+The recent versions of LwM2M support MQTT as a transport.
+
+The topic structure to use is: [ PREFIX "/" ] "lwm2m/" ( "bs" / "rd" ) "/" ENDPOINT
+
+* PREFIX is an optional prefix, for a multi-tenant environment.
+* `bs` is for the boostrap interface and `rd` for all other interfaces.
+* ENDPOINT is the LwM2M endpoint client name (or if not available, then the security protocol identifier is used)
+
+With the publish/subscribe model:
+* Servers subscribe to "{PREFIX/}lwm2m/rd/#" to receive messages from all clients.
+* Servers publish to "{PREFIX/}lwm2m/rd/{ENDPOINT}" for specific target endpoints.
+* Clients subscribe to "{PREFIX/}lwm2m/rd/{ENDPOINT}" to receive messages from the server that are directed at them.
+
+The Transport specification also lists clients as publishing to "{PREFIX/}lwm2m/rd/{ENDPOINT}", which would mean they receive their own messages.
+
+Data is encoded in CBOR, with a structure depending on the operation, e.g. for Send:
+
+```
+{
+  operation => 24, ; Send
+  token => uint,
+  ct => uint, ; LwM2M CBOR, SenML CBOR or SenML JSON
+  payload => bstr, ; Updated Value
+}
+```
+
+
+
 Device lifecycle
 ----------------
 
 LwM2M has full support for device configuration over the air, as well as firmware updates over the air.
 
 Multiple bootstrapping methods are supported, including full specifications for retry sequences with back offs, multiple retries, and then fallback to re-registration if needed (and you can also manually trigger re-registration).
+
 
 
 Idea for LwM2M metadata
