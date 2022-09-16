@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace tdt_simulator.Controllers;
 
@@ -29,7 +30,8 @@ public class OccupancyGeneratorController : ControllerBase
     [HttpGet(Name = "GetOccupancy")]
     public ActionResult<Occupancy> Get()
     {
-        _logger.LogInformation(new EventId(2001, "Event"), null, "Get data requested. {0}", HttpContext.Connection.RemoteIpAddress);
+        _logger.LogInformation(new EventId(2001, "Event"), null, "Get data requested TraceId={0} RemoteIp={1}",
+            Activity.Current?.TraceId, HttpContext.Connection.RemoteIpAddress);
         try {
             string apiKey = string.Empty;
             if (HttpContext.Request.Headers.TryGetValue("X-API-Key", out var apiKeyHeaders)) {
