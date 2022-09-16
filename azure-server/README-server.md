@@ -60,7 +60,7 @@ that were deployed.
 
 
 Notes
--------------------------
+-----
 
 pwsh
 ./start-server.ps1
@@ -83,7 +83,14 @@ sudo systemctl stop caddy
 sudo systemctl start caddy
 
 
-wget -O - localhost:5000/OccupancyGenerator?api_key=hV9N1J4vDY46h19r
+wget -q -O- localhost:5000/OccupancyGenerator?api_key=hV9N1J4vDY46h19r
+
+
+Preference in dual stack is IPv4:
+wget -q -O- https://v4v6.ipv6-test.com/api/myip.php
+
+But IPv6 only works:
+wget -q -O- https://v6.ipv6-test.com/api/myip.php
 
 
 **References:**
