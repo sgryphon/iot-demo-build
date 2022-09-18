@@ -28,3 +28,4 @@ To Do
 
 * AWS examples
 * Local device firmware examples
+* Mainflux: https://github.com/mainflux/mainflux

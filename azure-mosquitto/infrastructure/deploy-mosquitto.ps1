@@ -32,7 +32,7 @@
 .EXAMPLE
 
    az login
-   az account set --subscription <subscription id>
+   az account set --subscription 'acc54a93-d63e-4462-953e-dbeba4387b12'
    $VerbosePreference = 'Continue'
    ./deploy-mosquitto.ps1 -MqttPassword YourSecretPassword
 #>

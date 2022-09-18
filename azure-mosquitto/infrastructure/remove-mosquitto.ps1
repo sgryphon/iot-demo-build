@@ -14,6 +14,6 @@ $SubscriptionId = $(az account show --query id --output tsv)
 Write-Verbose "Removing from context subscription ID $SubscriptionId"
 
 $appName = 'mqtt'
-$rgName = "rg-$appName-$Environment-001".ToLowerInvariant()
+$rgName = "rg-$appName-$Environment-01".ToLowerInvariant()
 
 az group delete --name $rgName

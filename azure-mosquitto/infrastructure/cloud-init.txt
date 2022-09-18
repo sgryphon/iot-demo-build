@@ -37,6 +37,7 @@ write_files:
     content: |
       allow_anonymous false
       password_file /etc/mosquitto/passwd
+      acl_file /etc/mosquitto/aclfile
 
       listener 1883 #INIT_LIMIT_INSECURE_HOST#
 
@@ -47,8 +48,22 @@ write_files:
     content: |
       mqttuser:#INIT_PASSWORD_INPUT#
       mqttservice:#INIT_PASSWORD_INPUT#2
-      mqttdevice1:#INIT_PASSWORD_INPUT#3
-      mqttdevice2:#INIT_PASSWORD_INPUT#4
+      dev00001:#INIT_PASSWORD_INPUT#3
+      dev00002:#INIT_PASSWORD_INPUT#4
+      dev00003:#INIT_PASSWORD_INPUT#5
+  - path: /etc/mosquitto/aclfile
+    content: |
+      # General pattern access
+      pattern write dt/demo/+/%u/#
+      pattern readwrite cmd/demo/+/%u/#
+      
+      # Specific user access
+      user mqttservice
+      topic read dt/demo/#
+      topic readwrite cmd/demo/#
+
+      user mqttuser
+      topic readwrite #
 runcmd:
   - ufw allow ssh
   - ufw allow http
