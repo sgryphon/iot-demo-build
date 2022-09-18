@@ -101,6 +101,14 @@ More complex specific formats are used for the device twin such as receiving des
 }
 ```
 
+Batched data
+------------
+
+Azure IoT does not have any mechanism for directly supporting batched data.
+
+You would have to manually add a composite data structure for historical data with things like the date time; and even then it would still come in as a single message and need to be processed.
+
+
 Distributed tracing support
 ---------------------------
 

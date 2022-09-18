@@ -69,11 +69,35 @@ Each resource has universal attributes (all resources), common attributes (reuse
 | resourceName        | rn
 
 
+Addressing
+----------
+
+Entity addressing for Service Provider (SP, a domain name), CSE (Common Services Entity), and AE (Application Entity).
+
+EXAMPLE: 
+* absolute-CSE-ID = "//myoperator.com/cse1"
+Where "//myoperator.com" is the M2M-SP-ID and "/cse1" is the SP‑relative-CSE-ID.
+
+EXAMPLES (AE-ID can be issued by SP (starts with "S") or CSE (starts with "C")): 
+* S-AE-ID-Stem = "S563423" (can be used by itself)
+* absolute-AE-ID = "//myoperator.com/S563423", using the S-ID
+* absolute-AE-ID = "//myoperator.com/cse2/C3532ea3", using the CSE ID plus a C-ID
+
+OneM2M identifiers are case sensitive (domain portion must always be lowercase).
+
+Resource addressing is relative to the CSE, and can either be hierachical structured, e.g. "-/xxxx/yyyy", or an unstructured CSE-relative identifier. For absolute or SP relative addresses, the relevant prefixes are added, e.g. "//myoperator.com/cse1/-/xxxx/yyyy".
+
+Resource names are arbitrary strings, e.g. "myLightBulb", "123Sensor"
+
+Node IDs & Device IDs use URN format, e.g. urn:imei:123456..... 
+
+
+
 MQTT transport
 --------------
 
 The topic structure to use is:
-* For requests "/oneM2M/req/{Originator-ID}/{Receiver-ID}/{type>"
+* For requests "/oneM2M/req/{Originator-ID}/{Receiver-ID}/{type}"
 * For responses "/oneM2M/resp/{Originator-ID}/{Receiver-ID}"
 
 {originator} is the SP-relative-AE-ID or SP-relative-CSE-ID, omitting any leading "/" and replacing other "/" with ":". For an Absolute-CSE-ID, replace the leading "//" with ":"
@@ -108,6 +132,204 @@ As there are no special headers in MQTT, the message is made up of the oneM2M co
     "ot": 20150910T062032
 }
 ```
+
+Data
+----
+
+Enumerations:
+
+m2m:resourceType :- 2 = AE, 3 = container, 4 = contentInstance, 12 = mgmtCmd, 13 = mgmtObj, 14 = node, 18 = schedule, 23 = subscription, 28 = flexContainer, 29 = timeSeries, 30 = timeSeriesInstance
+
+m2m:operation :- 1 = Create, 2 = Retrieve, 3 = Update, 4 = Delete, 5 = Notify
+
+m2m:cmdType :- 1 = Reset, 2 = Reboot, 3 = Upload, 4 = Download, 5 = SoftwareInstall, 6 = SoftwareUninstall, 7 = SoftwareUpdate
+
+m2m:primitiveContent
+
+m2m:batchNotify
+
+m2m:notification
+
+m2m:flexContainerResource
+   @resourceName
+   resourceType
+   resourceID
+   parentID
+   creationTime
+   lastModifiedTime
+   labels
+   stateTag
+   containerDefinition
+   contentSize
+
+m2m:requestPrimitive
+   Operation : m2m:operation
+   To : xs:anyURI
+   From : m2m:ID
+   Request Identifier : m2m:requestID
+   Resource Type : m2m:resourceType
+   Content : m2m:primitiveContent
+   Release Version Indicator : m2m:releaseVersion
+
+
+JSON request message example
+----------------------------
+
+An example of a request message serialized using JSON is given below:
+
+```json
+{
+	"op": 1,
+	"fr": "Clight_ae1",
+	"to": "/homegateway/light",
+	"rqi": "A1234",
+	"pc": {
+		"m2m:sch": {
+			"se": {
+				"sce": ["* 0-5 2,6,10 * * * *"]
+			}
+		}
+	},
+	"ty": 18
+}
+```
+
+* op: operation (in this case it is Create)
+* fr: ID of the Originator (an AE in this example)
+* to: URI of the target resource
+* rqi: request identifier (this is a string)
+* pc: attributes of the <schedule> resource, with member name "m2m:sch", as provided by the Originator. This is serialized as a nested JSON object
+* ty: type of resource to be created (in this case a Schedule resource). This is a number.
+
+Note that the Operation (op) parameter is present only in Request primitives. The presence of this parameter in JSON serialized primitive representations allows to differentiate Request primitives from Response primitives.
+
+Response message examples
+-------------------------
+
+Response after requesting a top level AE resource, with result content "attributes and child resource references" and filter criteria level 2 (showing links of depth 1 and 2 below the AE):
+
+```json
+{ 
+ "m2m:ae": { 
+   "rn": "appname", 
+   "aei": "CAE01", 
+   "ct": "20160404T132648", 
+   "et": "20160408T004648", 
+   "lt": "20160404T132648", 
+   "pi": "ONET-CSE-02", 
+   "ri": "REQID1", 
+   "ty": 2,
+   "ch": [{"nm":"container1", "typ":3,  "val":"mn-cse/appname/container1"},
+          {"nm":"container2", "typ":3,  "val":"mn-cse/appname/container2"},
+ 		  {"nm":"sub1", "typ":23, "val":"mn-cse/appname/container2/sub1"}] 
+ } 
+}
+```
+
+Similiar response for a request with result content "attributes and child resources", which shows the child resources inline.
+
+```json
+{ 
+ "m2m:ae": { 
+   "rn": "appname", 
+   "aei": "CAE01", 
+   "ct": "20160404T132648", 
+   "et": "20160408T004648", 
+   "lt": "20160404T132648", 
+   "pi": "ONET-CSE-02", 
+   "ri": "REQID1", 
+   "ty": 2,
+   "m2m:cnt":[{"rn":"container1", "ty":3,  …},
+              {"rn":"container2", "ty":3,  … ,
+ 	 		   "m2m:sub":[{"rn":"sub1", "ty":23, …}]}
+			 ]
+  } 
+}
+```
+
+
+Specific resources
+----------------
+
+memory, see D.4 of oneM2M TS-0001
+
+"m2m:memory": {
+    "mgmtDefinition": 1003,
+    "memAvailable": 3123000,
+    "memTotal": 4000000
+}
+
+battery, see D.7 of oneM2M TS-0001
+
+"m2m:battery": {
+    "mgmtDefinition": 1006,
+    "batteryLevel": 95,
+    "batteryStatus": 1
+}
+
+deviceInfo, see D.8 of oneM2M TS-0001
+
+"m2m:deviceInfo": {
+    "mgmtDefinition": 1007,
+    "deviceLabel": "1234567890" OR "|systemID:0123 serviceID:xyz" OR "urn:imei:1234567890, ; serial number, key/value pairs, URNs
+    "manufacturer": "M5Stack",
+    "model": "M5 Atom Lite",
+    "deviceType": "",
+    "fwVersion": "",
+    "swVersion": "",
+    "hwVersion": ""
+}
+
+"m2m:reboot": {
+    "mgmtDefinition": 1009,
+    "reboot": true,
+    "factoryReset": true
+}
+
+Update operation: if reboot is true, then reboot; if factoryReset is true, then reset; if both are set then error BAD_REQUEST
+
+"m2m:eventLog": {
+    "mgmtDefinition": 1010,
+    "lotTypeId": 1,
+    "logData": "",
+    "logStatus": 1,
+    "logStart": true,
+    "logStop": true
+}
+
+Update start/stop to start/stop. Retrieve to get the current data.
+
+
+Example sequence
+----------------
+
+See TR-0017 Home domain abstract model, p. 35 - 37 for an example sequence of a washer (AE) 
+
+
+Home Devices
+------------
+
+deviceModelResource : <flexContainer>
+  DeviceClass ID = "org.onem2m.home.device.tv"
+  nodeLink = device node
+  children:
+    moduleResource : <flexContainer>
+      ModuleClass ID = "org.onem2m.home.moduleclass.audiovolume"
+      attributes = Properties of module, prefixed with 'prop'
+      attributes = DataPoints
+      children:
+        Action : <flexContainer>
+          Action ID = "org.onem2m.home.moduleclass.audiovolume.upvolume"
+    subDevice: <flexContainer>
+
+<node> (for the device)
+  children:
+    <mgmtObj>, e.g. firmware
+    deviceInfo
+      attributes = Properties of device model
+  
+
+
 
 LwM2M interworking
 ------------------

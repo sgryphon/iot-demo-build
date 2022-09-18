@@ -82,3 +82,19 @@ This would allow records to be used individually, such as store in a normalised 
   {"n":"urn:dev:ow:10e2073a01080063","u":"lat","t":1.320067644e+09,"v":60.07967}
 ]
 ```
+
+### ThingML extensions
+
+To reduce packet size even smaller, ThingML introduces a measurement index property, `i_`. For example index 5 is the same as `"n":"batteryVoltage","u":"V"`, and index -7 represents `"n"="electricCurrent","u":"A"`.
+
+```json
+[
+  {"bn":"urn:dev:ow:10e2073a01080063:","i_":5,"v":120.1},
+  {"i_":-7,"v":1.2}
+]
+```
+
+For a list of pre-defined indexes: https://docs.kpnthings.com/dm/processing/common-measurements-list
+
+
+
