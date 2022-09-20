@@ -18,25 +18,33 @@ The example code is configured to connect to a test MQTT server. Scripts to set 
 
 To run, start the test server, use a terminal to connect a secure shell to the server, and then use `tail` to follow the logs:
 
+```powershell
 ./start-mosquitto.ps1
 ssh iotadmin@mqdev01-0xacc5.australiaeast.cloudapp.azure.com
 sudo tail -f /var/log/mosquitto/mosquitto.log
+```
 
 In another shell, start a mosquitto client listening on all topics:
 
+```powershell
 $mqttPassword = 'YourSecretPassword'
 mosquitto_sub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t '#' -F '%I %t [%l] %p' -p 8883 -u mqttuser -P $mqttPassword
+```
 
 Then, in the PIO shell, deploy (upload) to your device, and then monitor the serial output:
 
+```shell
 export PIO_MQTT_PASSWORD=YourMqttPassword3
 (export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
 pio device monitor --baud 115200
+```
 
 To test downstream, use another terminal:
 
+```powershell
 $mqttPassword = 'YourSecretPassword'
 mosquitto_pub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t 'test/c2d' -p 8883 -u mqttuser -P $mqttPassword -m '{\"interval_s\": 60}'
+```
 
 ### Led indicators
 
