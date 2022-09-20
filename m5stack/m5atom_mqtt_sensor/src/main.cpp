@@ -79,7 +79,7 @@ void buildPropertiesMessage() {
 
 const char telemetry_template[] =
     "[{\"bn\":\"%s_\",\"n\":\"temperature\",\"u\":\"Cel\",\"v\":%.2f},"
-    "{\"n\":\"humidity\",\"u\":\"%RH\",\"v\":%.1f},"
+    "{\"n\":\"humidity\",\"u\":\"%%RH\",\"v\":%.1f},"
     "{\"n\":\"pressure\",\"u\":\"Pa\",\"v\":%.0f},"
     "{\"n\":\"rssi\",\"u\":\"dBW\",\"v\":%.3f}]";
 
