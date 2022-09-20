@@ -81,7 +81,7 @@ const char telemetry_template[] =
     "[{\"bn\":\"%s_\",\"n\":\"temperature\",\"u\":\"Cel\",\"v\":%.2f},"
     "{\"n\":\"humidity\",\"u\":\"%%RH\",\"v\":%.1f},"
     "{\"n\":\"pressure\",\"u\":\"Pa\",\"v\":%.0f},"
-    "{\"n\":\"rssi\",\"u\":\"dBW\",\"v\":%.3f}]";
+    "{\"n\":\"rssi\",\"u\":\"dBW\",\"v\":%d}]";
 
 void buildTelemetryMessage() {
   float pressure_pascal =
@@ -93,7 +93,7 @@ void buildTelemetryMessage() {
     humidity_percent = sht30.humidity;
   }
   int32_t rssi_dBm = modem.RSSI();
-  float rssi_dBW = rssi_dBm / 1000.0f;
+  int32_t rssi_dBW = rssi_dBm - 30;
   snprintf(message_buffer, 2000, telemetry_template, mqtt_user,
            temperature_celsius, humidity_percent, pressure_pascal, rssi_dBW);
 }
