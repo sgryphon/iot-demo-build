@@ -159,6 +159,11 @@ void loop() {
     led_off_ms = -1;
   }
 
+  if (M5.Btn.wasPressed()) {
+    send_properties = true;
+    next_message_ms = 1;
+  }
+
   if (next_message_ms > 0 && millis() > next_message_ms) {
     M5.dis.fillpix(CRGB::Blue);
 
