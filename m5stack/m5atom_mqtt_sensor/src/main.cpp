@@ -70,9 +70,8 @@ const char properties_template[] =
 
 void buildPropertiesMessage() {
   String imei = modem.IMEI();
-  String ip_addresses[4]; // The SIM7020 may get up to 4 addresses
+  String ip_addresses[4]; // The SIM7020 may get up to 4 IP addresses (public will be sorted first)
   modem.getLocalIPs(ip_addresses, 4);
-  int32_t rssidBm = modem.RSSI();
   snprintf(message_buffer, 2000, properties_template, mqtt_user, manufacturer,
            model, version, imei.c_str(), ip_addresses[0].c_str());
 }
@@ -81,29 +80,20 @@ const char telemetry_template[] =
     "[{\"bn\":\"%s_\",\"n\":\"temperature\",\"u\":\"Cel\",\"v\":%.2f},"
     "{\"n\":\"humidity\",\"u\":\"%RH\",\"v\":%.1f},"
     "{\"n\":\"pressure\",\"u\":\"Pa\",\"v\":%.0f},"
-    "{\"n\":\"rssi\",\"u\":\"dBW\",\"v\":%.3f},"
-    "{\"n\":\"batteryVoltage\",\"u\":\"V\",\"v\":%.3f}]";
+    "{\"n\":\"rssi\",\"u\":\"dBW\",\"v\":%.3f}]";
 
 void buildTelemetryMessage() {
+  float pressure_pascal = qmp6988.calcPressure(); // standard atmosphere is 101325 Pa
   float temperature_celsius = 0.0;
   float humidity_percent = 0.0;
-  float pressure_pascal = 0.0;
-  pressure_pascal = qmp6988.calcPressure(); // standard atmosphere is 101325 Pa
-  if (sht30.get() == 0) {                   // Obtain the data of SHT30.
-    temperature_celsius =
-        sht30.cTemp; // Store the temperature obtained from SHT30.
-    humidity_percent =
-        sht30.humidity; // Store the humidity obtained from the SHT30.
-  } else {
-    temperature_celsius = 0;
-    humidity_percent = 0;
+  if (sht30.get() == 0) { // Obtain the data of SHT30.
+    temperature_celsius = sht30.cTemp;
+    humidity_percent = sht30.humidity;
   }
   int32_t rssi_dBm = modem.RSSI();
   float rssi_dBW = rssi_dBm / 1000.0f;
-  float battery_voltage = 0.0;
   snprintf(message_buffer, 2000, telemetry_template, mqtt_user,
-           temperature_celsius, humidity_percent, pressure_pascal, rssi_dBW,
-           battery_voltage);
+           temperature_celsius, humidity_percent, pressure_pascal, rssi_dBW);
 }
 
 void setup() {
