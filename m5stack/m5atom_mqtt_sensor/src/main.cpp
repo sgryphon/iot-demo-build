@@ -70,7 +70,8 @@ const char properties_template[] =
 
 void buildPropertiesMessage() {
   String imei = modem.IMEI();
-  String ip_addresses[4]; // The SIM7020 may get up to 4 IP addresses (public will be sorted first)
+  String ip_addresses[4]; // The SIM7020 may get up to 4 IP addresses (public
+                          // will be sorted first)
   modem.getLocalIPs(ip_addresses, 4);
   snprintf(message_buffer, 2000, properties_template, mqtt_user, manufacturer,
            model, version, imei.c_str(), ip_addresses[0].c_str());
@@ -83,7 +84,8 @@ const char telemetry_template[] =
     "{\"n\":\"rssi\",\"u\":\"dBW\",\"v\":%.3f}]";
 
 void buildTelemetryMessage() {
-  float pressure_pascal = qmp6988.calcPressure(); // standard atmosphere is 101325 Pa
+  float pressure_pascal =
+      qmp6988.calcPressure(); // standard atmosphere is 101325 Pa
   float temperature_celsius = 0.0;
   float humidity_percent = 0.0;
   if (sht30.get() == 0) { // Obtain the data of SHT30.
