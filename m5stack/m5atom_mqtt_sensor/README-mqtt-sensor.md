@@ -43,7 +43,7 @@ To test downstream, use another terminal:
 
 ```powershell
 $mqttPassword = 'YourSecretPassword'
-mosquitto_pub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t 'test/c2d' -p 8883 -u mqttuser -P $mqttPassword -m '{\"interval_s\": 60}'
+mosquitto_pub -h mqdev01-0xacc5.australiaeast.cloudapp.azure.com -t 'cmd/demo/m5/dev00001/update/senml' -p 8883 -u mqttuser -P $mqttPassword -m '[{\"n\":\"dev00001_interval\",\"v\":60}]'
 ```
 
 ### Led indicators
