@@ -211,7 +211,7 @@ az vm create `
     --generate-ssh-keys `
     --nics $nicName `
     --public-ip-sku Standard `
-    --custom-data cloud-init.txt~ `
+    --custom-data (Join-Path $PSScriptRoot cloud-init.txt~) `
     --tags $tags
 
 #    --data-disk-caching None `
