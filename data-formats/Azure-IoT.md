@@ -17,7 +17,7 @@ Device twin definition
 
 The information schema for devices is expressed in DTDL.
 
-* Plug and play model repository, Mhttps://github.com/Azure/iot-plugandplay-models>
+* Plug and play model repository, <https://github.com/Azure/iot-plugandplay-models>
 
 ```json
 {
