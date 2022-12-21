@@ -9,13 +9,13 @@ A complete solution also needs to cover other interactions and cloud-to-device m
 
 Some published standards that cover data formats, as well as some of the other aspects, include:
 
-* [Lightweight Machine-to-Machine (LwM2M)](LwM2M.md)
+* [Lightweight Machine-to-Machine (LwM2M)](LwM2M.md) - full device lifecycle, efficient low-overhead protocol
+* [Matter](Matter.md) - standardised consumer/smart home devices
+* [SenML](SenML.md) - data only format
+* [Smart Applications REFerence Ontology (SAREF)](SAREF.md) - high level top-down ontologies
 * [OneM2M](OneM2M.md)
 * [Open Connectivity Foundation (OCF)](OCF.md)
 * [SparkPlug](SparkPlug.md)
-* [Smart Applications REFerence Ontology (SAREF)](SAREF.md)
-* [Matter](Matter.md)
-* [SenML](SenML.md)
 
 Major cloud providers also have their own default data formats for their IoT Platforms:
 
