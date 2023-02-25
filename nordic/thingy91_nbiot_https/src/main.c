@@ -15,26 +15,32 @@
 
 #define HTTPS_PORT 443
 
-#define HTTPS_HOSTNAME "example.com"
+#define HTTPS_HOSTNAME "v4v6.ipv6-test.com"
 
-#define HTTP_HEAD                                                              \
-	"HEAD / HTTP/1.1\r\n"                                                  \
+// #define HTTP_HEAD                                                              \
+// 	"HEAD / HTTP/1.1\r\n"                                                  \
+// 	"Host: " HTTPS_HOSTNAME ":443\r\n"                                     \
+// 	"Connection: close\r\n\r\n"
+
+// #define HTTP_HEAD_LEN (sizeof(HTTP_HEAD) - 1)
+
+#define HTTP_GET                                                              \
+	"GET /api/myip.php HTTP/1.1\r\n"                                                  \
 	"Host: " HTTPS_HOSTNAME ":443\r\n"                                     \
 	"Connection: close\r\n\r\n"
 
-#define HTTP_HEAD_LEN (sizeof(HTTP_HEAD) - 1)
+#define HTTP_GET_LEN (sizeof(HTTP_GET) - 1)
 
 #define HTTP_HDR_END "\r\n\r\n"
 
-#define RECV_BUF_SIZE 2048
+#define RECV_BUF_SIZE 4096
 #define TLS_SEC_TAG 42
 
-static const char send_buf[] = HTTP_HEAD;
+static const char send_buf[] = HTTP_GET;
 static char recv_buf[RECV_BUF_SIZE];
 
-/* Certificate for `example.com` */
 static const char cert[] = {
-	#include "../cert/DigiCertGlobalRootCA.pem"
+	#include "../cert/USERTrust_RSA_Certification_Authority.pem"
 };
 
 BUILD_ASSERT(sizeof(cert) < KB(4), "Certificate too large");
@@ -202,13 +208,13 @@ void main(void)
 
 	off = 0;
 	do {
-		bytes = send(fd, &send_buf[off], HTTP_HEAD_LEN - off, 0);
+		bytes = send(fd, &send_buf[off], HTTP_GET_LEN - off, 0);
 		if (bytes < 0) {
 			printk("send() failed, err %d\n", errno);
 			goto clean_up;
 		}
 		off += bytes;
-	} while (off < HTTP_HEAD_LEN);
+	} while (off < HTTP_GET_LEN);
 
 	printk("Sent %d bytes\n", off);
 
@@ -232,12 +238,13 @@ void main(void)
 	}
 
 	/* Print HTTP response */
-	p = strstr(recv_buf, "\r\n");
-	if (p) {
-		off = p - recv_buf;
-		recv_buf[off + 1] = '\0';
-		printk("\n>\t %s\n\n", recv_buf);
-	}
+	// p = strstr(recv_buf, "\r\n");
+	// if (p) {
+	// 	off = p - recv_buf;
+	// 	recv_buf[off + 1] = '\0';
+	// 	printk("\n>\t %s\n\n", recv_buf);
+	// }
+	printk("\n> %s\n\n", recv_buf);
 
 	printk("Finished, closing socket.\n");
 
