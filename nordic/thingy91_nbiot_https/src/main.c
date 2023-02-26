@@ -175,7 +175,7 @@ void main(void)
 	size_t off;
 	struct addrinfo *res;
 	struct addrinfo hints = {
-		.ai_family = AF_INET,
+		.ai_family = AF_INET6,
 		.ai_socktype = SOCK_STREAM,
 	};
 
@@ -238,12 +238,12 @@ void main(void)
 			address_string, sizeof(address_string)));
 	}
 
-	((struct sockaddr_in *)res->ai_addr)->sin_port = htons(HTTPS_PORT);
+	((struct sockaddr_in6 *)res->ai_addr)->sin6_port = htons(HTTPS_PORT);
 
 	if (IS_ENABLED(CONFIG_SAMPLE_TFM_MBEDTLS)) {
-		fd = socket(AF_INET, SOCK_STREAM | SOCK_NATIVE_TLS, IPPROTO_TLS_1_2);
+		fd = socket(AF_INET6, SOCK_STREAM | SOCK_NATIVE_TLS, IPPROTO_TLS_1_2);
 	} else {
-		fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TLS_1_2);
+		fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TLS_1_2);
 	}
 	if (fd == -1) {
 		printk("Failed to open socket!\n");
@@ -257,7 +257,7 @@ void main(void)
 	}
 
 	printk("Connecting to %s\n", HTTPS_HOSTNAME);
-	err = connect(fd, res->ai_addr, sizeof(struct sockaddr_in));
+	err = connect(fd, res->ai_addr, sizeof(struct sockaddr_in6));
 	if (err) {
 		printk("connect() failed, err: %d\n", errno);
 		goto clean_up;
