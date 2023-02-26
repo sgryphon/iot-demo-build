@@ -10,8 +10,10 @@
 #include <zephyr/net/socket.h>
 #include <modem/nrf_modem_lib.h>
 #include <zephyr/net/tls_credentials.h>
+#include <modem/pdn.h>
 #include <modem/lte_lc.h>
 #include <modem/modem_key_mgmt.h>
+#include <nrf_modem_at.h>
 
 #define HTTPS_PORT 443
 
@@ -93,6 +95,26 @@ int cert_provision(void)
 	return 0;
 }
 
+static const char * const event_str[] = {
+	[PDN_EVENT_CNEC_ESM] = "ESM",
+	[PDN_EVENT_ACTIVATED] = "activated",
+	[PDN_EVENT_DEACTIVATED] = "deactivated",
+	[PDN_EVENT_IPV6_UP] = "IPv6 up",
+	[PDN_EVENT_IPV6_DOWN] = "IPv6 down",
+};
+
+void pdn_event_handler(uint8_t cid, enum pdn_event event, int reason)
+{
+	switch (event) {
+	case PDN_EVENT_CNEC_ESM:
+		printk("Event: PDP context %d, %s\n", cid, pdn_esm_strerror(reason));
+		break;
+	default:
+		printk("Event: PDP context %d %s\n", cid, event_str[event]);
+		break;
+	}
+}
+
 /* Setup TLS options on a given socket */
 int tls_setup(int fd)
 {
@@ -159,6 +181,13 @@ void main(void)
 
 	printk("HTTPS client sample started\n\r");
 
+	k_msleep(1000);
+	printk("1\n\r");
+	k_msleep(1000);
+	printk("2\n\r");
+	k_msleep(1000);
+	printk("3\n\r");
+
 #if !defined(CONFIG_SAMPLE_TFM_MBEDTLS)
 	/* Provision certificates before connecting to the LTE network */
 	err = cert_provision();
@@ -166,6 +195,16 @@ void main(void)
 		return;
 	}
 #endif
+
+	/* Setup a callback for the default PDP context (zero).
+	 * Do this before switching to function mode 1 (CFUN=1)
+	 * to receive the first activation event.
+	 */
+	err = pdn_default_ctx_cb_reg(pdn_event_handler);
+	if (err) {
+		printk("pdn_default_ctx_cb_reg() failed, err %d\n", err);
+		return;
+	}
 
 	printk("Waiting for network.. ");
 	err = lte_lc_init_and_connect();
@@ -175,10 +214,28 @@ void main(void)
 	}
 	printk("OK\n");
 
+	char apn[32] = { 0 };
+	err = pdn_default_apn_get(apn, sizeof(apn));
+	if (err) {
+		printk("pdn_default_apn_get() failed, err %d\n", err);
+		return;
+	}
+	printk("Default APN is %s\n", apn);
+
 	err = getaddrinfo(HTTPS_HOSTNAME, NULL, &hints, &res);
 	if (err) {
 		printk("getaddrinfo() failed, err %d\n", errno);
 		return;
+	}
+	char address_string[64] = { 0 };
+	if (res->ai_addr->sa_family == AF_INET6) {
+		printk("Host %s address is %s\n", HTTPS_HOSTNAME, inet_ntop(AF_INET6,
+			&((const struct sockaddr_in6 *) res->ai_addr)->sin6_addr,
+			address_string, sizeof(address_string)));
+	} else {
+		printk("Host %s IPv4 address is %s\n", HTTPS_HOSTNAME, inet_ntop(AF_INET,
+			&((const struct sockaddr_in *) res->ai_addr)->sin_addr,
+			address_string, sizeof(address_string)));
 	}
 
 	((struct sockaddr_in *)res->ai_addr)->sin_port = htons(HTTPS_PORT);
