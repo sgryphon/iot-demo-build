@@ -10,7 +10,7 @@
 #include <zephyr/net/socket.h>
 #include <modem/nrf_modem_lib.h>
 #include <zephyr/net/tls_credentials.h>
-#include <modem/pdn.h>64:ff9b::334b:4e67
+#include <modem/pdn.h>
 #include <modem/lte_lc.h>
 #include <modem/modem_key_mgmt.h>
 #include <nrf_modem_at.h>
