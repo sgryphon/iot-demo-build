@@ -13,7 +13,7 @@ project(azure_iot_hub)
 # NORDIC SDK APP START
 target_sources(app PRIVATE src/main.c)
 if (CONFIG_MODEM_KEY_MGMT) 
-  target_sources(app PRIVATE credentials_provision/modem_credentials_provision.c)
+  target_sources(app PRIVATE credentials_provision/credentials_provision.c)
 endif ()
 # NORDIC SDK APP END
 

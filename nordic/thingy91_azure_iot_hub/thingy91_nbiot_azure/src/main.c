@@ -18,9 +18,9 @@
 #include <modem/lte_lc.h>
 #endif
 
-//#if defined(CONFIG_MODEM_KEY_MGMT)
-#include "modem_credentials_provision.h"
-//#endif /* CONFIG_MODEM_KEY_MGMT */
+#if defined(CONFIG_MODEM_KEY_MGMT)
+#include "credentials_provision.h"
+#endif /* CONFIG_MODEM_KEY_MGMT */
 
 LOG_MODULE_REGISTER(azure_iot_hub_sample, CONFIG_AZURE_IOT_HUB_SAMPLE_LOG_LEVEL);
 
@@ -555,7 +555,7 @@ void main(void)
 	cJSON_Init();
 
 #if CONFIG_MODEM_KEY_MGMT
-	err = modem_credentials_provision();
+	err = credentials_provision();
 	if (err) {
 		LOG_ERR("credentials_provision, error: %d", err);
 		return;

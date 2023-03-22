@@ -8,4 +8,4 @@
  *
  *  @return 0 If successful. Otherwise, a negative error code is returned.
  */
-int modem_credentials_provision(void);
+int credentials_provision(void);

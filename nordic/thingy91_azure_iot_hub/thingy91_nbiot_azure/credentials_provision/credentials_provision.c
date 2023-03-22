@@ -8,7 +8,7 @@
 
 #include CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES
 
-int modem_credentials_provision(void)
+int credentials_provision(void)
 {
 	int err = 0;
 
