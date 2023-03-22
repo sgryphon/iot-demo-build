@@ -1,0 +1,19 @@
+[ ca ]
+default_ca      = ca_default
+
+[ ca_default ]
+name            = subca
+home            = dev-certs/$name
+database        = $home/db/index.txt
+serial          = $home/db/serial.txt
+new_certs_dir   = $home/certs
+certificate     = $home/$name.pem
+private_key     = $home/$name.key
+policy          = policy_default
+default_md      = sha256
+default_days    = 3650
+copy_extensions = copy
+subjectKeyIdentifier = hash
+
+[ policy_default ]
+commonName      = supplied
