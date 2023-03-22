@@ -207,4 +207,77 @@ Select the location and application name.
 
 Note that the application will be created with it's own git repository; to include it in a higher level repository, simply delete the `.git` (hidden) folder and commit the initial code.
 
+### Register the device
+
+Register the device with the authentication methoda "x509_ca".
+
+```powershell
+az iot hub device-identity create --hub-name $iotName --device-id $deviceid --am x509_ca
+```
+
+### Converting certificates to C source files
+
+The certificates need to be converted to a format suitable for including in the application source.
+
+```powershell
+$lines = Get-Content "dev-certs/devices/$($deviceId).pem"
+$foundStart = $false
+$wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart = $true }; if ($foundStart) { "`"$($_)\n`"" }}
+$wrapped | Set-Content "dev-certs/devices/$($deviceId).pem.c"
+
+$lines = Get-Content "dev-certs/devices/$($deviceId).key"
+$foundStart = $false
+$wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart = $true }; if ($foundStart) { "`"$($_)\n`"" }}
+$wrapped | Set-Content "dev-certs/devices/$($deviceId).key.c"
+```
+
+### Configuring the application
+
+You need to download the Azure IoT server certificates and prepare include files for them. Currently this is Baltimore Cyber,
+but they are transitioning to DigiCert, so include both.
+
+You need the hub name and device ID to put in the configuration:
+
+```powershell
+$hub = az iot hub show --name $iotName | ConvertFrom-Json
+Write-Host "CONFIG_AZURE_IOT_HUB_HOSTNAME=`"$($hub.properties.hostName)`"`nCONFIG_AZURE_IOT_HUB_DEVICE_ID=`"$deviceId`""
+```
+
+Create an include file to reference the device-specific certificates, e.g. `src\certs-imei-350457791791735879.h`.
+This file should be based on the `mqtt-certs.h`, referencing the generated client and downloaded server certificates.
+
+```c
+static const unsigned char ca_certificate[] = {
+#include "../certs/BaltimoreCyberTrustRoot.crt.pem.c"
+};
+
+static const unsigned char private_key[] = {
+#include "../../dev-certs/devices/imei-35045779171735879.key.c"
+};
+
+static const unsigned char device_certificate[] = {
+#include "../../dev-certs/devices/imei-35045779171735879.pem.c"
+};
+
+static const unsigned char ca_certificate_2[] = {
+#include "../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.c"
+};
+```
+
+You can then create an overlay file, e.g. `overlay-imei-350457791791735879.conf`, in the project root
+with the needed configuration
+
+```ini
+CONFIG_AZURE_IOT_HUB_HOSTNAME="iot-hub001-0xacc5-dev.azure-devices.net"
+CONFIG_AZURE_IOT_HUB_DEVICE_ID="imei-350457791791735879"
+CONFIG_MQTT_HELPER_PROVISION_CERTIFICATES=y
+CONFIG_MQTT_HELPER_CERTIFICATES_FILE="src/certs-imei-350457791791735879.c"
+CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG=11
+```
+
+To build:
+
+```powershell
+west build -p -c -b thingy91_nrf9160_ns -- -DOVERLAY=overlay-imei-350457791791735879.conf
+```
 
