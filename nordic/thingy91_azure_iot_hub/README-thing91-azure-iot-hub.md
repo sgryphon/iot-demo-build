@@ -215,7 +215,26 @@ Register the device with the authentication methoda "x509_ca".
 az iot hub device-identity create --hub-name $iotName --device-id $deviceid --am x509_ca
 ```
 
-### Converting certificates to C source files
+
+### Provisioning certificates via code
+
+You can follow the process to manually provision the certificates directly to the modem (keeping them secure),
+outlined in the application sample.
+
+To provision via code, during development, you need to make a number of changes. Provisioning via code is supported
+in mqtt_helper, but only for provisioning via `tls_credential_add()`. The code to provision via `modem_key_mgmt_write()` 
+has been adapted from several other samples.
+
+Note that including the certificates in the source code during development means that those specific certificates,
+including the private key, are compiled into the firmware image. Not only is this a security risk, but means the firmware
+image will only work on one device.
+
+For broader rollout, the device ID needs to be generated from information stored on the device, such as the IMEI, and
+the certificates, or other secrets, provisioned directly to the device storage (e.g. following the process from Nordic).
+This allows a single firmware image to be used across multiple devices.
+
+
+#### Converting certificates to C source files
 
 The certificates need to be converted to a format suitable for including in the application source.
 
@@ -231,20 +250,13 @@ $wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart =
 $wrapped | Set-Content "dev-certs/devices/$($deviceId).key.h"
 ```
 
-### Configuring the application
+You also need to download the Azure IoT server certificates and convert them for inclusion. Currently this is Baltimore Cyber,
+but they are transitioning to DigiCert, so include both. These are public certificates, so have beend downloaded, converted,
+and included in the `certs` folder.
 
-You need to download the Azure IoT server certificates and prepare include files for them. Currently this is Baltimore Cyber,
-but they are transitioning to DigiCert, so include both.
+#### Updating the sample code to include the certificates
 
-You need the hub name and device ID to put in the configuration:
-
-```powershell
-$hub = az iot hub show --name $iotName | ConvertFrom-Json
-Write-Host "CONFIG_AZURE_IOT_HUB_HOSTNAME=`"$($hub.properties.hostName)`"`nCONFIG_AZURE_IOT_HUB_DEVICE_ID=`"$deviceId`""
-```
-
-Create an include file to reference the device-specific certificates, e.g. `src\certs-imei-350457791791735879.h`.
-This file should be based on the `mqtt-certs.h`, referencing the generated client and downloaded server certificates.
+* Prepare a header to include the device-specific certificate files (plus the server files), `credentials_provision\certs-imei-350457791791735879.h`
 
 ```c
 static const unsigned char ca_certificate[] = {
@@ -264,27 +276,75 @@ static const unsigned char ca_certificate_2[] = {
 };
 ```
 
-You can then create an overlay file, e.g. `overlay-imei-350457791791735879.conf`, in the project root
-with the needed configuration (e.g. you may need to also APN details):
+* Add code to provision via `modem_key_mgmt_write()`, in `credentials_provision\credentials_provision.c` and `credentials_provision\credentials_provision.h`
+  * The `credentials_provision.c` file references the setting `CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES` to make it easy to change devices.
+* Add the configuration setting to KConfig
+
+```
+config AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES
+	string "Modem certificates"
+	help
+	  Include file that contains certificates to provision to the modem.
+```
+
+* Modify `main.c` to include the header and call the function before initialising the modem, but only if `CONFIG_MODEM_KEY_MGMT` is set.
+
+```c
+//#if defined(CONFIG_MODEM_KEY_MGMT)
+#include "credentials_provision.h"
+//#endif /* CONFIG_MODEM_KEY_MGMT */
+
+...
+
+#if CONFIG_MODEM_KEY_MGMT
+	err = credentials_provision();
+	if (err) {
+		LOG_ERR("credentials_provision, error: %d", err);
+		return;
+	}
+#endif /* CONFIG_MODEM_KEY_MGMT */
+```
+
+* Modify `CMakeLists.txt` to include the header and source files, when `CONFIG_MODEM_KEY_MGMT` is set.
+
+```
+if (CONFIG_MODEM_KEY_MGMT) 
+  target_sources(app PRIVATE credentials_provision/credentials_provision.c)
+endif ()
+zephyr_include_directories_ifdef(CONFIG_MODEM_KEY_MGMT credentials_provision)
+```
+
+* Create an overlay file for the device `overlay-imei-350457791791735879.conf` with the IoT Hub host name, device name, enabling `CONFIG_MODEM_KEY_MGMT`, setting `CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES`, and the secondary tag `CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG`.
+
+To get the IoT Hub host name:
+
+```powershell
+$hub = az iot hub show --name $iotName | ConvertFrom-Json
+Write-Host "CONFIG_AZURE_IOT_HUB_HOSTNAME=`"$($hub.properties.hostName)`"`nCONFIG_AZURE_IOT_HUB_DEVICE_ID=`"$deviceId`""
+```
+
+The overlay will look like this:
 
 ```ini
 CONFIG_AZURE_IOT_HUB_HOSTNAME="iot-hub001-0xacc5-dev.azure-devices.net"
 CONFIG_AZURE_IOT_HUB_DEVICE_ID="imei-350457791791735879"
-CONFIG_MQTT_HELPER_PROVISION_CERTIFICATES=y
-CONFIG_MQTT_HELPER_CERTIFICATES_FILE="src/certs-imei-350457791791735879.c"
+CONFIG_MODEM_KEY_MGMT=y
+CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES="certs-imei-350457791791735879.h"
 CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG=11
-CONFIG_PDN_DEFAULTS_OVERRIDE=y
-CONFIG_PDN_DEFAULT_APN="telstra.iot"
-CONFIG_PDN_DEFAULT_FAM_IPV4V6=y
 ```
 
-To build:
+Building and running
+--------------------
+
+To build, using the overlay configured above:
 
 ```powershell
 west build -p -c -b thingy91_nrf9160_ns -- "-DOVERLAY_CONFIG=overlay-imei-350457791791735879.conf"
 ```
 
-Monitor IoT Hub activity:
+Use the nRF Connect Programmer to write the `zephyr/app_signed.hex` file to the device and restart.
+
+As well as monitoring the serial logs from the device you can monitor IoT Hub activity:
 
 ```powershell
 az iot hub monitor-events -n $iotName --timeout 0
