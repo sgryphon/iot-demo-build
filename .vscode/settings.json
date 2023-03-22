@@ -21,7 +21,8 @@
     "C_Cpp.default.configurationProvider": "nrf-connect",
     "nrf-connect.applications": [
         "${workspaceFolder}/nordic/thingy91_nbiot_https",
-        "${workspaceFolder}/nordic/thingy91_azure_iot_hub/thing91_nbiot_azure"
+        "${workspaceFolder}/nordic/thingy91_azure_iot_hub/thing91_nbiot_azure",
+        "${workspaceFolder}/nordic/thingy91_nbiot_azure"
     ],
-    "nrf-connect.topdir": "${nrf-connect.sdk:2.3.0}"
+    "nrf-connect.topdir": "/home/sly/ncs/v2.3.0"
 }
