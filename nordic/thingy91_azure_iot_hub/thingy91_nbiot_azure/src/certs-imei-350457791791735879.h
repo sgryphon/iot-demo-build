@@ -10,11 +10,11 @@
  *      "-----END CA CERTIFICATE-----\n"
  */
 static const unsigned char ca_certificate[] = {
-#if __has_include("../certs/BaltimoreCyberTrustRoot.crt.pem.c")
-#include "../certs/BaltimoreCyberTrustRoot.crt.pem.c"
-#else
-""
-#endif
+//#if __has_include("../certs/BaltimoreCyberTrustRoot.crt.pem.h")
+#include "../certs/BaltimoreCyberTrustRoot.crt.pem.h"
+//#else
+//""
+//#endif
 };
 
 /*
@@ -23,11 +23,11 @@ static const unsigned char ca_certificate[] = {
  *      "-----END PRIVATE KEY-----\n"
  */
 static const unsigned char private_key[] = {
-#if __has_include("../../dev-certs/devices/imei-35045779171735879.key.c")
-#include "../../dev-certs/devices/imei-35045779171735879.key.c"
-#else
-""
-#endif
+//#if __has_include("../../dev-certs/devices/imei-350457791791735879.key.h")
+#include "../../dev-certs/devices/imei-350457791791735879.key.h"
+//#else
+//""
+//#endif
 };
 
 /*
@@ -36,11 +36,11 @@ static const unsigned char private_key[] = {
  *      "-----END CLIENT CERTIFICATE-----\n"
  */
 static const unsigned char device_certificate[] = {
-#if __has_include("../../dev-certs/devices/imei-35045779171735879.pem.c")
-#include "../../dev-certs/devices/imei-35045779171735879.pem.c"
-#else
-""
-#endif
+//#if __has_include("../../dev-certs/devices/imei-350457791791735879.pem.h")
+#include "../../dev-certs/devices/imei-350457791791735879.pem.h"
+//#else
+//""
+//#endif
 };
 
 #if CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG != -1
@@ -51,11 +51,11 @@ static const unsigned char device_certificate[] = {
  *      "-----END CA CERTIFICATE-----\n"
  */
 static const unsigned char ca_certificate_2[] = {
-#if __has_include("../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.c")
-#include "../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.c"
-#else
-""
-#endif
+//#if __has_include("../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.h")
+#include "../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.h"
+//#else
+//""
+//#endif
 };
 
 /*

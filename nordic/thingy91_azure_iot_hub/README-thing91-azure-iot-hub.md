@@ -223,12 +223,12 @@ The certificates need to be converted to a format suitable for including in the 
 $lines = Get-Content "dev-certs/devices/$($deviceId).pem"
 $foundStart = $false
 $wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart = $true }; if ($foundStart) { "`"$($_)\n`"" }}
-$wrapped | Set-Content "dev-certs/devices/$($deviceId).pem.c"
+$wrapped | Set-Content "dev-certs/devices/$($deviceId).pem.h"
 
 $lines = Get-Content "dev-certs/devices/$($deviceId).key"
 $foundStart = $false
 $wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart = $true }; if ($foundStart) { "`"$($_)\n`"" }}
-$wrapped | Set-Content "dev-certs/devices/$($deviceId).key.c"
+$wrapped | Set-Content "dev-certs/devices/$($deviceId).key.h"
 ```
 
 ### Configuring the application
@@ -248,24 +248,24 @@ This file should be based on the `mqtt-certs.h`, referencing the generated clien
 
 ```c
 static const unsigned char ca_certificate[] = {
-#include "../certs/BaltimoreCyberTrustRoot.crt.pem.c"
+#include "../certs/BaltimoreCyberTrustRoot.crt.pem.h"
 };
 
 static const unsigned char private_key[] = {
-#include "../../dev-certs/devices/imei-35045779171735879.key.c"
+#include "../../dev-certs/devices/imei-350457791791735879.key.h"
 };
 
 static const unsigned char device_certificate[] = {
-#include "../../dev-certs/devices/imei-35045779171735879.pem.c"
+#include "../../dev-certs/devices/imei-350457791791735879.pem.h"
 };
 
 static const unsigned char ca_certificate_2[] = {
-#include "../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.c"
+#include "../certs/DigiCertGlobalG2TLSRSASHA2562020CA1.crt.pem.h"
 };
 ```
 
 You can then create an overlay file, e.g. `overlay-imei-350457791791735879.conf`, in the project root
-with the needed configuration
+with the needed configuration (e.g. you may need to also APN details):
 
 ```ini
 CONFIG_AZURE_IOT_HUB_HOSTNAME="iot-hub001-0xacc5-dev.azure-devices.net"
@@ -273,11 +273,19 @@ CONFIG_AZURE_IOT_HUB_DEVICE_ID="imei-350457791791735879"
 CONFIG_MQTT_HELPER_PROVISION_CERTIFICATES=y
 CONFIG_MQTT_HELPER_CERTIFICATES_FILE="src/certs-imei-350457791791735879.c"
 CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG=11
+CONFIG_PDN_DEFAULTS_OVERRIDE=y
+CONFIG_PDN_DEFAULT_APN="telstra.iot"
+CONFIG_PDN_DEFAULT_FAM_IPV4V6=y
 ```
 
 To build:
 
 ```powershell
-west build -p -c -b thingy91_nrf9160_ns -- -DOVERLAY=overlay-imei-350457791791735879.conf
+west build -p -c -b thingy91_nrf9160_ns -- "-DOVERLAY_CONFIG=overlay-imei-350457791791735879.conf"
 ```
 
+Monitor IoT Hub activity:
+
+```powershell
+az iot hub monitor-events -n $iotName --timeout 0
+```
