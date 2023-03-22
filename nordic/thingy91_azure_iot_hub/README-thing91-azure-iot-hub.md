@@ -13,8 +13,8 @@ https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/networ
 The library is based on X.509 CA Signed security for client devices, with devices having a certificate and
 key signed by a certificate authority registered in IoT Hub (or Device Provisioning Service).
 
-Setup of development certificates in Azure IoT
-----------------------------------------------
+Setup of development certificates for Azure IoT
+-----------------------------------------------
 
 This is a combination of the following pages, for fully scripted creation of a development certificate:
 
@@ -155,6 +155,12 @@ $certs.value | ft name, etag, @{n='isVerified';e={$_.properties.isVerified}}
 az iot hub certificate delete --hub-name $iotName --name $certs.value[0].name --etag $certs.value[0].etag
 ```
 
+### Web servers
+
+You can also use the certificate chain to sign web server certificates.
+
+NOTE: For web servers use `-addext "extendedKeyUsage = serverAuth"`
+
 Generate client device certificate
 ----------------------------------
 
@@ -189,12 +195,16 @@ Azure IoT Hub can then verify the signature against the device certificate, and 
 device certificate (which is signed by the intermediate certificate) against the 
 uploaded intermediate certificate, providing the chain of trust to the device. 
 
-Web servers
------------
 
-You can also use the certificate chain to sign web server certificates.
+Creating an application
+-----------------------
 
-NOTE: For web servers use `-addext "extendedKeyUsage = serverAuth"`
+Using the nRF Connect extension for Visual Studio Code, create a new application.
 
+Select the version of the SDK (currently v2.3.0) and the `nrf/samples/nrf9160/azure_iot_hub` template.
+
+Select the location and application name.
+
+Note that the application will be created with it's own git repository; to include it in a higher level repository, simply delete the `.git` (hidden) folder and commit the initial code.
 
 

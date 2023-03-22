@@ -17,10 +17,11 @@
         "vector": "cpp",
         "system_error": "cpp"
     },
-    "nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.2.0}",
-    "nrf-connect.topdir": "${nrf-connect.sdk:2.2.0}",
+    "nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.3.0}",
     "C_Cpp.default.configurationProvider": "nrf-connect",
     "nrf-connect.applications": [
-        "${workspaceFolder}/nordic/thingy91_nbiot_https"
-    ]
+        "${workspaceFolder}/nordic/thingy91_nbiot_https",
+        "${workspaceFolder}/nordic/thingy91_azure_iot_hub/thing91_nbiot_azure"
+    ],
+    "nrf-connect.topdir": "${nrf-connect.sdk:2.3.0}"
 }
