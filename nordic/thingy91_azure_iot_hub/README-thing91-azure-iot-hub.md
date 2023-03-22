@@ -288,4 +288,24 @@ Monitor IoT Hub activity:
 
 ```powershell
 az iot hub monitor-events -n $iotName --timeout 0
+
+Starting event monitor, use ctrl-c to stop...
+{
+    "event": {
+        "origin": "imei-350457791791735879",
+        "module": "",
+        "interface": "",
+        "component": "",
+        "payload": "{\"temperature\":25.1,\"timestamp\":49101}"
+    }
+}
+{
+    "event": {
+        "origin": "imei-350457791791735879",
+        "module": "",
+        "interface": "",
+        "component": "",
+        "payload": "{\"temperature\":25.1,\"timestamp\":69111}"
+    }
+}
 ```

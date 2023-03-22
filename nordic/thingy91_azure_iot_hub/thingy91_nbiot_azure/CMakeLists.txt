@@ -12,9 +12,13 @@ project(azure_iot_hub)
 
 # NORDIC SDK APP START
 target_sources(app PRIVATE src/main.c)
+if (CONFIG_MODEM_KEY_MGMT) 
+  target_sources(app PRIVATE credentials_provision/modem_credentials_provision.c)
+endif ()
 # NORDIC SDK APP END
 
 zephyr_include_directories(src)
+zephyr_include_directories_ifdef(CONFIG_MODEM_KEY_MGMT credentials_provision)
 
 # Make folder containing certificates global so that it can be located by
 # the MQTT helper library.

@@ -18,6 +18,10 @@
 #include <modem/lte_lc.h>
 #endif
 
+//#if defined(CONFIG_MODEM_KEY_MGMT)
+#include "modem_credentials_provision.h"
+//#endif /* CONFIG_MODEM_KEY_MGMT */
+
 LOG_MODULE_REGISTER(azure_iot_hub_sample, CONFIG_AZURE_IOT_HUB_SAMPLE_LOG_LEVEL);
 
 /* Interval [s] between sending events to the IoT hub. The value can be changed
@@ -549,6 +553,14 @@ void main(void)
 
 	work_init();
 	cJSON_Init();
+
+#if CONFIG_MODEM_KEY_MGMT
+	err = modem_credentials_provision();
+	if (err) {
+		LOG_ERR("credentials_provision, error: %d", err);
+		return;
+	}
+#endif /* CONFIG_MODEM_KEY_MGMT */
 
 #if IS_ENABLED(CONFIG_LTE_LINK_CONTROL)
 	LOG_INF("Connecting to LTE network");

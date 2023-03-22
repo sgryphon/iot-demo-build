@@ -6,6 +6,11 @@
 
 menu "Azure IoT Hub sample"
 
+config AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES
+	string "Modem certificates"
+	help
+	  Include file that contains certificates to provision to the modem.
+
 menu "Zephyr Kernel"
 source "Kconfig.zephyr"
 endmenu
@@ -13,5 +18,7 @@ endmenu
 module = AZURE_IOT_HUB_SAMPLE
 module-str = Azure IoT Hub sample
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+
 
 endmenu
