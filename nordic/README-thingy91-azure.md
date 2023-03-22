@@ -402,7 +402,7 @@ In certificate manager, set:
 * Security tag: Enter "10". This is the default in the sample application, or you can choose your own slot to use.
 * CA certificate: Open the `azure-certs/BaltimoreCyberTrustRoot.crt.pem` file (or download from Microsoft), and paste the contents in as the CA Certificate.
 * Client certificate: Open the device client certificate file (PEM), e.g. `dev-certs/devices/350457791791735879.pem` and paste the contents between (and including) the BEGIN and END lines into Client certifcate.
-* Private key: Open the device private key file (KEY), e.g. `dev-certs/devices/350457791791735879.key`, and paste into the Privte key.
+* Private key: Open the device private key file (KEY), e.g. `dev-certs/devices/350457791791735879.key`, and paste into the Private key.
 
 Make sure you have definitely updated the Security tag and then click Update certificates.
 

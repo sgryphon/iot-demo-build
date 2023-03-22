@@ -557,6 +557,9 @@ void main(void)
 	LOG_INF("Connected to LTE network");
 #endif
 
+  /* Wait for IPv6. TODO: Listen for PDN events, with timeout */
+  k_msleep(1000);
+
 #if IS_ENABLED(CONFIG_AZURE_IOT_HUB_DPS)
 	/* Using the device ID as DPS registration ID. */
 	err = dps_run(&cfg.hostname, &cfg.device_id);
