@@ -43,6 +43,29 @@ The second half of the article demonstrates using the Thingy:91 to connect. To p
 * LPWAN SIM card (e.g. from Telstra)
 * Visual Studio Code
 
+Focus on IPv6
+-------------
+
+IPv6, with it's increased address range, is very important for Internet of Things (IoT) projectes, particularly large
+scale rollouts.
+
+The Telstra IoT network, including LTE-M and NB-IoT, has full support for IPv6, including IPv6-only connections using
+DNS64 (domain name system 6-to-4) and NAT64 (network address translation 6-to-4), which allows devices with an
+IPv6-only connection to still connect to IPv4 only servers.
+
+This means, no matter if your servers are IPv6, or still only IPv4, you can use IPv6-only on the Telstra network
+and only have to code your application for a single network stack (instead of two).
+
+The Telstra [Wireless Application Development Guidelines](https://www.telstra.com.au/business-enterprise/products/internet-of-things/capabilities) require that all new IOT/M2M devices support IPv6 natively, and IOT/M2M applications and end to end services support IPv6, and that systems are configured either as dual stack or IPv6-only single stack.
+
+Any large-scale deployments are expected to be IPv6-only single stack.
+
+Therefore it is important to evaluate and test any devices for IPv6 capabilities.
+
+The Zephyr operating system, on which the Nordic framework is based, has good support for IPv6, including
+IPv6-only networks such as Thread.
+
+
 Setup of development certificate hierarchy for Azure IoT
 --------------------------------------------------------
 
@@ -263,32 +286,14 @@ az iot hub certificate delete --hub-name $iotName --name $certs.value[0].name --
 Generate device certificates
 ----------------------------
 
-You will need the device ID that will be used when connecting to Azure. For the asset tracking application, this defaults to
-the IMEI number, which is printed on a sticker inside the Thingy:91, e.g. "350457791791735879", although you can override
-this during build.
+You will need the device ID that will be used when connecting to Azure. We will use the device
+IMEI number, which is printed on a sticker inside the Thingy:91, e.g. "350457791791735879".
+
+This needs to be manually set in the sample, but is the auto-generated default value used in
+the Nordic asset tracking application sample. You can also override with your own ID if needed.
 
 Note if you are using DPS it uses a registration ID, which must match the common name on the device certificate. This is a
 separate value from the device ID, but will often be the same (e.g. if they must both match the same device certificate).
-
-#### Aside: Confirming the device ID
-
-If you need to confirm the device ID, the the application does not output it until after the library is
-initialised (which fails), so to see the value before configuring you need to insert an extra line of logging
-in the sample app (see below for setup details).
-
-TODO: Check this
-
-```c
-	LOG_INF("*** Client ID ***:    %s", client_id_buf);
-	err = azure_iot_hub_init(azure_iot_hub_event_handler);
-```
-
-Then  build the application, and although it will fail to connect (because you haven't configured anything yet)
-the serial connection output will include the Client ID that you need to use:
-
-```
-west build -p -c -b thingy91_nrf9160_ns -- "-DOVERLAY_CONFIG=overlay-azure.conf"
-```
 
 ### Create device in Azure
 
@@ -401,6 +406,8 @@ In certificate manager, set:
 
 Make sure you have definitely updated the Security tag and then click Update certificates.
 
+<pic - certificates>
+
 The log will report when it is complete, and you will also see the AT commands that were sent in the Terminal window. You can also use `AT%CMNG=1` to list the certificates in use.
 
 Note that Microsoft is in the process of switching over their certificates, so you can also load the 
@@ -427,6 +434,131 @@ Note that when you create the sample, it will initialise the folder as new git r
 this, e.g. the folder is part of a larger repository, you can simply delete the .git folder, and then 
 check in the initial code to your source control.
 
+### Configuring the sample
+
+Before building you need to configure the `prj.conf` file with your hub and IoT Hub host name.
+
+```ini
+CONFIG_AZURE_IOT_HUB_DEVICE_ID="350457791791735879"
+CONFIG_AZURE_IOT_HUB_HOSTNAME="iot-hub001-0xacc5-dev.azure-devices.net"
+```
+
+A full example would store these values in configuration (or auto-generate), so that the a single
+firmware binary can be deployed across multiple devices.
+
+### Building the sample
+
+With the SDK terminal (opened from Toolchain Manager), change to the directory where you created the sample app,
+and build.
+
+```powershell
+cd ~/Code/iot-demo-build/nordic/thingy91_nbiot_azure
+west build -p -c -b thingy91_nrf9160_ns
+```
+
+Then use the Programmer to write it to the Thingy:91 (hold down the button while turning on, clear and select the new file `build/zephyr/app_signed.hex`, and Write).
+
+### Running the sample
+
+To view the debug output stream from the device you can listen to the micro-USB serial port. One
+easy way to do this is the nRF Terminal tab in VS Code. You can find this terminal in  
+View > Command Palette (and then search for it), or via `CTRL+J` and then selecting the tab.
+
+Click the start button in the terminal (top right) and connect to the serial port
+(usually `/dev/ttyACM0` on Linux).
+
+Turn the Thingy:91 off (the terminal will report Disconnected) and then back on again
+(without pressing the button) and you will see the device run the Azure IoT Hub sample.
+
+<pic - terminal>
+
 
 Running in IPv6-only network
 ----------------------------
+
+If we turn on debugging for the `mqtt_helper` then we will see that the device is connecting
+to an IPv4 address -- not surprising as the packet data network connection defaults to dual
+stack and Azure IoT Hub currently only has an IPv4 address:
+
+```powershell
+sly@sigil:~/Code/iot-demo-build/nordic/thingy91_nbiot_azure$ host iot-hub001-0xacc5-dev.azure-devices.net 8.8.8.8
+Aliases: 
+iot-hub001-0xacc5-dev.azure-devices.net is an alias for gateway-prod-gw-australiaeast-1-tls10.australiaeast.cloudapp.azure.com.
+gateway-prod-gw-australiaeast-1-tls10.australiaeast.cloudapp.azure.com has address 13.70.74.195
+```
+
+In dual stack mode, Telstra provides private IPv4 addresses to devices and runs network address 
+translation (NAT44) to allow them to connect from that private network to public IPv4 addresses.
+
+### Updating the sample for IPv6
+
+Currently the sample waits for LTE packet data network (PDN) connection, and then tries to connect to Azure.
+However IPv6 prefixes are sent in a separate notification after the initial network activation.
+
+This means that if you run the code with IPv6 only it will fail, as it tries to resolve the
+address before IPv6 is fully configured.
+
+For this sample we can just add a short delay, in `src/main.c`, after the connection and before initialising Azure:
+
+```c
+  ...
+	modem_configure();
+	k_sem_take(&network_connected_sem, K_FOREVER);
+	LOG_INF("Connected to LTE network");
+#endif
+
+  /* Wait for IPv6. TODO: Listen for PDN events, with timeout */
+  k_msleep(1000);
+  ...
+```
+
+In a full build we would listen to PDN events and wait for IPv6, with a short timeout (in case the network
+does not have IPv6).
+
+### Configuring for IPv6-only
+
+We can easily configure the packet data network for IPv6 only operation in `prj.conf`:
+
+```ini
+CONFIG_PDN=y
+CONFIG_PDN_DEFAULTS_OVERRIDE=y
+CONFIG_PDN_DEFAULT_APN="telstra.iot"
+CONFIG_PDN_DEFAULT_FAM_IPV6=y
+```
+
+We can also enable debug logging for `mqtt_helper`, the component that connects to Azure, to see the IP address resolution.
+
+```ini
+CONFIG_MQTT_HELPER_LOG_LEVEL_DBG=y
+```
+
+### Example connection to Azure IoT Hub from IPv6-only network
+
+Rebuild the application and deploy to the device, connect to NRF Terminal and turn the device back on.
+
+The additional logging will show the IPv6 address resolution, and then the successful connection
+to Azure IoT Hub:
+
+<pic - logs>
+
+The relevant log lines show the lookup of `iot-hub001-0xacc5-dev.azure-devices.net` and the resolved
+IPv6 address of `2001:8004:11d0:4e2a::d46:4ac3`.
+
+```
+[00:00:04.396,423] <dbg> mqtt_helper: broker_init: Resolving IP address for iot-hub001-0xacc5-dev.azure-devices.net
+[00:00:04.595,703] <dbg> mqtt_helper: broker_init: IPv6 Address found 2001:8004:11d0:4e2a::d46:4ac3 (AF_INET6)
+...
+[00:00:08.191,101] <dbg> mqtt_helper: mqtt_evt_handler: MQTT mqtt_client connected
+```
+
+This is a NAT64 address, although it is using a custom prefix of `2001:8004:11d0:4e2a::` instead of the
+standard `64:ff9b::`.
+
+The suffix `d46:4ac3` is the same for standard DNS64 and contains the encoded IPv4 address: 0x0d = 13, 0x46 = 70, 0x4a = 74, 0xc3 = 195. 
+
+NOTE: While the underlying Zephyr OS has good support for IPv6, support in the Nordic `mqtt_helper` is relatively new
+and not available in v2.3.0. To run the sample above, I had to use the v-next development version.
+
+
+
+
