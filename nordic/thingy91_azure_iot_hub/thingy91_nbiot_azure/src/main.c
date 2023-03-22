@@ -567,6 +567,9 @@ void main(void)
 	modem_configure();
 	k_sem_take(&network_connected_sem, K_FOREVER);
 	LOG_INF("Connected to LTE network");
+
+  /* wait for IPv6 ... TODO: check PDN events, wait for semaphore, with timeout */
+  k_msleep(1000);
 #endif
 
 #if IS_ENABLED(CONFIG_AZURE_IOT_HUB_DPS)

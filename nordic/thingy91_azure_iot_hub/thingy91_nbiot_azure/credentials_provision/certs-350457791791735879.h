@@ -23,8 +23,8 @@ static const unsigned char ca_certificate[] = {
  *      "-----END PRIVATE KEY-----\n"
  */
 static const unsigned char private_key[] = {
-//#if __has_include("../../dev-certs/devices/imei-350457791791735879.key.h")
-#include "../../dev-certs/devices/imei-350457791791735879.key.h"
+//#if __has_include("../../dev-certs/devices/350457791791735879.key.h")
+#include "../../dev-certs/devices/350457791791735879.key.h"
 //#else
 //""
 //#endif
@@ -36,8 +36,8 @@ static const unsigned char private_key[] = {
  *      "-----END CLIENT CERTIFICATE-----\n"
  */
 static const unsigned char device_certificate[] = {
-//#if __has_include("../../dev-certs/devices/imei-350457791791735879.pem.h")
-#include "../../dev-certs/devices/imei-350457791791735879.pem.h"
+//#if __has_include("../../dev-certs/devices/350457791791735879.pem.h")
+#include "../../dev-certs/devices/350457791791735879.pem.h"
 //#else
 //""
 //#endif

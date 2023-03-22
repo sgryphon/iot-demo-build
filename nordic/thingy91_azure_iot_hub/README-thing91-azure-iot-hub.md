@@ -196,6 +196,31 @@ device certificate (which is signed by the intermediate certificate) against the
 uploaded intermediate certificate, providing the chain of trust to the device. 
 
 
+Alternative certificates
+------------------------
+
+The certificates need to be converted to a format suitable for including in the application source.
+
+```powershell
+mkdir dev-certs
+mkdir dev-certs/devices
+
+$deviceId = "350457791791735879"
+$source = "/home/sly/Documents/Temp/dev-certs/devices"
+$destination = "dev-certs/devices"
+
+$lines = Get-Content (Join-Path $source "$($deviceId).pem")
+$foundStart = $false
+$wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart = $true }; if ($foundStart) { "`"$($_)\n`"" }}
+$wrapped | Set-Content (Join-Path $destination "$($deviceId).pem.h")
+
+$lines = Get-Content (Join-Path $source "$($deviceId).key")
+$foundStart = $false
+$wrapped = $lines | ForEach-Object { if ($_ -match '-----BEGIN') { $foundStart = $true }; if ($foundStart) { "`"$($_)\n`"" }}
+$wrapped | Set-Content (Join-Path $destination "$($deviceId).key.h")
+```
+
+
 Creating an application
 -----------------------
 
@@ -256,7 +281,7 @@ and included in the `certs` folder.
 
 #### Updating the sample code to include the certificates
 
-* Prepare a header to include the device-specific certificate files (plus the server files), `credentials_provision\certs-imei-350457791791735879.h`
+* Prepare a header to include the device-specific certificate files (plus the server files), `credentials_provision\certs-350457791791735879.h`
 
 ```c
 static const unsigned char ca_certificate[] = {
@@ -264,11 +289,11 @@ static const unsigned char ca_certificate[] = {
 };
 
 static const unsigned char private_key[] = {
-#include "../../dev-certs/devices/imei-350457791791735879.key.h"
+#include "../../dev-certs/devices/350457791791735879.key.h"
 };
 
 static const unsigned char device_certificate[] = {
-#include "../../dev-certs/devices/imei-350457791791735879.pem.h"
+#include "../../dev-certs/devices/350457791791735879.pem.h"
 };
 
 static const unsigned char ca_certificate_2[] = {
@@ -314,7 +339,7 @@ endif ()
 zephyr_include_directories_ifdef(CONFIG_MODEM_KEY_MGMT credentials_provision)
 ```
 
-* Create an overlay file for the device `overlay-imei-350457791791735879.conf` with the IoT Hub host name, device name, enabling `CONFIG_MODEM_KEY_MGMT`, setting `CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES`, and the secondary tag `CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG`.
+* Create an overlay file for the device `overlay-device-350457791791735879.conf` with the IoT Hub host name, device name, enabling `CONFIG_MODEM_KEY_MGMT`, setting `CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES`, and the secondary tag `CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG`.
 
 To get the IoT Hub host name:
 
@@ -327,9 +352,9 @@ The overlay will look like this:
 
 ```ini
 CONFIG_AZURE_IOT_HUB_HOSTNAME="iot-hub001-0xacc5-dev.azure-devices.net"
-CONFIG_AZURE_IOT_HUB_DEVICE_ID="imei-350457791791735879"
+CONFIG_AZURE_IOT_HUB_DEVICE_ID="350457791791735879"
 CONFIG_MODEM_KEY_MGMT=y
-CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES="certs-imei-350457791791735879.h"
+CONFIG_AZURE_IOT_HUB_SAMPLE_MODEM_CERTIFICATES="certs-350457791791735879.h"
 CONFIG_MQTT_HELPER_SECONDARY_SEC_TAG=11
 ```
 
@@ -339,7 +364,7 @@ Building and running
 To build, using the overlay configured above:
 
 ```powershell
-west build -p -c -b thingy91_nrf9160_ns -- "-DOVERLAY_CONFIG=overlay-imei-350457791791735879.conf"
+west build -p -c -b thingy91_nrf9160_ns -- "-DOVERLAY_CONFIG=overlay-device-350457791791735879.conf"
 ```
 
 Use the nRF Connect Programmer to write the `zephyr/app_signed.hex` file to the device and restart.
