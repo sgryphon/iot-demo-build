@@ -1,0 +1,2 @@
+# exclude certificates (including private keys)
+dev-certs
