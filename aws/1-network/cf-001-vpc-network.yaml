@@ -1,0 +1,284 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Create core VPC and subnets"
+# See: https://aws.amazon.com/blogs/networking-and-content-delivery/architect-dual-stack-amazon-vpc-with-multiple-ipv6-cidr-blocks/
+#      https://docs.aws.amazon.com/vpc/latest/userguide/nat-gateway-nat64-dns64.html
+
+Resources:
+
+  # VPC
+  coreVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","01"]]
+  coreIPv6CidrBlock:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      AmazonProvidedIpv6CidrBlock: true
+      VpcId: !Ref coreVPC
+
+  # Internet gateway
+  internetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","gateway"]]
+  gatewayToInternet:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref coreVPC
+      InternetGatewayId: !Ref internetGateway
+  egressOnlyInternetGateway:
+    Type: AWS::EC2::EgressOnlyInternetGateway
+    Properties: 
+      VpcId: !Ref coreVPC
+
+  # NAT gateway - in the dual-stack public network so it can NAT44 and NAT64
+  natGateway:
+    Type: AWS::EC2::NatGateway
+    DependsOn: natPublicIP
+    Properties:
+      AllocationId: !GetAtt natPublicIP.AllocationId
+      SubnetId: !Ref publicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","nat-gateway"]]
+  natPublicIP:
+    Type: AWS::EC2::EIP
+    DependsOn: coreVPC
+    Properties:
+      Domain: vpc
+
+  # Routing - public subnets
+  publicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref coreVPC
+      Tags:
+        - Key: Name 
+          Value: !Join ["-", [!Ref "AWS::StackName","public-route-table"]]
+  publicIpv6DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: gatewayToInternet
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      DestinationIpv6CidrBlock: ::/0
+      GatewayId: !Ref internetGateway
+  publicIpv4DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: gatewayToInternet
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref internetGateway
+  publicNat64Route:
+    Type: AWS::EC2::Route
+    DependsOn: natGateway
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      DestinationIpv6CidrBlock: '64:ff9b::/96'
+      NatGatewayId: !Ref natGateway
+
+  # Routing - private subnets
+  privateEgressRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref coreVPC
+      Tags:
+        - Key: Name 
+          Value: !Join ["-", [!Ref "AWS::StackName","private-route-table"]]
+  privateEgressIpv6DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref privateEgressRouteTable
+      DestinationIpv6CidrBlock: ::/0
+      EgressOnlyInternetGatewayId: !Ref egressOnlyInternetGateway
+  privateEgressIpv4DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: natGateway
+    Properties:
+      RouteTableId: !Ref privateEgressRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref natGateway
+  privateEgressNat64Route:
+    Type: AWS::EC2::Route
+    DependsOn: natGateway
+    Properties:
+      RouteTableId: !Ref privateEgressRouteTable
+      DestinationIpv6CidrBlock: '64:ff9b::/96'
+      NatGatewayId: !Ref natGateway
+
+  # Public Subnet 1 (IPv6 only) - suffix 00
+  publicSubnet1:
+    Type: AWS::EC2::Subnet
+    DependsOn: coreIPv6CidrBlock
+    Properties:
+      VpcId: !Ref coreVPC
+      AssignIpv6AddressOnCreation : true
+      AvailabilityZone:
+        Fn::Select:
+         - 0
+         - Fn::GetAZs: ""
+      EnableDns64: true
+      Ipv6CidrBlock: !Select [ 0, !Cidr [ !Select [ 0, !GetAtt coreVPC.Ipv6CidrBlocks], 1, 64 ]]
+      Ipv6Native: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","public-subnet-01"]]
+  publicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref publicSubnet1
+      RouteTableId: !Ref publicRouteTable
+
+  # Public Subnet 2 (dual stack) - suffix 01
+  publicSubnet2:
+    Type: AWS::EC2::Subnet
+    DependsOn: coreIPv6CidrBlock
+    Properties:
+      VpcId: !Ref coreVPC
+      AssignIpv6AddressOnCreation : true
+      AvailabilityZone:
+        Fn::Select:
+         - 1
+         - Fn::GetAZs: ""
+      CidrBlock: !Select [ 1, !Cidr [ !GetAtt coreVPC.CidrBlock, 2, 8 ]]
+      Ipv6CidrBlock: !Select [ 1, !Cidr [ !Select [ 0, !GetAtt coreVPC.Ipv6CidrBlocks], 2, 64 ]]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","public-subnet-02"]]
+  publicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref publicSubnet2
+      RouteTableId: !Ref publicRouteTable
+  
+  # Private Subnet 1 (IPv6 only) - suffix 02
+  privateSubnet1:
+    Type: AWS::EC2::Subnet
+    DependsOn: coreIPv6CidrBlock
+    Properties:
+      VpcId: !Ref coreVPC
+      AssignIpv6AddressOnCreation: true
+      AvailabilityZone:
+        Fn::Select:
+         - 0
+         - Fn::GetAZs: ""
+      EnableDns64: true
+      Ipv6CidrBlock: !Select [ 2, !Cidr [ !Select [ 0, !GetAtt coreVPC.Ipv6CidrBlocks], 3, 64 ]] 
+      Ipv6Native: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","private-subnet-01"]]
+  privateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref privateSubnet1
+      RouteTableId: !Ref privateEgressRouteTable
+
+  # Private Subnet 2 (dual stack) - suffix 03
+  privateSubnet2:
+    Type: AWS::EC2::Subnet
+    DependsOn: coreIPv6CidrBlock
+    Properties:
+      VpcId: !Ref coreVPC
+      AssignIpv6AddressOnCreation: true
+      AvailabilityZone:
+        Fn::Select:
+         - 1
+         - Fn::GetAZs: ""
+      CidrBlock: !Select [ 3, !Cidr [ !GetAtt coreVPC.CidrBlock, 4, 8 ]]
+      EnableDns64: true
+      Ipv6CidrBlock: !Select [ 3, !Cidr [ !Select [ 0, !GetAtt coreVPC.Ipv6CidrBlocks], 4, 64 ]]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","private-subnet-02"]]
+  privateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref privateSubnet2
+      RouteTableId: !Ref privateEgressRouteTable
+
+  # Private Subnet 3 (IPv6 only) - suffix 04
+  privateSubnet3:
+    Type: AWS::EC2::Subnet
+    DependsOn: coreIPv6CidrBlock
+    Properties:
+      VpcId: !Ref coreVPC
+      AssignIpv6AddressOnCreation: true
+      AvailabilityZone:
+        Fn::Select:
+         - 0
+         - Fn::GetAZs: ""
+      EnableDns64: true
+      Ipv6CidrBlock: !Select [ 4, !Cidr [ !Select [ 0, !GetAtt coreVPC.Ipv6CidrBlocks], 5, 64 ]] 
+      Ipv6Native: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","private-subnet-03"]]
+
+  # Private Subnet 4 (dual stack) - suffix 05
+  privateSubnet4:
+    Type: AWS::EC2::Subnet
+    DependsOn: coreIPv6CidrBlock
+    Properties:
+      VpcId: !Ref coreVPC
+      AssignIpv6AddressOnCreation: true
+      AvailabilityZone:
+        Fn::Select:
+         - 1
+         - Fn::GetAZs: ""
+      CidrBlock: !Select [ 5, !Cidr [ !GetAtt coreVPC.CidrBlock, 6, 8 ]]
+      EnableDns64: true
+      Ipv6CidrBlock: !Select [ 5, !Cidr [ !Select [ 0, !GetAtt coreVPC.Ipv6CidrBlocks], 6, 64 ]]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName","private-subnet-04"]]
+
+Outputs:
+  coreVPCID:
+    Description: VPC ID
+    Value: !Ref coreVPC
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","vpc"]]
+  publicSubnet1ID:
+    Description: Public Subnet 01 ID
+    Value: !Ref publicSubnet1
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","public-subnet-01"]]
+  publicSubnet1ID:
+    Description: Public Subnet 02 ID
+    Value: !Ref publicSubnet2
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","public-subnet-02"]]
+  privateSubnet1ID:
+    Description: Private Subnet 01 ID
+    Value: !Ref privateSubnet1
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","private-subnet-01"]]
+  privateSubnet2ID:
+    Description: Private Subnet 02 ID
+    Value: !Ref privateSubnet2
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","private-subnet-02"]]
+  privateSubnet13D:
+    Description: Private Subnet 03 ID
+    Value: !Ref privateSubnet3
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","private-subnet-03"]]
+  privateSubnet4ID:
+    Description: Private Subnet 04 ID
+    Value: !Ref privateSubnet4
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","private-subnet-04"]]
+  privateVPCSecurityGroup:
+    Description: Default security for Lambda VPC
+    Value: !GetAtt coreVPC.DefaultSecurityGroup
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","vpc-sg"]]
