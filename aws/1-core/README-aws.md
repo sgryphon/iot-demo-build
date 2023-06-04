@@ -62,17 +62,17 @@ aws configure sso
 ```
 
 Use:
-* Session: sso-datahub (or make up your own name)
-* Start URL: https://d-9a673a3182.awsapps.com/start#
+* Session: sso-iot-demo (or make up your own name)
+* Start URL: https://d-9a673a3182.awsapps.com/start# (or whatever your SSO login is)
 * Region: us-east-2
 * Scopes: (default) sso:account:access
-* Select the account ??? (???) with role AWSAdministratorAccess
-* Default region, format, and profile name (<your profile>)
+* Select your account (e.g. I have an account IoT Playground)
+* Default region (None), format (None), and profile name ('AWSAdministratorAccess-<account number>', e.g. 'AWSAdministratorAccess-744827226675')
 
 Configure the default settings:
 
 ```powershell
-$ENV:AWS_PROFILE="<your profile>"
+$ENV:AWS_PROFILE="AWSAdministratorAccess-744827226675"
 $ENV:AWS_DEFAULT_REGION="ap-southeast-2"
 $ENV:DEPLOY_ENVIRONMENT = 'Dev'
 $VerbosePreference = 'Continue'
