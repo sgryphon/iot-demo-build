@@ -20,29 +20,33 @@ Private subnets with outbound access have a routing table with:
 
 Subnets:
 
-* Public Subnet 1 (IPv6 only) - suffix 00
+* Public DMZ Subnet 1 (IPv6 only) - suffix 00
   - gets the first /64 subnet, which ends with 00
   - uses DNS64 for IPv4 destinations
-* Public Subnet 2 (dual stack) - suffix 01 
+* Public DMZ Subnet 2 (dual stack) - suffix 01 
   - gets the second /64 subnet, which ends with 01
   - IPv4 private range uses 10.0.1.0/24 for internal addresses; internet gateway assigns public addresses as needed
   - does not have DNS64, so dual stack clients will use their IPv4 address for connections
-* Private Subnet 1 (IPv6 only) - suffix 02
+* Private DMZ Subnet 1 (IPv6 only) - suffix 02
   - gets the third /64 subnet, which ends with 02
   - outbound only access
   - has DNS64 for IPv4 destnations
-* Private Subnet 2 (dual stack) - suffix 03
+* Private DMZ Subnet 2 (dual stack) - suffix 03
   - gets the fourth /64 subnet, which ends with 03
   - IPv4 private range uses 10.0.3.0/24
   - outbound only access: IPv6 is firewall based, IPv4 is NAT based
   - configured with DNS64, so dual stack machines use NAT64 instead of NAT44
-* Private Subnet 3 (IPv6 only) - suffix 04
+* Private Internal Subnet 3 (IPv6 only) - suffix 04
   - gets the fifth /64 subnet, which ends with 04
-* Private Subnet 4 (dual stack) - suffix 05
+* Private Internal Subnet 4 (dual stack) - suffix 05
   - gets the sixth /64 subnet, which ends with 05
   - IPv4 private range uses 10.0.5.0/24
 
 Subnets 3 & 4 are internal only, with no outbound access.
+
+For guidance on the architectural design of Public DMZ vs Private DMZ vs Private Internal network zones see: https://aws.amazon.com/blogs/networking-and-content-delivery/architect-dual-stack-amazon-vpc-with-multiple-ipv6-cidr-blocks/
+
+For guidance on IPv6 only subnets, see: https://aws.amazon.com/blogs/networking-and-content-delivery/introducing-ipv6-only-subnets-and-ec2-instances/
 
 
 Requirements
@@ -63,11 +67,12 @@ aws configure sso
 
 Use:
 * Session: sso-iot-demo (or make up your own name)
-* Start URL: https://d-9a673a3182.awsapps.com/start# (or whatever your SSO login is)
+* Start URL: whatever your SSO login is, e.g. https://d-9a673a3182.awsapps.com/start#
 * Region: us-east-2
 * Scopes: (default) sso:account:access
 * Select your account (e.g. I have an account IoT Playground)
-* Default region (None), format (None), and profile name ('AWSAdministratorAccess-<account number>', e.g. 'AWSAdministratorAccess-744827226675')
+* Default region (None), format (None),
+* Default profile name ('AWSAdministratorAccess-<account number>', e.g. 'AWSAdministratorAccess-744827226675')
 
 Configure the default settings:
 

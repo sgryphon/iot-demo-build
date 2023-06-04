@@ -47,7 +47,10 @@ $stackName = "leshan-${Environment}".ToLowerInvariant()
 
 $networkStackName = "core-network-${Environment}".ToLowerInvariant()
 $vpcName = "$networkStackName-01".ToLowerInvariant()
-$publicSubnetName = "$networkStackName-public-subnet-01".ToLowerInvariant()
+$publicSubnet01Name = "$networkStackName-public-subnet-01".ToLowerInvariant()
+
+$keyName = "leshan-${Environment}-key".ToLowerInvariant()
+$sshFolder = "~/.ssh"
 
 # Check if profile and region environment variables are set
 if (-not $ENV:AWS_PROFILE) {
@@ -68,22 +71,26 @@ $vpc = aws ec2 describe-vpcs `
     | Select-Object -ExpandProperty Vpcs `
     | Select-Object -First 1
 
-Write-Verbose "Getting public subnet $publicSubnetName" 
-$subnet = aws ec2 describe-subnets `
-  --filters "Name=tag:Name,Values=$publicSubnetName" "Name=vpc-id,Values=$($vpc.VpcId)" `
+Write-Verbose "Getting public IPv6 subnet $publicSubnet01Name" 
+$ipv6Subnet = aws ec2 describe-subnets `
+  --filters "Name=tag:Name,Values=$publicSubnet01Name" "Name=vpc-id,Values=$($vpc.VpcId)" `
   | ConvertFrom-Json `
   | Select-Object -ExpandProperty Subnets `
   | Select-Object -First 1   
 
-
-Write-Verbose
-
-aws ec2 create-key-pair --key-name MyKeyPair --query 'KeyMaterial' --output text > MyKeyPair.pem
+$keyPath ="$sshFolder/$keyName.pem"
+if (Test-Path $keyPath) {
+  Write-Verbose "Using key pair $keyName found at path: $keyPath"
+} else {
+  Write-Verbose "Generate key pair $keyName and saving to: $keyPath"
+  aws ec2 create-key-pair --key-name $keyName --query 'KeyMaterial' --output text | Out-File $keyPath
+  if (!$?) { throw "AWS CLI returned error: $LastExitCode" }
+}
 
 Write-Verbose "Deploying cloud formation to create server stack $stackName"
 
 $instanceType = 't3.micro'
-$imageId = 'resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+$amiImageId = '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64'
 
 aws cloudformation deploy `
     --template-file $stackTemplateFile `
@@ -92,7 +99,10 @@ aws cloudformation deploy `
       "BusinessUnit=IoT" `
       "DataClassification=Non-business" `
       "Environment=$Environment" `
-    --parameter-overrides "InstanceType=$instanceType" KeyName=my-key "VPCId=$($vpc.VpcId)" "SubnetId=$($subnet.SubnetId)" "ImageId=$imageId"
+    --parameter-overrides "InstanceType=$instanceType" "KeyName=$keyName" "VPCId=$($vpc.VpcId)" "Ipv6SubnetId=$($ipv6Subnet.SubnetId)" "AmiImageId=$amiImageId"
+if (!$?) { throw "AWS CLI returned error: $LastExitCode" }
+
+# aws cloudformation delete-stack --stack-name 'leshan-dev'
 
 # Retrieve the output values
 $stackOutputs = aws cloudformation describe-stacks `
@@ -101,3 +111,5 @@ $stackOutputs = aws cloudformation describe-stacks `
     | Select-Object -ExpandProperty Stacks
 
 Write-Host "Stack outputs:`n$($stackOutputs | ConvertTo-Json -Depth 10)"
+
+Write-Host "To connect: ssh -i $keyPath <host-dns-name>"

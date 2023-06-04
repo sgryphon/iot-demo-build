@@ -64,6 +64,7 @@ aws cloudformation deploy `
       "BusinessUnit=IoT" `
       "DataClassification=Non-business" `
       "Environment=$Environment"
+if (!$?) { throw "AWS CLI returned error: $LastExitCode" }
 
 # Retrieve the output values
 $stackOutputs = aws cloudformation describe-stacks `
