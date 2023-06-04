@@ -48,6 +48,7 @@ $stackName = "leshan-${Environment}".ToLowerInvariant()
 $networkStackName = "core-network-${Environment}".ToLowerInvariant()
 $vpcName = "$networkStackName-01".ToLowerInvariant()
 $publicSubnet01Name = "$networkStackName-public-subnet-01".ToLowerInvariant()
+$publicSubnet02Name = "$networkStackName-public-subnet-02".ToLowerInvariant()
 
 $keyName = "leshan-${Environment}-key".ToLowerInvariant()
 $sshFolder = "~/.ssh"
@@ -78,6 +79,13 @@ $ipv6Subnet = aws ec2 describe-subnets `
   | Select-Object -ExpandProperty Subnets `
   | Select-Object -First 1   
 
+Write-Verbose "Getting public dual stack subnet $publicSubnet02Name" 
+$dualStackSubnet = aws ec2 describe-subnets `
+  --filters "Name=tag:Name,Values=$publicSubnet02Name" "Name=vpc-id,Values=$($vpc.VpcId)" `
+  | ConvertFrom-Json `
+  | Select-Object -ExpandProperty Subnets `
+  | Select-Object -First 1   
+  
 $keyPath ="$sshFolder/$keyName.pem"
 if (Test-Path $keyPath) {
   Write-Verbose "Using key pair $keyName found at path: $keyPath"
@@ -99,7 +107,10 @@ aws cloudformation deploy `
       "BusinessUnit=IoT" `
       "DataClassification=Non-business" `
       "Environment=$Environment" `
-    --parameter-overrides "InstanceType=$instanceType" "KeyName=$keyName" "VPCId=$($vpc.VpcId)" "Ipv6SubnetId=$($ipv6Subnet.SubnetId)" "AmiImageId=$amiImageId"
+    --parameter-overrides "InstanceType=$instanceType" "KeyName=$keyName" `
+      "AmiImageId=$amiImageId" "VPCId=$($vpc.VpcId)" `
+      "Ipv6SubnetId=$($ipv6Subnet.SubnetId)" `
+      "DualStackSubnetId=$($dualStackSubnet.SubnetId)"
 if (!$?) { throw "AWS CLI returned error: $LastExitCode" }
 
 # aws cloudformation delete-stack --stack-name 'leshan-dev'
