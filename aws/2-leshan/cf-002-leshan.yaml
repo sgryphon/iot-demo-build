@@ -25,6 +25,14 @@ Parameters:
     Description: The ID of your existing Dual stack Subnet
     Type: AWS::EC2::Subnet::Id
 
+  DualStackIpv6Address:
+    Description: IPv6 Address to us in the dual stack network
+    Type: String
+
+  DualStackIpv4Address:
+    Description: IPv4 Address to us in the dual stack network
+    Type: String
+
   AmiImageId:
     Description: The ID of the AMI to launch
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
@@ -42,7 +50,10 @@ Resources:
           DeviceIndex: 0
           GroupSet:
             - !Ref leshanSecurityGroup
-          Ipv6AddressCount: 1
+          Ipv6Addresses:
+            - !Ref DualStackIpv6Address
+          PrivateIpAddresses:
+            - !Ref DualStackIpv4Address
           SubnetId: !Ref DualStackSubnetId
       PrivateDnsNameOptions:
         HostnameType: resource-name

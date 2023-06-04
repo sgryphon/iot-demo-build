@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: AWS CloudFormation Template for Elastic IP
+
+Resources:
+  LeshanEIP:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: 'vpc'
+      
+Outputs:
+  EIP:
+    Description: Elastic IP Address
+    Value: !GetAtt LeshanEIP.PublicIp
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","address"]]
+  AllocationId:
+    Description: The allocation ID for the EIP
+    Value: !GetAtt LeshanEIP.AllocationId
+    Export:
+      Name: !Join ["-", [!Ref "AWS::StackName","allocation-id"]]
