@@ -114,9 +114,18 @@ Add the boostrap server to the bottom of `overlay-lwm2m.conf`. Leaving the Pre-S
 # Bootstrap config
 CONFIG_LWM2M_RD_CLIENT_SUPPORT_BOOTSTRAP=y
 CONFIG_LWM2M_CLIENT_UTILS_SERVER="coaps://ec2-54-206-3-178.ap-southeast-2.compute.amazonaws.com:5681"
-CONFIG_LWM2M_INTEGRATION_PSK=
+CONFIG_LWM2M_INTEGRATION_PSK=""
 ```
 
+Also configure the mobile packet data network in `prj.conf`:
+
+```
+# Packet data network
+CONFIG_PDN=y
+CONFIG_PDN_DEFAULTS_OVERRIDE=y
+CONFIG_PDN_DEFAULT_APN="telstra.iot"
+CONFIG_PDN_DEFAULT_FAM_IPV6=y
+```
 
 Build
 -----
