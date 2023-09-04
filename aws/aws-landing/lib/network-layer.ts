@@ -12,6 +12,7 @@ import { Fn, Tags } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 
 export class NetworkLayer extends Construct {
+
     public readonly vpc: Vpc;
 
     constructor(scope: Construct, id: string, props: NetworkLayerProps = {}) {

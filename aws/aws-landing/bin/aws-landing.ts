@@ -2,10 +2,11 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { AwsLandingStack } from '../lib/aws-landing-stack';
-import { IpAddresses } from 'aws-cdk-lib/aws-ec2';
+import { IpAddresses, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { UtilityServerStack } from '../lib/utility-server-stack';
 
 const app = new cdk.App();
-new AwsLandingStack(app, 'AwsLandingStack-dev', {
+const landingNetworkDev = new AwsLandingStack(app, 'AwsLandingStack-dev', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
@@ -23,14 +24,22 @@ new AwsLandingStack(app, 'AwsLandingStack-dev', {
   environment: 'Dev',
 });
 
-new AwsLandingStack(app, 'AwsLandingStack-test1', {
+const landingNetworkTest1 = new AwsLandingStack(app, 'AwsLandingStack-test1', {
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
   ipv4PrivateAddresses: IpAddresses.cidr('10.96.0.0/21'),
   environment: 'Test',
 });
 
-new AwsLandingStack(app, 'AwsLandingStack-test2', {
+const landingNetworkTest2 = new AwsLandingStack(app, 'AwsLandingStack-test2', {
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
   ipv4PrivateAddresses: IpAddresses.cidr('10.97.0.0/21'),
   environment: 'Test',
+});
+
+new UtilityServerStack(app, 'UtilityServer-Public-dev', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  availabilityZoneIndex: 0,
+  environment: 'Dev',
+  subnetType: SubnetType.PUBLIC,
+  vpc: landingNetworkDev.networkLayer.vpc
 });

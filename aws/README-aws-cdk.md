@@ -222,3 +222,11 @@ The existing IPv4 routes for the private networks are left as is, although they 
 To support multiple stacks, e.g. different environments or regions, with custom IPv4 settings, modify `bin/aws-landing.ts` to deploy to multiple stacks. The IPv4 addresses need to fit into your allocation plan.
 
 Note that different IPv6 settings are not needed, as the allocated /56 ranges from Amazon will already be unique.
+
+### Utility servers
+
+Additional stacks are also provided inside the CDK application to provision out administration/utility servers, to be able to example the network.
+
+One server is deployed into the public dual stack network, and can be used as a jump host to access the second server in the private network.
+
+
