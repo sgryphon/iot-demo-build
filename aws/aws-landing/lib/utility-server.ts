@@ -53,16 +53,17 @@ export class UtilityServer extends Construct {
     const userData = UserData.forLinux();
 
     this.instance = new Instance(this, 'Instance', {
-      vpc: props!.vpc!,
-      vpcSubnets: props!.subnets!,
       instanceType: props?.instanceType!,
+      keyName: props?.keyName,
       machineImage: MachineImage.latestAmazonLinux2023({
         cachedInContext: false,
         cpuType: AmazonLinuxCpuType.X86_64,
       }),
-      userData: userData,
-      securityGroup: this.securityGroup,
       role: serverRole,
+      securityGroup: this.securityGroup,
+      userData: userData,
+      vpc: props!.vpc!,
+      vpcSubnets: props!.subnets!,
     });
 
     if (props?.mapPublicIpv4) {
@@ -78,6 +79,7 @@ export class UtilityServer extends Construct {
 
 export interface UtilityServerProps {
   readonly instanceType: InstanceType;
+  readonly keyName: string;
   readonly mapPublicIpv4: boolean;
   readonly subnets?: SubnetSelection;
   readonly vpc?: IVpc;

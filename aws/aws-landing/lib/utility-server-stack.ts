@@ -16,9 +16,11 @@ export class UtilityServerStack extends cdk.Stack {
       subnetType: props?.subnetType,
       availabilityZones: [ az ],
     };
+    const keyName = `utility-${props?.environment}-key`.toLowerCase();
 
     this.server = new UtilityServer(this, 'Server', {
       instanceType:  InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
+      keyName: keyName,
       mapPublicIpv4: props?.subnetType === SubnetType.PUBLIC,
       subnets: subnetSelection,
       vpc: props?.vpc,

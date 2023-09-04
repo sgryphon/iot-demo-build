@@ -121,10 +121,12 @@ cdk init app --language typescript
 Following the example to see modifications and removal: https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html
 
 
-App: Landing with IPv6
+App: Landing template with IPv6
 ----------------------
 
-### Running the developed app
+### Deploy the network stack
+
+Run the app with the Cloud Development Kit to deploy the network stack:
 
 ```powershell
 $ENV:CDK_DEFAULT_ACCOUNT="744827226675"
@@ -132,6 +134,8 @@ $ENV:CDK_DEFAULT_REGION="ap-southeast-2"
 cdk synth
 cdk deploy AwsLandingStack-dev
 ```
+
+See the next section for how to deploy a utility server.
 
 ### Initial creation
 
@@ -223,10 +227,52 @@ To support multiple stacks, e.g. different environments or regions, with custom 
 
 Note that different IPv6 settings are not needed, as the allocated /56 ranges from Amazon will already be unique.
 
-### Utility servers
+
+Landing template - Utility server
+----------------------
 
 Additional stacks are also provided inside the CDK application to provision out administration/utility servers, to be able to example the network.
 
 One server is deployed into the public dual stack network, and can be used as a jump host to access the second server in the private network.
 
+### Preparing a key pair
+
+To access the utility server via SSH, you need to prepare a key pair to use when creating the instance.
+
+You can check if you have an existing key file: `ls ~/.ssh/`.
+
+You can check the key pairs that have been created in AWS via: `(aws ec2 describe-key-pairs | ConvertFrom-Json).KeyPairs | Format-Table KeyName, CreateTime`
+
+If you don't, then you need to prepare and create a key pair in AWS. After the machine is created, you can log in an modify the keys used, but if you lose the key then you won't be able to log in (and will need to recreate the machine).
+
+```powershell
+$keyName = "utility-${ENV:DEPLOY_ENVIRONMENT}-key".ToLowerInvariant()
+$sshFolder = "~/.ssh"
+$keyPath ="$sshFolder/$keyName.pem"
+aws ec2 create-key-pair --key-name $keyName --query 'KeyMaterial' --output text | Out-File $keyPath
+```
+
+### Deploying the server
+
+Once the key is ready, and the main network has been deployed, you can deploy the utility server:
+
+```powershell
+cdk deploy UtilityServer-Public-dev
+```
+
+CloudFormation does not support output of the IPv6 address, but can output the InstanceID, which can be used to get the address via the AWS CLI:
+
+```powershell
+$stack = aws cloudformation describe-stacks --stack-name UtilityServer-Public-dev | ConvertFrom-Json
+$instance = aws ec2 describe-instances --instance-ids $stack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
+$instance.Reservations[0].Instances.Ipv6Address, $instance.Reservations[0].Instances.PublicIpAddress
+ping $instance.Reservations[0].Instances.Ipv6Address
+```
+
+You can then use SSH, with the private key, to access the server:
+
+```powershell
+$utilityIpv6 = $instance.Reservations[0].Instances.Ipv6Address
+ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@$utilityIpv6"
+```
 
