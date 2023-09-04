@@ -264,6 +264,14 @@ Althought the output CloudFormation is a bit messy (the selection functions are 
 
 (If you don't want a fixed address, you can just let AWS auto-assign a suffix).
 
+### Server configuration
+
+When creating the security group for the server, note that you need to allow both outbound IPv4 and IPv6 (separately). For testing purposes it can be useful to allow ICMP/Ping. When adding rules for other ports, e.g. if you allow HTTP/S, also make sure to configure both IPv6 and (if needed) IPv4.
+
+Assign the fixed IPv6 address calculated as above (or you can let it auto-assign an address).
+
+If you want to assign a public IPv4 address, then this needs to be done manually (assigning an Elastic IP), as automatic mapping is turned off (public IPv4 addresses are now charged).
+
 ### Deploying the server
 
 Once the key is ready, and the main network has been deployed, you can deploy the utility server:
@@ -275,17 +283,17 @@ cdk deploy UtilityServer-Public-dev
 CloudFormation does not support output of the IPv6 address, but can output the InstanceID, which can be used to get the address via the AWS CLI:
 
 ```powershell
-$stack = aws cloudformation describe-stacks --stack-name UtilityServer-Public-dev | ConvertFrom-Json
-$instance = aws ec2 describe-instances --instance-ids $stack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
-$instance.Reservations[0].Instances.Ipv6Address, $instance.Reservations[0].Instances.PublicIpAddress
-ping $instance.Reservations[0].Instances.Ipv6Address
+$publicStack = aws cloudformation describe-stacks --stack-name UtilityServer-Public-dev | ConvertFrom-Json
+$publicInstance = aws ec2 describe-instances --instance-ids $stack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
+$publicInstance.Reservations[0].Instances.Ipv6Address, $publicInstance.Reservations[0].Instances.PublicIpAddress
+ping $publicInstance.Reservations[0].Instances.Ipv6Address
 ```
 
 You can then use SSH, with the private key, to access the server:
 
 ```powershell
-$utilityIpv6 = $instance.Reservations[0].Instances.Ipv6Address
-ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@$utilityIpv6"
+$publicUtilityIpv6 = $publicInstance.Reservations[0].Instances.Ipv6Address
+ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@$publicUtilityIpv6"
 ```
 
 ### Utility server on the private network
@@ -302,4 +310,30 @@ The private server will have an IPv6 address, but it will not be directly access
 $privateStack = aws cloudformation describe-stacks --stack-name UtilityServer-Private-dev | ConvertFrom-Json
 $privateInstance = aws ec2 describe-instances --instance-ids $privateStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
 $privateInstance.Reservations[0].Instances.Ipv6Address
+```
+
+#### Connecting to the private server
+
+To use the public server as a jump box, first upload the SSH key using SCP (note the different syntax from SSH), and then connect to the public jump box via SSH:
+
+```powershell
+scp -i ~/.ssh/utility-dev-key.pem "${ENV:USERPROFILE}\.ssh\utility-dev-key.pem" "ec2-user@[${publicUtilityIpv6}]:/home/ec2-user/.ssh/utility-dev-key.pem"
+ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@$publicUtilityIpv6"
+```
+
+From the public server, you can ping to the private server. To connect, you need to set the permissions on the key to restrict access, and then connect to the internal server:
+
+```bash
+ping 2406:da1c:c1b:2601::110a
+chmod 400 ~/.ssh/utility-dev-key.pem
+
+ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@2406:da1c:c1b:2601::110a"
+```
+
+Once on the internal server, you can check the configuration, and that it has outbound connectivity to both IPv6 and IPv4:
+
+```bash
+ip addr
+ping -c 3 www.google.com
+ping -c 3 v4.ipv6-test.com
 ```

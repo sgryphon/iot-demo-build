@@ -30,10 +30,11 @@ export class UtilityServer extends Construct {
     });
 
     // Create a security group for the server
-    this.securityGroup = new SecurityGroup(this, 'SSHSecurityGroup', {
+    this.securityGroup = new SecurityGroup(this, 'UtilityServerSecurityGroup', {
       vpc: props!.vpc!,
-      description: 'Security Group for Leshan server',
+      description: 'Security Group for utility server',
       allowAllOutbound: true,
+      allowAllIpv6Outbound: true,
     });
 
     // Utility server allows SSH, ICMP/Ping, HTTP, and HTTPS inbound
