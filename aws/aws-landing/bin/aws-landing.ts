@@ -38,6 +38,8 @@ const landingNetworkTest2 = new AwsLandingStack(app, 'AwsLandingStack-test2', {
 
 new UtilityServerStack(app, 'UtilityServer-Public-dev', {
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  addressSubnetIndex: 0,
+  addressSuffix: "100d",
   availabilityZoneIndex: 0,
   environment: 'Dev',
   subnetType: SubnetType.PUBLIC,

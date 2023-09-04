@@ -252,6 +252,18 @@ $keyPath ="$sshFolder/$keyName.pem"
 aws ec2 create-key-pair --key-name $keyName --query 'KeyMaterial' --output text | Out-File $keyPath
 ```
 
+### Specifying the address suffix
+
+The actual IPv6 address range assigned is not known until deployment time, but by using the CIDR CloudFormation function, along with array operations we can construct an IP address with a specific suffix.
+
+Because we know the structure of the subnets created, we can specify the subnet index, where dividing by 256 gives us the block, and the remainder is the index within that block.
+
+Subnets are always /64 in length, so we know the CIDR function will return a result like "W:X:Y:Z:0:0:0:0/64" (it returns the long form), so we can split on the ":" and use the first four components to create an address with a fixed suffix.
+
+Althought the output CloudFormation is a bit messy (the selection functions are repeated 4 times), it can give us fixed server addresses like "W:X:Y:Z::100d"
+
+(If you don't want a fixed address, you can just let AWS auto-assign a suffix).
+
 ### Deploying the server
 
 Once the key is ready, and the main network has been deployed, you can deploy the utility server:
