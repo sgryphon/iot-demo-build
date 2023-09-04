@@ -288,3 +288,18 @@ $utilityIpv6 = $instance.Reservations[0].Instances.Ipv6Address
 ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@$utilityIpv6"
 ```
 
+### Utility server on the private network
+
+Once the key is ready, and the main network has been deployed, you can deploy the utility server:
+
+```powershell
+cdk deploy UtilityServer-Private-dev
+```
+
+The private server will have an IPv6 address, but it will not be directly accessible (it has egress only routing):
+
+```powershell
+$privateStack = aws cloudformation describe-stacks --stack-name UtilityServer-Private-dev | ConvertFrom-Json
+$privateInstance = aws ec2 describe-instances --instance-ids $privateStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
+$privateInstance.Reservations[0].Instances.Ipv6Address
+```

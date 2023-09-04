@@ -18,7 +18,7 @@ export class UtilityServerStack extends cdk.Stack {
     };
     const keyName = `utility-${props?.environment}-key`.toLowerCase();
 
-    const vpcBlock = props?.addressSubnetIndex! / 256;
+    const vpcBlock = Math.trunc(props?.addressSubnetIndex! / 256);
     const subnetBlock = props?.addressSubnetIndex! % 256;
     const addressBlock = Fn.select(subnetBlock, 
       Fn.cidr(Fn.select(vpcBlock, props?.vpc?.vpcIpv6CidrBlocks!), subnetBlock + 1, "64"));

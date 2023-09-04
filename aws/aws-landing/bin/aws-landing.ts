@@ -45,3 +45,13 @@ new UtilityServerStack(app, 'UtilityServer-Public-dev', {
   subnetType: SubnetType.PUBLIC,
   vpc: landingNetworkDev.networkLayer.vpc
 });
+
+new UtilityServerStack(app, 'UtilityServer-Private-dev', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  addressSubnetIndex: 257,
+  addressSuffix: "110a",
+  availabilityZoneIndex: 1,
+  environment: 'Dev',
+  subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+  vpc: landingNetworkDev.networkLayer.vpc
+});
