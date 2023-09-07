@@ -1,9 +1,24 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AmazonLinuxCpuType, CfnEIP, CfnEIPAssociation, CfnInstance, CloudFormationInit, ISubnet, IVpc, InitCommand, InitConfig, InitFile, InitGroup, InitPackage, InitUser, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, OperatingSystemType, Peer, Port, SecurityGroup, Subnet, SubnetSelection, SubnetType, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { LeshanServer } from './leshan-server';
+import { AmazonLinuxCpuType, 
+  CfnEIP, 
+  CfnEIPAssociation, 
+  CloudFormationInit, 
+  InitCommand, 
+  InitConfig, 
+  InitFile,
+  InitPackage,
+  InitUser,
+  Instance, 
+  InstanceType, 
+  MachineImage, 
+  Peer, 
+  Port, 
+  SecurityGroup, 
+  SubnetSelection, 
+  SubnetType, 
+  Vpc } from 'aws-cdk-lib/aws-ec2';
 import { CfnOutput, CfnParameter, Duration, Fn, Stack } from 'aws-cdk-lib';
-import { basename } from 'path';
 import { ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 export class Lwm2mDemoServerStack extends cdk.Stack {
@@ -60,14 +75,14 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
     // Assign an IPv4 address
     var eip = new CfnEIP(this, "Ip");
     // Derive host name from IPv4
-    const hostName = 'ec2-' + Fn.join('-', Fn.split('.', eip?.attrPublicIp!)) + '.'
-      + Stack.of(this).region + '.compute.amazonaws.com'
+    var hostName = props?.hostName;
+    if (!hostName) {
+      hostName = 'ec2-' + Fn.join('-', Fn.split('.', eip?.attrPublicIp!)) + '.'
+        + Stack.of(this).region + '.compute.amazonaws.com'
+    }
     const init = CloudFormationInit.fromConfigSets({
-      configSets: { default: ['java', 'caddy', 'leshan'], },
+      configSets: { default: ['caddy', 'leshan'], },
       configs: {
-        java: new InitConfig([
-          InitPackage.yum('java-17-amazon-corretto'),
-        ]),
         // Caddy, see: https://caddyserver.com/docs/running
         caddy: new InitConfig([
           //InitGroup.fromName('caddy-group'),
@@ -93,6 +108,7 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
           InitCommand.shellCommand('sudo systemctl enable --now caddy'),
         ]),
         leshan: new InitConfig([
+          InitPackage.yum('java-17-amazon-corretto'),
           InitCommand.shellCommand('mkdir /home/ec2-user/leshan-server'),
           InitCommand.shellCommand('wget -O /home/ec2-user/leshan-server/leshan-server-demo.jar https://ci.eclipse.org/leshan/job/leshan-1.x/lastSuccessfulBuild/artifact/leshan-server-demo.jar'),
           //InitCommand.shellCommand('nohup java -jar /home/ec2-user/leshan-server/leshan-server-demo.jar &')
@@ -161,6 +177,7 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
 
 export interface Lwm2mDemoServerStackProps extends cdk.StackProps {
   readonly addressSuffix?: string;
+  readonly hostName?: string;
   readonly instanceType?: InstanceType;
   readonly keyName?: string;
   readonly vpc?: Vpc;
