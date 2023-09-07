@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { AwsLwm2MDemoStack } from '../lib/aws-lwm2m-demo-stack';
+import { Lwm2mDemoNetworkStack } from '../lib/lwm2m-demo-network-stack';
+import { Lwm2mDemoServerStack } from '../lib/lwm2m-demo-server-stack';
+import { InstanceClass, InstanceSize, InstanceType, IpAddresses } from 'aws-cdk-lib/aws-ec2';
 
 const app = new cdk.App();
-new AwsLwm2MDemoStack(app, 'AwsLwm2MDemoStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+const demoNetwork = new Lwm2mDemoNetworkStack(app, 'Lwm2mDemoNetworkStack', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  ipv4PrivateAddresses: IpAddresses.cidr('10.192.0.0/20'),
+});
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+new Lwm2mDemoServerStack(app, 'Lwm2mDemoServerStack', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  addressSuffix: "100d",
+  instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
+  keyName: 'leshan-demo-key',
+  vpc: demoNetwork.vpc
 });
