@@ -67,12 +67,14 @@ export class UtilityServer extends Construct {
       vpcSubnets: props!.subnets!,
     });
 
-    this.instance.instance.ipv6Addresses = [{
-      ipv6Address: props?.ipv6Address!
-    }];
+    if (props?.ipv6Address) {
+      this.instance.instance.ipv6Addresses = [{
+        ipv6Address: props?.ipv6Address!
+      }];
+    }
 
     if (props?.mapPublicIpv4) {
-    // Assign Elastic IPv4
+      // Assign Elastic IPv4
       let eip = new CfnEIP(this, "Ip");
       let ec2Assoc = new CfnEIPAssociation(this, "Ec2Association", {
         eip: eip.ref,
@@ -83,10 +85,10 @@ export class UtilityServer extends Construct {
 }
 
 export interface UtilityServerProps {
-  readonly instanceType: InstanceType;
-  readonly ipv6Address: string;
-  readonly keyName: string;
-  readonly mapPublicIpv4: boolean;
+  readonly instanceType?: InstanceType;
+  readonly ipv6Address?: string;
+  readonly keyName?: string;
+  readonly mapPublicIpv4?: boolean;
   readonly subnets?: SubnetSelection;
   readonly vpc?: IVpc;
 }

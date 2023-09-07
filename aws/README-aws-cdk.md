@@ -284,7 +284,7 @@ CloudFormation does not support output of the IPv6 address, but can output the I
 
 ```powershell
 $publicStack = aws cloudformation describe-stacks --stack-name UtilityServer-Public-dev | ConvertFrom-Json
-$publicInstance = aws ec2 describe-instances --instance-ids $stack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
+$publicInstance = aws ec2 describe-instances --instance-ids $publicStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
 $publicInstance.Reservations[0].Instances.Ipv6Address, $publicInstance.Reservations[0].Instances.PublicIpAddress
 ping $publicInstance.Reservations[0].Instances.Ipv6Address
 ```
@@ -324,10 +324,10 @@ ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@$publicUtilityIpv6"
 From the public server, you can ping to the private server. To connect, you need to set the permissions on the key to restrict access, and then connect to the internal server:
 
 ```bash
-ping 2406:da1c:c1b:2601::110a
+ping 2406:da1c:c1b:2601::2001
 chmod 400 ~/.ssh/utility-dev-key.pem
 
-ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@2406:da1c:c1b:2601::110a"
+ssh -i ~/.ssh/utility-dev-key.pem "ec2-user@2406:da1c:c1b:2601::2001"
 ```
 
 Once on the internal server, you can check the configuration, and that it has outbound connectivity to both IPv6 and IPv4:

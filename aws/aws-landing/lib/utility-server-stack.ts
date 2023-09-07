@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { CfnInstance, InstanceClass, InstanceSize, InstanceType, SubnetSelection, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { CfnOutput, Fn, Tags, Token } from 'aws-cdk-lib';
+import { InstanceClass, InstanceSize, InstanceType, SubnetSelection, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { CfnOutput, Fn, Tags } from 'aws-cdk-lib';
 import { UtilityServer } from './utility-server';
 
 export class UtilityServerStack extends cdk.Stack {
@@ -18,16 +18,19 @@ export class UtilityServerStack extends cdk.Stack {
     };
     const keyName = `utility-${props?.environment}-key`.toLowerCase();
 
-    const vpcBlock = Math.trunc(props?.addressSubnetIndex! / 256);
-    const subnetBlock = props?.addressSubnetIndex! % 256;
-    const addressBlock = Fn.select(subnetBlock, 
-      Fn.cidr(Fn.select(vpcBlock, props?.vpc?.vpcIpv6CidrBlocks!), subnetBlock + 1, "64"));
-    // Results from the CIDR function have the format "2406:da1c:dc0:300:0:0:0:0/64",
-    // so split on ":" and use the first four.
-    const split = Fn.split(":", addressBlock)
-    const ipv6Address = Fn.join(":",
-      [ Fn.select(0, split), Fn.select(1, split), Fn.select(2, split), Fn.select(3, split),
-        "", props?.addressSuffix! ]);
+    var ipv6Address: string | undefined = undefined;
+    if (props?.addressSubnetIndex && props.addressSuffix) {
+      const vpcBlock = Math.trunc(props?.addressSubnetIndex! / 256);
+      const subnetBlock = props?.addressSubnetIndex! % 256;
+      const addressBlock = Fn.select(subnetBlock, 
+        Fn.cidr(Fn.select(vpcBlock, props?.vpc?.vpcIpv6CidrBlocks!), subnetBlock + 1, "64"));
+      // Results from the CIDR function have the format "2406:da1c:dc0:300:0:0:0:0/64",
+      // so split on ":" and use the first four.
+      const split = Fn.split(":", addressBlock)
+      ipv6Address = Fn.join(":",
+        [ Fn.select(0, split), Fn.select(1, split), Fn.select(2, split), Fn.select(3, split),
+          "", props?.addressSuffix! ]);
+    }
 
     this.server = new UtilityServer(this, 'Server', {
       instanceType:  InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
@@ -52,9 +55,9 @@ export class UtilityServerStack extends cdk.Stack {
 }
 
 export interface UtilityServerStackProps extends cdk.StackProps {
-  readonly addressSubnetIndex: number;
-  readonly addressSuffix: string;
-  readonly availabilityZoneIndex: number;
+  readonly addressSubnetIndex?: number;
+  readonly addressSuffix?: string;
+  readonly availabilityZoneIndex?: number;
   readonly environment?: string;
   readonly subnetType: SubnetType;
   readonly vpc?: Vpc;
