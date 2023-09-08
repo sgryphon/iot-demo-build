@@ -3,6 +3,8 @@ import { Construct } from 'constructs';
 import { AmazonLinuxCpuType, 
   CfnEIP, 
   CfnEIPAssociation, 
+  CfnNetworkInterface, 
+  CfnNetworkInterfaceAttachment, 
   CloudFormationInit, 
   InitCommand, 
   InitConfig, 
@@ -158,10 +160,17 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
       eip: eip!.ref,
       instanceId: this.instance.instanceId
     });
-    // Assign IPv6
-    this.instance.instance.ipv6Addresses = [{
-      ipv6Address: ipv6Address
-    }];
+    // Assign additional interface with fixed IPv6
+    const networkInterface = new CfnNetworkInterface(this, 'Network', {
+      ipv6Addresses: [ { ipv6Address: ipv6Address } ],
+      groupSet: [ this.securityGroup.securityGroupId ],
+      subnetId: props?.vpc?.selectSubnets(subnetSelection).subnetIds[0]!,
+    });
+    const networkAttachment = new CfnNetworkInterfaceAttachment(this, 'NetworkAttachment', {
+      deviceIndex: '1',
+      instanceId: this.instance.instanceId,
+      networkInterfaceId: networkInterface.attrId,
+    });
 
     new CfnOutput(this, 'instanceId', { value: this.instance.instanceId });
     /*

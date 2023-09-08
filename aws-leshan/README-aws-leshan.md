@@ -69,7 +69,7 @@ You can query the instance details via the AWS CLI:
 ```powershell
 $leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
 $leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
-$leshanInstance.Reservations[0].Instances.Ipv6Address, $leshanInstance.Reservations[0].Instances.PublicDnsName
+$leshanInstance.Reservations.Instances.NetworkInterfaces.Ipv6Addresses.Ipv6Address, $leshanInstance.Reservations.Instances.PublicDnsName
 ```
 
 AWS will provide an IPv6 address for the server (with the suffix we configured of `:100d`), but does not generate a DNS entry for it. To access the admin console via HTTPS (automatically provided by Lets Encrypt) you need to use the IPv4-based DNS name.
@@ -106,7 +106,7 @@ You can use SSH, with the private key, to access the server directly:
 ```powershell
 $leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
 $leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
-ssh -i ~/.ssh/leshan-demo-key.pem "ec2-user@$($leshanInstance.Reservations[0].Instances.Ipv6Address)"
+ssh -i ~/.ssh/leshan-demo-key.pem "ec2-user@$($leshanInstance.Reservations.Instances.NetworkInterfaces.Ipv6Addresses.Ipv6Address[1])"
 ```
 
 Then if necessary run the Leshan server, from the remote shell:
@@ -166,10 +166,10 @@ Run the demo client, passing in the address of the Azure Leshan server.
 $leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
 $leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
 $leshanInstance.Reservations[0].Instances.Ipv6Address
-java -jar ./leshan-client-demo.jar -n $id -i $id -p $key -u "coaps://[$($leshanInstance.Reservations[0].Instances.Ipv6Address)]:5684"
+java -jar ./leshan-client-demo.jar -n $id -i $id -p $key -u "coaps://[$($leshanInstance.Reservations.Instances.NetworkInterfaces.Ipv6Addresses.Ipv6Address[1])]:5684"
 ```
 
-In the web UI, you will be able to see the device connected, and the 
+In the web UI, you will be able to see the device connected, with the client address and security indicator. From the device screen you can operate functions like reading values from the client.
 
 
 ### Troubleshooting
@@ -185,3 +185,7 @@ And also the Caddy proxy logs:
 ```bash
 journalctl -u caddy --no-pager
 ```
+
+Removing SSH known host (locally):
+
+ssh-keygen -R $leshanInstance.Reservations.Instances.NetworkInterfaces.Ipv6Addresses.Ipv6Address[1]
