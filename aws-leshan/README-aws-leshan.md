@@ -172,7 +172,8 @@ java -jar ./leshan-client-demo.jar -n $id -i $id -p $key -u "coaps://[$($leshanI
 In the web UI, you will be able to see the device connected, with the client address and security indicator. From the device screen you can operate functions like reading values from the client.
 
 
-### Troubleshooting
+Troubleshooting
+---------------
 
 If the server isn't working you can check the cloud init logs
 
@@ -188,4 +189,6 @@ journalctl -u caddy --no-pager
 
 Removing SSH known host (locally):
 
+```powershell
 ssh-keygen -R $leshanInstance.Reservations.Instances.NetworkInterfaces.Ipv6Addresses.Ipv6Address[1]
+```

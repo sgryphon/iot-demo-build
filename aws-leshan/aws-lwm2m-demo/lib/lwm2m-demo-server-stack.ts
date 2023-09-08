@@ -19,6 +19,7 @@ import { AmazonLinuxCpuType,
   SecurityGroup, 
   SubnetSelection, 
   SubnetType, 
+  UserData, 
   Vpc } from 'aws-cdk-lib/aws-ec2';
 import { CfnOutput, CfnParameter, Duration, Fn, Stack } from 'aws-cdk-lib';
 import { ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -110,7 +111,6 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
           InitPackage.yum('java-17-amazon-corretto'),
           InitCommand.shellCommand('mkdir /home/ec2-user/leshan-server'),
           InitCommand.shellCommand('wget -O /home/ec2-user/leshan-server/leshan-server-demo.jar https://ci.eclipse.org/leshan/job/leshan-1.x/lastSuccessfulBuild/artifact/leshan-server-demo.jar'),
-          //InitCommand.shellCommand('nohup java -jar /home/ec2-user/leshan-server/leshan-server-demo.jar &')
         ]),
       }
     });
@@ -174,9 +174,9 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
 
     new CfnOutput(this, 'instanceId', { value: this.instance.instanceId });
     /*
-    $stack = aws cloudformation describe-stacks --stack-name Lwm2mLeshanStack-dev | ConvertFrom-Json
-    $instance = aws ec2 describe-instances --instance-ids $stack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
-    $instance.Reservations[0].Instances.Ipv6Address, $instance.Reservations[0].Instances.PublicIpAddress
+$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
+$leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
+$leshanInstance.Reservations.Instances.NetworkInterfaces.Ipv6Addresses.Ipv6Address, $leshanInstance.Reservations.Instances.PublicDnsName
     */
   }
 }
