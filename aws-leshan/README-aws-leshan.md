@@ -59,7 +59,7 @@ cdk deploy Lwm2mDemoNetworkStack
 Then to deploy the server stack you need to supply the web UI password that will be used:
 
 ```powershell
-cdk deploy Lwm2mDemoServerStack --parameters basicPassword=P@ssword1
+cdk deploy Lwm2mDemoServerStack --parameters Lwm2mDemoServerStack:basicPassword=P@ssword1
 ```
 
 ### Get the server details
@@ -67,36 +67,23 @@ cdk deploy Lwm2mDemoServerStack --parameters basicPassword=P@ssword1
 You can query the instance details via the AWS CLI:
 
 ```powershell
-$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStackv | ConvertFrom-Json
+$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
 $leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
 $leshanInstance.Reservations[0].Instances.Ipv6Address, $leshanInstance.Reservations[0].Instances.PublicDnsName
 ```
 
-AWS will provide an IPv6 address for the server (with the suffix we configured of `:100d`), but does not generate a DNS entry for it, so to access the admin console via HTTPS (automatically provided by Lets Encrypt), you need to use the IPv4-based DNS name.
+AWS will provide an IPv6 address for the server (with the suffix we configured of `:100d`), but does not generate a DNS entry for it. To access the admin console via HTTPS (automatically provided by Lets Encrypt) you need to use the IPv4-based DNS name.
 
-
-### Connecting to the server via SSH
-
-You can use SSH, with the private key, to access the server directly:
-
-```powershell
-$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mLeshanStack-dev | ConvertFrom-Json
-$leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
-ssh -i ~/.ssh/leshan-dev-key.pem "ec2-user@$($leshanInstance.Reservations[0].Instances.Ipv6Address)"
-```
-
-Then if necessary run the Leshan server, from the remote shell:
-
-```bash
-nohup java -jar /home/ec2-user/leshan-server/leshan-server-demo.jar &
-```
 
 ### Stop and start
 
 There are script to stop (to save money) and restart (e.g. each day after the automatic shutdown) the server.
 
 ```powershell
-TODO
+$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
+aws ec2 stop-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue
+
+aws ec2 start-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue
 ```
 
 After restarting you need to log on and run the Leshan server (`java -jar ~/leshan-server/leshan-server-demo.jar`)
@@ -111,6 +98,28 @@ cdk destroy Lwm2mDemoNetworkStack Lwm2mDemoServerStack
 
 Testing the Leshan Server
 -------------------------
+
+### Connecting to the server via SSH
+
+You can use SSH, with the private key, to access the server directly:
+
+```powershell
+$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
+$leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
+ssh -i ~/.ssh/leshan-demo-key.pem "ec2-user@$($leshanInstance.Reservations[0].Instances.Ipv6Address)"
+```
+
+Then if necessary run the Leshan server, from the remote shell:
+
+```bash
+nohup java -jar /home/ec2-user/leshan-server/leshan-server-demo.jar &
+```
+
+### Viewing the Leshan web UI
+
+The web portal is accessible via HTTPS, using `$leshanInstance.Reservations[0].Instances.PublicDnsName`
+
+You will be prompted with to enter a username ('iotadmin') and the web password.
 
 ### Download the Leshan demo client
 
@@ -129,19 +138,50 @@ cd ../temp
 wget https://ci.eclipse.org/leshan/job/leshan/lastSuccessfulBuild/artifact/leshan-client-demo.jar
 ```
 
+### Configuring pre-shared key security
+
+Generate the pre-shared key (PSK) ID and key, e.g.
+
+```powershell
+$id = "urn:imei:3504577901234567"
+$key = ((Get-Random -Max 0xff -Count 32|ForEach-Object ToString X2) -join '')
+$id, $key
+```
+
+In the Leshan Web UI, go to Security > Add new client security configuration, and enter the following:
+
+* Client endpoint: urn:imei:3504577901234567 (as above)
+* Security mode: Pre-Shared Key
+* Identity: urn:imei:3504577901234567
+* Key: (as generated)
+
+Click Create, and the endpoint will be added to the list.
+
+
 ### Running the client
 
 Run the demo client, passing in the address of the Azure Leshan server.
 
 ```powershell
-$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mLeshanStack-dev | ConvertFrom-Json
+$leshanStack = aws cloudformation describe-stacks --stack-name Lwm2mDemoServerStack | ConvertFrom-Json
 $leshanInstance = aws ec2 describe-instances --instance-ids $leshanStack.Stacks[0].Outputs[0].OutputValue | ConvertFrom-Json
-java -jar ./leshan-client-demo.jar -u "coap://[$($leshanInstance.Reservations[0].Instances.Ipv6Address)]:5683"
+$leshanInstance.Reservations[0].Instances.Ipv6Address
+java -jar ./leshan-client-demo.jar -n $id -i $id -p $key -u "coaps://[$($leshanInstance.Reservations[0].Instances.Ipv6Address)]:5684"
 ```
 
-### Viewing the Leshan web UI
+In the web UI, you will be able to see the device connected, and the 
 
-The web portal is accessible via HTTPS, using `$leshanInstance.Reservations[0].Instances.PublicDnsName`
 
-You will be prompted with to enter a username ('iotadmin') and the web password.
+### Troubleshooting
 
+If the server isn't working you can check the cloud init logs
+
+```bash
+cat /var/log/cloud-init-output.log
+```
+
+And also the Caddy proxy logs:
+
+```bash
+journalctl -u caddy --no-pager
+```

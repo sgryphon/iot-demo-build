@@ -22,19 +22,14 @@ export class Lwm2mDemoNetworkStack extends cdk.Stack {
     // with dual stack public networks (need an IPv4 address for NAT).
 
     // This is the same as the default NAT provider, but we want a reference, so create here
+    // This will create one public network, and one private network.
+    // We will only use the public network, but are keeping the private one so that a NAT gateway is created
     const maxAzs = 1;
     const natProvider = NatProvider.gateway();
     this.vpc = new Vpc(this, 'VPC', {
         ipAddresses: props?.ipv4PrivateAddresses,
         maxAzs: maxAzs,
         natGatewayProvider: natProvider,
-        subnetConfiguration: [
-            {
-                cidrMask: 24,
-                name: 'Public',
-                subnetType: SubnetType.PUBLIC,
-            }
-        ]
     });
     Tags.of(this.vpc).add('aws-cdk-ex:vpc-protocol', 'DualStack', { includeResourceTypes: [CfnVPC.CFN_RESOURCE_TYPE_NAME] });
 
@@ -92,6 +87,9 @@ export class Lwm2mDemoNetworkStack extends cdk.Stack {
             routerType: RouterType.NAT_GATEWAY,
         });
     });
+
+    // NOTE: We are not modifying the private network, as we will not be using it,
+    // but could change it similarly to be dual stack (or single stack IPv6)
 
     Tags.of(this).add('Owner', 'IoT Demo');
     Tags.of(this).add('Classification', 'Confidential');

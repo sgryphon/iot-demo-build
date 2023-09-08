@@ -85,9 +85,7 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
       configs: {
         // Caddy, see: https://caddyserver.com/docs/running
         caddy: new InitConfig([
-          //InitGroup.fromName('caddy-group'),
           InitUser.fromName('caddy', { 
-            //groups: [ 'caddy-group' ],
             homeDir: '/var/lib/caddy',
           }),
           InitFile.fromString('/etc/caddy/Caddyfile',
@@ -101,10 +99,9 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
           ),
           InitCommand.shellCommand('sudo yum -y copr enable @caddy/caddy epel-7-$(arch)'),
           InitCommand.shellCommand('sudo yum -y install caddy'),
-          InitCommand.shellCommand('HASHED_PASSWORD=$(caddy hash-password --plaintext \'' + props?.basicPassword + '\');'
+          InitCommand.shellCommand('HASHED_PASSWORD=$(caddy hash-password --plaintext \'' + basicPassword.valueAsString + '\');'
             + ' echo $HASHED_PASSWORD;' 
             + ' sudo sed -i s:__hashed_password_base64__:${HASHED_PASSWORD//:/\\:}:g /etc/caddy/Caddyfile'),
-          //InitCommand.shellCommand('sudo systemctl reload caddy'),
           InitCommand.shellCommand('sudo systemctl enable --now caddy'),
         ]),
         leshan: new InitConfig([
