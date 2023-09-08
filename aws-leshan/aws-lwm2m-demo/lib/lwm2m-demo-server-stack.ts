@@ -115,18 +115,6 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
       }
     });
 
-    // Build IPv6 address
-    const vpcBlock = 0;
-    const subnetBlock = 0;
-    const addressBlock = Fn.select(subnetBlock, 
-      Fn.cidr(Fn.select(vpcBlock, props?.vpc?.vpcIpv6CidrBlocks!), subnetBlock + 1, "64"));
-    // Results from the CIDR function have the format "2406:da1c:dc0:300:0:0:0:0/64",
-    // so split on ":" and use the first four.
-    const split = Fn.split(":", addressBlock)
-    const ipv6Address = Fn.join(":",
-      [ Fn.select(0, split), Fn.select(1, split), Fn.select(2, split), Fn.select(3, split),
-        "", props?.addressSuffix! ]);
-
     // Other parameters
     const az = cdk.Stack.of(this).availabilityZones[0];
     const subnetSelection: SubnetSelection = {
@@ -143,8 +131,8 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
     this.instance = new Instance(this, 'Instance', {
       init: init,
       initOptions: {
-        ignoreFailures: true,
-        timeout: Duration.minutes(10),
+        ignoreFailures: false,
+        timeout: Duration.minutes(15),
       },
       instanceType: props?.instanceType!,
       keyName: props?.keyName,
@@ -155,11 +143,25 @@ export class Lwm2mDemoServerStack extends cdk.Stack {
       vpc: props!.vpc!,
       vpcSubnets: subnetSelection,
     });
+    
     // Assign Elastic IPv4
     const ec2Assoc = new CfnEIPAssociation(this, "Ec2Association", {
       eip: eip!.ref,
       instanceId: this.instance.instanceId
     });
+
+    // Build IPv6 address
+    const vpcBlock = 0;
+    const subnetBlock = 0;
+    const addressBlock = Fn.select(subnetBlock, 
+      Fn.cidr(Fn.select(vpcBlock, props?.vpc?.vpcIpv6CidrBlocks!), subnetBlock + 1, "64"));
+    // Results from the CIDR function have the format "2406:da1c:dc0:300:0:0:0:0/64",
+    // so split on ":" and use the first four.
+    const split = Fn.split(":", addressBlock)
+    const ipv6Address = Fn.join(":",
+      [ Fn.select(0, split), Fn.select(1, split), Fn.select(2, split), Fn.select(3, split),
+        "", props?.addressSuffix! ]);
+
     // Assign additional interface with fixed IPv6
     const networkInterface = new CfnNetworkInterface(this, 'Network', {
       ipv6Addresses: [ { ipv6Address: ipv6Address } ],
