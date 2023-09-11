@@ -1,0 +1,50 @@
+@startuml VPC
+' Uncomment the line below for "dark mode" styling
+'!$AWS_DARK = true
+
+' Template from: https://github.com/awslabs/aws-icons-for-plantuml
+
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v16.0/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/AWSSimplified.puml
+!include AWSPuml/Compute/EC2.puml
+!include AWSPuml/Compute/EC2ElasticIPAddress.puml
+!include AWSPuml/Compute/EC2Instance.puml
+!include AWSPuml/Groups/AWSCloud.puml
+!include AWSPuml/Groups/VPC.puml
+!include AWSPuml/Groups/AvailabilityZone.puml
+!include AWSPuml/Groups/PublicSubnet.puml
+!include AWSPuml/Groups/PrivateSubnet.puml
+!include AWSPuml/NetworkingContentDelivery/VPCNATGateway.puml
+!include AWSPuml/NetworkingContentDelivery/VPCInternetGateway.puml
+!include AWSPuml/NetworkingContentDelivery/VPCElasticNetworkInterface.puml
+
+hide stereotype
+skinparam linetype poly
+
+AWSCloudGroup(cloud) {
+
+
+  VPCGroup(vpc, "VPC - Lwm2mDemoNetwork") {
+    AvailabilityZoneGroup(az_1, "\tAvailability Zone 1\t") {
+      PublicSubnetGroup(az_1_public, "PublicSubnet1") {
+        VPCNATGateway(az_1_nat_gateway, "NAT gateway", "") #Transparent
+        EC2Instance(az_1_ec2_1, "Lwm2mDemoServer", "") #Transparent
+
+        EC2ElasticIPAddress(az_1_eip_1, "EIP\nPublic IPv4\nPublic DNS name", "Public IPv4")
+        VPCElasticNetworkInterface(az_1_net_1, "Network Interface\nStatic IPv6 [::100d]", "Static IPv6")
+      }
+'      PrivateSubnetGroup(az_1_private, "Private subnet") {
+'      }
+
+      az_1_ec2_1 <.u. az_1_net_1 : IPv6 n
+      az_1_ec2_1 <.u. az_1_eip_1 : IPv4 in
+      az_1_ec2_1 .u.> az_1_nat_gateway : NAT64 out
+    }
+
+    VPCInternetGateway(internet_gateway, "Internet gateway", "")
+
+    az_1_public .[hidden]d.> internet_gateway
+  }
+}
+@enduml
