@@ -1,4 +1,4 @@
-@startuml VPC
+@startuml aws-leshan
 ' Uncomment the line below for "dark mode" styling
 '!$AWS_DARK = true
 
@@ -25,14 +25,14 @@ skinparam linetype poly
 AWSCloudGroup(cloud) {
 
 
-  VPCGroup(vpc, "VPC - Lwm2mDemoNetwork") {
+  VPCGroup(vpc, "VPC - Lwm2mDemoNetwork\t\t2406:da1c:42c:ca00::/56\t10.192.0.0/20") {
     AvailabilityZoneGroup(az_1, "\tAvailability Zone 1\t") {
-      PublicSubnetGroup(az_1_public, "PublicSubnet1") {
+      PublicSubnetGroup(az_1_public, "PublicSubnet1\t2406:da1c:42c:ca00::/64\t10.192.0.0/21") {
         VPCNATGateway(az_1_nat_gateway, "NAT gateway", "") #Transparent
-        EC2Instance(az_1_ec2_1, "Lwm2mDemoServer", "") #Transparent
+        EC2Instance(az_1_ec2_1, "Lwm2mDemoServer\nCaddy 2\nEclipse Leshan", "") #Transparent
 
-        EC2ElasticIPAddress(az_1_eip_1, "EIP\nPublic IPv4\nPublic DNS name", "Public IPv4")
-        VPCElasticNetworkInterface(az_1_net_1, "Network Interface\nStatic IPv6 [::100d]", "Static IPv6")
+        EC2ElasticIPAddress(az_1_eip_1, "Elastic IP\nPublic IPv4\nPublic DNS name", "To assign a Public IPv4 independent of the instance")
+        VPCElasticNetworkInterface(az_1_net_1, "Network Interface\nStatic IPv6\n[2406:da1c:42c:ca00::100d]", "To assign a network interface with a fixed IPv6 suffix independent of the instance")
       }
 '      PrivateSubnetGroup(az_1_private, "Private subnet") {
 '      }
@@ -45,6 +45,7 @@ AWSCloudGroup(cloud) {
     VPCInternetGateway(internet_gateway, "Internet gateway", "")
 
     az_1_public .[hidden]d.> internet_gateway
+'    az_1_private .[hidden]u.> az_1_public
   }
 }
 @enduml
