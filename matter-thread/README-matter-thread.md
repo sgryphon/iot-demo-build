@@ -5,7 +5,7 @@ Matter (& Thread)
 Python Matter Server control script
 -----------------------------------
 
-[scripts/Send-MatterCommand.ps1]
+[scripts/Send-MatterCommand.ps1](scripts/Send-MatterCommand.ps1)
 
 This PowerShell script can be used to send commands to a [Python Matter Server](https://github.com/home-assistant-libs/python-matter-server)
 
