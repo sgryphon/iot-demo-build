@@ -18,7 +18,11 @@ Requirements:
 ### Prerequisites
 
 * Configure AWS single sign on
-* Install the Cloud Developmen Kit (`npm install -g aws-cdk`) and ensure it is bootstrapped for your account.
+* Install the Cloud Development Kit (`npm install -g aws-cdk`) and ensure it is bootstrapped for your account.
+
+### Design
+
+![AWS VPC design for the Leshan server deployment](aws-leshan.png)
 
 ### Sign in to AWS
 
