@@ -94,29 +94,26 @@ void wifiConnectedLoop() {
     int httpCode;
 
     DemoConsole.writeMessage("%d\n", nowMilliseconds);
-/*
-    M5.Lcd.print("v6: begin");
+
+    DemoConsole.print("\n");
+    DemoConsole.print("v6: begin");
     http.begin("http://v6.ipv6-test.com/api/myip.php");
-    M5.Lcd.print(",GET");
+    DemoConsole.print(",GET");
     httpCode = http.GET();
-    M5.Lcd.printf(",%d", httpCode);
+    DemoConsole.writeMessage(",%d", httpCode);
     if (httpCode > 0) {  // httpCode will be negative on error.
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
-        M5.Lcd.print(",");
-        M5.Lcd.print(payload);
+        DemoConsole.print(",RESP=");
+        DemoConsole.print(payload);
       }
-    } else {export PIO_WIFI_SSID=GryphonIOT
-export PIO_WIFI_PASSWORD=sporting4p9q
-export PIO_MQTT_USER=mqttuser
-export PIO_MQTT_PASSWORD=Pass@word1
-
-      M5.Lcd.printf(",ERROR %s", http.errorToString(httpCode).c_str());
+    } else {
+      DemoConsole.writeMessage(",ERROR %s", http.errorToString(httpCode).c_str());
     }
-    M5.Lcd.print("\n");
+    DemoConsole.print("\n");
     http.end();
-*/
 
+    DemoConsole.print("\n");
     DemoConsole.print("v4v6: begin");
     http.begin("http://v4v6.ipv6-test.com/api/myip.php");
     DemoConsole.print(",GET");
@@ -125,7 +122,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
     if (httpCode > 0) {  // httpCode will be negative on error.
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
-        DemoConsole.print(",");
+        DemoConsole.print(",RESP=");
         DemoConsole.print(payload);
       }
     } else {
@@ -136,7 +133,8 @@ export PIO_MQTT_PASSWORD=Pass@word1
 
     // https://github.com/espressif/arduino-esp32/blob/master/libraries/HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino
 
-    M5.Lcd.print("v4v6-tls: ");
+    DemoConsole.print("\n");
+    DemoConsole.print("v4v6-tls:");
     WiFiClientSecure *client = new WiFiClientSecure;
     if (client) {
       client->setCACert((char *)root_ca_pem_start);
@@ -151,7 +149,7 @@ export PIO_MQTT_PASSWORD=Pass@word1
           if (httpCode > 0) {
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
               String payload = http.getString();
-              DemoConsole.print(",");
+              DemoConsole.print(",RESP=");
               DemoConsole.print(payload);
             }
             DemoConsole.print("\n");

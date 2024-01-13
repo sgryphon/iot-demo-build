@@ -124,6 +124,8 @@ IPv6Address StartNetworkClass::globalIPv6(){
   if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
     return IPv6Address();
   }
+  // Have global IPv6 address, so consider the network connected
+  wifi_connected = true;
   return IPv6Address(addr.addr);
 }
 

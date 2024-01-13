@@ -3,7 +3,6 @@
 
 void setup() {
   M5.begin();
-  /*
   M5.Lcd.setTextSize(3);
   M5.Lcd.print("Hello M5Stack Core2\n(with Arduino framework)\nvia PlatformIO");
   M5.Lcd.print("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz\n");
@@ -14,7 +13,6 @@ void setup() {
   for (int y = 1; y < 25; y++) {
     M5.Lcd.printf("%d\n", y);
   }
-  */
 }
 
 void loop() {
