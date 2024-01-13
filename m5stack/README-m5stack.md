@@ -184,10 +184,18 @@ Also of relevance: https://cpp4arduino.com/2020/02/07/how-to-format-strings-with
 You need to set your wifi name and password as environment variables to run:
 
 ```
-export PIO_WIFI_SSID=YourWifiName
-export PIO_WIFI_SSID=YourWifiPassword
+export PIO_WIFI_SSID="YourWifiName"
+export PIO_WIFI_PASSWORD="YourWifiPassword"
 pio run --target upload
 ```
+
+Example output:
+
+![M5Stack Core2 WiFi testing of HTTPS, with IPv6 failure](pics/core2-wifi-screens.png)
+
+1. Blue: Initialising on a dual stack WiFi network, IPv4 shown at top; the GETSTA messages show receiving IPv6 link-local and global addresses
+2. Green: Now have IPv6 address as well, and v4v6.ipv6-test.com works for both HTTP and HTTPS (as IPv4), but v6.ipv6-test.com does not
+3. Third shot is running on a different WiFi that is IPv6 only, the IPv6 addresses are received, but connects aren't working; the logged error details are DNS Failed.
 
 Based on:
 
@@ -198,6 +206,7 @@ Based on:
 TODO:
 
 * Look at provisioning: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/provisioning/index.html
+
 
 ### MQTT
 
