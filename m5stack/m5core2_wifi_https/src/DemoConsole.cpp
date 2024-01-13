@@ -7,6 +7,11 @@ static const char* TAG = "demo";
 
 #define HEADER_HEIGHT (16)
 
+#define ST(A) #A
+#define STR(A) ST(A)
+
+static const char* version = STR(PIO_VERSION);
+
 void checkPage() {
   if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
     M5.Lcd.fillRect(0, HEADER_HEIGHT, 320, 240 - HEADER_HEIGHT, 0);
@@ -16,7 +21,7 @@ void checkPage() {
 
 void printHeader() {
   // Time = 8, IPv6 = 39
-  // Date = 10, MAC = 17, WiFi 3, IPv4 = 15
+  // Date = 10, WiFi 3, IPv4 = 15, Version/MAC = 17
   uint16_t headerColor;
   String ipv6 = StartNetwork.globalIPv6().toString();
   if (StartNetwork.wifiConnected()) {
@@ -42,17 +47,24 @@ void printHeader() {
   // Date
   M5.Lcd.setCursor(0, 8);
   M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date);
+  // WiFi Status
+  M5.Lcd.setCursor(9 * 6, 0);
+  M5.Lcd.printf("(%2d)", WiFi.status());
+  // Version 
+  M5.Lcd.setCursor(11 * 6, 8); 
+  M5.Lcd.printf("v%s", version);
   // IPv6
   M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
-  //M5.Lcd.setCursor((53-39)*6, 0);
   M5.Lcd.print(ipv6);
-  // MAC & WiFi Status
-  M5.Lcd.setCursor((53-39)*6, 8);
-  M5.Lcd.printf("%s (%3d)", WiFi.macAddress().c_str(), WiFi.status());
+  // (or MAC)
+  // String mac = WiFi.macAddress();
+  // M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(mac), 8); 
+  // M5.Lcd.print(mac.c_str());
+  //M5.Lcd.setCursor((53-39)*6, 0);
   // IPv4
   String ipv4 = WiFi.localIP().toString();
-  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv4), 8); 
-  M5.Lcd.print(ipv4.c_str());
+  M5.Lcd.setCursor(53*6 - M5.Lcd.textWidth(ipv4) - 6, 8);
+  M5.Lcd.printf(" %s", ipv4.c_str());
 
   M5.Lcd.setCursor(x, y);
   M5.Lcd.setTextColor(WHITE, BLACK);

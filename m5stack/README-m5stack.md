@@ -186,7 +186,9 @@ You need to set your wifi name and password as environment variables to run:
 ```
 export PIO_WIFI_SSID="YourWifiName"
 export PIO_WIFI_PASSWORD="YourWifiPassword"
-pio run --target upload
+
+(export PIO_VERSION=$(git describe --tags --dirty=-dev); pio run --target upload)
+pio device monitor --baud 115200
 ```
 
 Example output:
@@ -292,7 +294,7 @@ export IOT_CONFIG_DEVICE_ID=
 export IOT_CONFIG_IOTHUB_FQDN=YourAzureIotHostName.azure-devices.net
 export IOT_CONFIG_DEVICE_KEY=YourAzureIoTDeviceKey
 
-(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
+(export PIO_VERSION=$(git describe --tags --dirty=-dev); pio run --target upload)
 ```
 
 ![M5Stack Core2 Azure IoT](pics/m5core2-azure-iot.jpg)
@@ -383,10 +385,10 @@ pio pkg install --library fastled/FastLED
 To run:
 
 ```shell
-export PIO_WIFI_SSID=YourWifiName
-export PIO_WIFI_PASSWORD=YourWifiPassword
+export PIO_WIFI_SSID="YourWifiName"
+export PIO_WIFI_PASSWORD="YourWifiPassword"
 
-(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
+(export PIO_VERSION=$(git describe --tags --dirty=-dev); pio run --target upload)
 pio device monitor --baud 115200
 ```
 
@@ -443,7 +445,7 @@ Then, in the PIO shell, deploy (upload) to your device, and then monitor the ser
 
 ```shell
 export PIO_MQTT_PASSWORD=YourMqttPassword3
-(export PIO_VERSION=$(git describe --tags --dirty); pio run --target upload)
+(export PIO_VERSION=$(git describe --tags --dirty=-dev); pio run --target upload)
 pio device monitor --baud 115200
 ```
 

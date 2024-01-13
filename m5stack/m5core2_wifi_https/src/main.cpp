@@ -11,8 +11,12 @@
 #include "esp_log.h"
 static const char* TAG = "demo";
 
-static const char* ssid = WIFI_SSID;
-static const char* password = WIFI_PASSWORD;
+#define ST(A) #A
+#define STR(A) ST(A)
+
+static const char* version = STR(PIO_VERSION);
+static const char* ssid = STR(PIO_WIFI_SSID);
+static const char* password = STR(PIO_WIFI_PASSWORD);
 
 #define SEND_INTERVAL_MS (10000)
 unsigned long nextMessageMilliseconds = 0;
