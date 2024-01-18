@@ -1,4 +1,4 @@
-#include <M5Core2.h>
+#include <M5Unified.h>
 #include "DemoConsole.h"
 #include "StartNetwork.h"
 
@@ -33,20 +33,17 @@ void printHeader() {
   } else {
     headerColor = ORANGE;
   }
-  RTC_DateTypeDef rtcDateNow;
-  RTC_TimeTypeDef rtcTimeNow;
-  M5.Rtc.GetDate(&rtcDateNow);
-  M5.Rtc.GetTime(&rtcTimeNow);
+  m5::rtc_datetime_t now = M5.Rtc.getDateTime();
   int x = M5.Lcd.getCursorX();
   int y = M5.Lcd.getCursorY();
   M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);
   M5.Lcd.setTextColor(WHITE, headerColor);
   // Time
   M5.Lcd.setCursor(0, 0);
-  M5.Lcd.printf("%02d:%02d:%02d", rtcTimeNow.Hours, rtcTimeNow.Minutes, rtcTimeNow.Seconds);
+  M5.Lcd.printf("%02d:%02d:%02d", now.time.hours, now.time.minutes, now.time.seconds);
   // Date
   M5.Lcd.setCursor(0, 8);
-  M5.Lcd.printf("%04d-%02d-%02d", rtcDateNow.Year, rtcDateNow.Month, rtcDateNow.Date);
+  M5.Lcd.printf("%04d-%02d-%02d", now.date.year, now.date.month, now.date.date);
   // WiFi Status
   M5.Lcd.setCursor(9 * 6, 0);
   M5.Lcd.printf("(%2d)", WiFi.status());

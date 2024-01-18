@@ -2,6 +2,7 @@
 #define StartNetwork_h
 
 #include <WiFi.h>
+#include <IPAddress.h>
 
 class StartNetworkClass
 {
@@ -9,7 +10,7 @@ class StartNetworkClass
 public:
     void begin(const char* ssid, const char* password);
     const char * eui64();
-    IPv6Address globalIPv6();
+    IPAddress globalIPv6();
     String mainDnsIP();
     bool wifiConnected();
 };
