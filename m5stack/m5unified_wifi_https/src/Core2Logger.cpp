@@ -1,10 +1,19 @@
 #include "Core2Logger.h"
 
 #include <M5Unified.h>
+#include <WiFi.h>
+
+#define ST(A) #A
+#define STR(A) ST(A)
 
 Core2Logger::Core2Logger() {}
 
 static const char *TAG = "Core2Logger";
+static const char* version = STR(PIO_VERSION);
+static const int HEADER_HEIGHT = 16;
+
+unsigned long header_update_at_millis = 0;
+unsigned long header_update_interval_ms = 500;
 
 /*
 CRGB led_color = CRGB::White;
@@ -32,6 +41,55 @@ void ledOn(unsigned long now) {
 }
 */
 
+void printHeader() {
+  // Time = 8, IPv6 = 39
+  // Date = 10, WiFi 3, IPv4 = 15, Version/MAC = 17
+  uint16_t headerColor;
+  IPAddress globalAddress = WiFi.globalIPv6();
+  if (WiFi.isConnected()) {
+    if (globalAddress.type() == IPType::IPv6 && globalAddress != IN6ADDR_ANY) {
+      headerColor = DARKGREEN;
+    } else {
+      headerColor = BLUE;
+    }
+  } else {
+    headerColor = ORANGE;
+  }
+  m5::rtc_datetime_t now = M5.Rtc.getDateTime();
+  int x = M5.Lcd.getCursorX();
+  int y = M5.Lcd.getCursorY();
+  M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);
+  M5.Lcd.setTextColor(WHITE, headerColor);
+  // Time
+  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.printf("%02d:%02d:%02d", now.time.hours, now.time.minutes, now.time.seconds);
+  // Date
+  M5.Lcd.setCursor(0, 8);
+  M5.Lcd.printf("%04d-%02d-%02d", now.date.year, now.date.month, now.date.date);
+  // WiFi Status
+  M5.Lcd.setCursor(9 * 6, 0);
+  M5.Lcd.printf("(%2d)", WiFi.status());
+  // Version 
+  M5.Lcd.setCursor(11 * 6, 8); 
+  M5.Lcd.printf("v%s", version);
+  // IPv6
+  String ipv6 = globalAddress.toString();
+  M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
+  M5.Lcd.print(ipv6);
+  // (or MAC)
+  // String mac = WiFi.macAddress();
+  // M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(mac), 8); 
+  // M5.Lcd.print(mac.c_str());
+  //M5.Lcd.setCursor((53-39)*6, 0);
+  // IPv4
+  String ipv4 = WiFi.localIP().toString();
+  M5.Lcd.setCursor(53*6 - M5.Lcd.textWidth(ipv4) - 6, 8);
+  M5.Lcd.printf(" %s", ipv4.c_str());
+
+  M5.Lcd.setCursor(x, y);
+  M5.Lcd.setTextColor(WHITE, BLACK);
+}
+
 /*
 void startLed(CRGB color, int16_t count, int16_t time_on_ms = 200) {
   led_color = color;
@@ -55,6 +113,14 @@ void Core2Logger::loop() {
     ledOn(now);
   }
   */
+  if (now > header_update_at_millis) {
+    printHeader();
+    if (header_update_at_millis == 0) {
+      header_update_at_millis = now + header_update_interval_ms;
+    } else {
+      header_update_at_millis += header_update_interval_ms;
+    }
+  }
 }
 
 void Core2Logger::pending() { 
