@@ -46,7 +46,6 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info){
             //can set ap hostname here
             WiFi.softAPsetHostname(AP_SSID);
             break;
-
         case ARDUINO_EVENT_WIFI_STA_START:
             //set sta hostname here
             WiFi.setHostname(AP_SSID);
@@ -59,13 +58,19 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info){
 #endif
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-            //char ipv6[40];
-            //snprintf(ipv6, sizeof(ipv6), IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+#ifdef START_NETWORK_MD5_LCD
+            DemoConsole.print("STA local IPv6: ");
+            DemoConsole.print(WiFi.localIPv6());
+            DemoConsole.print("\n");
+            DemoConsole.print("STA global IPv6: ");
+            DemoConsole.print(WiFi.globalIPv6());
+            DemoConsole.print("\n");
+#endif
+            // Details from info event
             ESP_LOGD(TAG, "WIFI STA_GOT_IP6: " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
 #ifdef START_NETWORK_MD5_LCD
             DemoConsole.print("STA IPv6: ");
             DemoConsole.writeMessage(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
-            //M5.Lcd.print(WiFi.localIPv6());
             DemoConsole.print("\n");
 #endif
             break;
@@ -96,9 +101,9 @@ void StartNetworkClass::begin(const char* ssid, const char* password)
   wifi_password = password;
   WiFi.disconnect(true);
   WiFi.onEvent(wifiOnEvent);
-  //WiFi.mode(WIFI_MODE_APSTA);
-  //WiFi.softAP(AP_SSID);
-  //WiFi.begin(STA_SSID, STA_PASS);
+  // WiFi.mode(WIFI_MODE_APSTA);
+  // WiFi.softAPenableIPv6();
+  // WiFi.softAP(AP_SSID);
   WiFi.enableIPv6();
   WiFi.begin(wifi_ssid, wifi_password);
 };
@@ -110,20 +115,6 @@ const char * StartNetworkClass::eui64() {
   // 0<3>3467 fffe 9acdf0
   snprintf(eui64_buffer, sizeof(eui64_buffer), "%02x%02x%02xfffe%02x%02x%02x", mac[0] ^ 2, mac[1], mac[2], mac[3], mac[4], mac[5]);
   return eui64_buffer;
-}
-
-IPAddress StartNetworkClass::globalIPv6(){
-  IPAddress ip = WiFi.globalIPv6();
-  if(ip.type() == IPType::IPv6 && ip != IN6ADDR_ANY){
-    // Have global IPv6 address, so consider the network connected
-    wifi_connected = true;
-  }
-  return ip;
-}
-
-String StartNetworkClass::mainDnsIP(){
-  IPAddress dns = WiFi.dnsIP();
-  return dns.toString();
 }
 
 bool StartNetworkClass::wifiConnected()

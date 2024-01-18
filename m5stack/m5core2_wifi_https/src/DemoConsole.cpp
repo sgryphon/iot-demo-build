@@ -23,9 +23,9 @@ void printHeader() {
   // Time = 8, IPv6 = 39
   // Date = 10, WiFi 3, IPv4 = 15, Version/MAC = 17
   uint16_t headerColor;
-  String ipv6 = StartNetwork.globalIPv6().toString();
-  if (StartNetwork.wifiConnected()) {
-    if (ipv6 != "0000:0000:0000:0000:0000:0000:0000:0000") {
+  IPAddress globalAddress = WiFi.globalIPv6();
+  if (WiFi.isConnected()) {
+    if (globalAddress.type() == IPType::IPv6 && globalAddress != IN6ADDR_ANY) {
       headerColor = DARKGREEN;
     } else {
       headerColor = BLUE;
@@ -51,6 +51,7 @@ void printHeader() {
   M5.Lcd.setCursor(11 * 6, 8); 
   M5.Lcd.printf("v%s", version);
   // IPv6
+  String ipv6 = globalAddress.toString();
   M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
   M5.Lcd.print(ipv6);
   // (or MAC)
@@ -74,7 +75,10 @@ void DemoConsoleClass::begin() {
 }
 
 void DemoConsoleClass::loop() {
-  printHeader();
+  unsigned long nowMilliseconds = millis();
+  if (nowMilliseconds % 1000 == 0) {
+    printHeader();
+  }
 }
 
 size_t DemoConsoleClass::writeMessage(const char * format, ...) {

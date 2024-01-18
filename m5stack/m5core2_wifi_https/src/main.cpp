@@ -21,6 +21,7 @@ static const char* password = STR(PIO_WIFI_PASSWORD);
 #define SEND_INTERVAL_MS (10000)
 unsigned long nextMessageMilliseconds = 0;
 HTTPClient http;
+int16_t count = 0;
 
 // https://docs.platformio.org/en/latest/platforms/espressif32.html#embedding-binary-data
 // https://techtutorialsx.com/2017/11/18/esp32-arduino-https-get-request/
@@ -67,22 +68,20 @@ const char* root_ca= \
 void printWiFi() {
   ESP_LOGD(TAG, "printWiFi");
 
-  DemoConsole.print("IPv6: ");
+  DemoConsole.print("Local IPv6: ");
   DemoConsole.print(WiFi.localIPv6());
   DemoConsole.print("\n");
-  DemoConsole.print("IPv6: ");
-  DemoConsole.print(StartNetwork.globalIPv6());
+  DemoConsole.print("Global IPv6: ");
+  DemoConsole.print(WiFi.globalIPv6());
   DemoConsole.print("\n");
-  DemoConsole.print("DNS: ");
-  DemoConsole.print(StartNetwork.mainDnsIP());
-  DemoConsole.print("\n");
-  DemoConsole.print("\n");
-
   DemoConsole.print("IPv4: ");
   DemoConsole.print(WiFi.localIP());
   DemoConsole.print("\n");
   DemoConsole.print("DNS: ");
   DemoConsole.print(WiFi.dnsIP(0));
+  DemoConsole.print("\n");
+  DemoConsole.print("DNS2: ");
+  DemoConsole.print(WiFi.dnsIP(1));
   DemoConsole.print("\n");
   DemoConsole.print("Gateway: ");
   DemoConsole.print(WiFi.gatewayIP());
@@ -90,87 +89,84 @@ void printWiFi() {
   DemoConsole.print("\n");
 }
 
-void wifiConnectedLoop() {
-  unsigned long nowMilliseconds = millis();
-  if (nowMilliseconds > nextMessageMilliseconds) {
-    nextMessageMilliseconds = nowMilliseconds + SEND_INTERVAL_MS;
+void testNetwork() {
+  int httpCode;
 
-    int httpCode;
+  DemoConsole.writeMessage("Button %d\n", count);
 
-    DemoConsole.writeMessage("%d\n", nowMilliseconds);
-
-    DemoConsole.print("\n");
-    DemoConsole.print("v6: begin");
-    http.begin("http://v6.ipv6-test.com/api/myip.php");
-    DemoConsole.print(",GET");
-    httpCode = http.GET();
-    DemoConsole.writeMessage(",%d", httpCode);
-    if (httpCode > 0) {  // httpCode will be negative on error.
-      if (httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-        DemoConsole.print(",RESP=");
-        DemoConsole.print(payload);
-      }
-    } else {
-      DemoConsole.writeMessage(",ERROR %s", http.errorToString(httpCode).c_str());
+  DemoConsole.print("\n");
+  DemoConsole.print("v6: begin");
+  http.begin("http://v6.ipv6-test.com/api/myip.php");
+  DemoConsole.print(",GET");
+  httpCode = http.GET();
+  DemoConsole.writeMessage(",%d", httpCode);
+  if (httpCode > 0) {  // httpCode will be negative on error.
+    if (httpCode == HTTP_CODE_OK) {
+      String payload = http.getString();
+      DemoConsole.print(",RESP=");
+      DemoConsole.print(payload);
     }
-    DemoConsole.print("\n");
-    http.end();
+  } else {
+    DemoConsole.writeMessage(",ERROR %s", http.errorToString(httpCode).c_str());
+  }
+  DemoConsole.print("\n");
+  http.end();
 
-    DemoConsole.print("\n");
-    DemoConsole.print("v4v6: begin");
-    http.begin("http://v4v6.ipv6-test.com/api/myip.php");
-    DemoConsole.print(",GET");
-    httpCode = http.GET();
-    DemoConsole.writeMessage(",%d", httpCode);
-    if (httpCode > 0) {  // httpCode will be negative on error.
-      if (httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-        DemoConsole.print(",RESP=");
-        DemoConsole.print(payload);
-      }
-    } else {
-      DemoConsole.writeMessage(",ERROR %s", http.errorToString(httpCode).c_str());
+  DemoConsole.print("\n");
+  DemoConsole.print("v4v6: begin");
+  http.begin("http://v4v6.ipv6-test.com/api/myip.php");
+  DemoConsole.print(",GET");
+  httpCode = http.GET();
+  DemoConsole.writeMessage(",%d", httpCode);
+  if (httpCode > 0) {  // httpCode will be negative on error.
+    if (httpCode == HTTP_CODE_OK) {
+      String payload = http.getString();
+      DemoConsole.print(",RESP=");
+      DemoConsole.print(payload);
     }
-    DemoConsole.print("\n");
-    http.end();
+  } else {
+    DemoConsole.writeMessage(",ERROR %s", http.errorToString(httpCode).c_str());
+  }
+  DemoConsole.print("\n");
+  http.end();
 
-    // https://github.com/espressif/arduino-esp32/blob/master/libraries/HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino
+  // https://github.com/espressif/arduino-esp32/blob/master/libraries/HTTPClient/examples/BasicHttpsClient/BasicHttpsClient.ino
 
-    DemoConsole.print("\n");
-    DemoConsole.print("v4v6-tls:");
-    WiFiClientSecure *client = new WiFiClientSecure;
-    if (client) {
-      client->setCACert((char *)root_ca_pem_start);
-      //client->setCACert(root_ca);
-      {
-        HTTPClient http;
-        DemoConsole.print("begin");
-        if (http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php")) {
-          DemoConsole.print(",GET");
-          httpCode = http.GET();
-          DemoConsole.writeMessage(",%d", httpCode);
-          if (httpCode > 0) {
-            if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-              String payload = http.getString();
-              DemoConsole.print(",RESP=");
-              DemoConsole.print(payload);
-            }
-            DemoConsole.print("\n");
-          } else {
-            DemoConsole.writeMessage(",ERROR %s\n", http.errorToString(httpCode).c_str());
+  DemoConsole.print("\n");
+  DemoConsole.print("v4v6-tls:");
+  WiFiClientSecure *client = new WiFiClientSecure;
+  if (client) {
+    client->setCACert((char *)root_ca_pem_start);
+    //client->setCACert(root_ca);
+    {
+      HTTPClient http;
+      DemoConsole.print("begin");
+      if (http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php")) {
+        DemoConsole.print(",GET");
+        httpCode = http.GET();
+        DemoConsole.writeMessage(",%d", httpCode);
+        if (httpCode > 0) {
+          if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+            String payload = http.getString();
+            DemoConsole.print(",RESP=");
+            DemoConsole.print(payload);
           }
-
-          http.end();
+          DemoConsole.print("\n");
         } else {
-          DemoConsole.print("Unable to connect\n");
+          DemoConsole.writeMessage(",ERROR %s\n", http.errorToString(httpCode).c_str());
         }
+
+        http.end();
+      } else {
+        DemoConsole.print("Unable to connect\n");
       }
-      delete client;
-    } else {
-      DemoConsole.print("Unable to create client\n");
     }
-  } 
+    delete client;
+  } else {
+    DemoConsole.print("Unable to create client\n");
+  }
+
+  printWiFi();
 }
 
 void setup() {
@@ -200,15 +196,22 @@ void setup() {
 }
 
 void loop() {
-  ESP_LOGD(TAG, "** Loop %d **", millis());
+  //ESP_LOGD(TAG, "** Loop %d **", millis());
   //ESP_LOGI(TAG, "** Loop %d **", millis());
 
   M5.update();
   DemoConsole.loop();
 
-  if(StartNetwork.wifiConnected()){
-    wifiConnectedLoop();
-  }
-
-  delay(1000);
+  // if(StartNetwork.wifiConnected()){
+  //   wifiConnectedLoop();
+  // }
+  if (M5.BtnA.wasPressed()) {
+    ++count;
+    if (count % 5 == 0) {
+      DemoConsole.print("Too many button presses\n");
+      return;
+    }
+    testNetwork();
+    //logger->information("Button was pressed %d\n", count);
+  }  
 }
