@@ -41,6 +41,9 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
     _logger->information("WF STA IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
     ip6_address_type = esp_netif_ip6_get_addr_type(&info.got_ip6.ip6_info.ip);
+    if (ip6_address_type == ESP_IP6_ADDR_IS_GLOBAL || ip6_address_type == ESP_IP6_ADDR_IS_UNIQUE_LOCAL) {
+      _logger->success();
+    }
     ESP_LOGD(TAG, "IPv6 address type %d", ip6_address_type);
     break;
   case ARDUINO_EVENT_WIFI_AP_GOT_IP6:

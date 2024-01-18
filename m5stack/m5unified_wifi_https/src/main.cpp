@@ -30,7 +30,7 @@ void testNetwork() {
   // localIPv6() is the local IPv6 address of category link-local
   logger->information("Global IPv6 %s", WiFi.globalIPv6().toString().c_str());
   logger->information("IPv4 %s", WiFi.localIP().toString().c_str());
-  logger->information("Link-Local IPv6 %s", WiFi.localIPv6().toString().c_str());
+  logger->information("Link-Local IPv6 %s", WiFi.localIPv6().toString(true).c_str());
 
   for (int dns_index = 0; dns_index < 2; ++dns_index) {
     logger->information("DNS%d %s", dns_index, WiFi.dnsIP(dns_index).toString().c_str());
