@@ -1,4 +1,4 @@
-#include "EventLogger.h"
+#include "Core2Logger.h"
 #include "WiFiNetworkManager.h"
 
 #include <HTTPClient.h>
@@ -10,9 +10,9 @@
 
 const char *ap_password = STR(PIO_AP_PASSWORD);
 int16_t count = 0;
-EventLogger *logger = new EventLogger();
+//EventLogger *logger = new EventLogger();
 //EventLogger *logger = new AtomLogger();
-//EventLogger *logger = new Core2Logger();
+EventLogger *logger = new Core2Logger();
 WiFiNetworkManager *network = nullptr;
 extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
 extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
