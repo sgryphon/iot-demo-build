@@ -12,8 +12,16 @@ static const char *TAG = "Core2Logger";
 static const char* version = STR(PIO_VERSION);
 static const int HEADER_HEIGHT = 16;
 
+std::mutex mutex;
 unsigned long header_update_at_millis = 0;
 unsigned long header_update_interval_ms = 500;
+
+void checkPage() {
+  if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
+    M5.Lcd.fillRect(0, HEADER_HEIGHT, 320, 240 - HEADER_HEIGHT, 0);
+    M5.Lcd.setCursor(0, HEADER_HEIGHT);
+  }
+}
 
 /*
 CRGB led_color = CRGB::White;
@@ -101,6 +109,13 @@ void startLed(CRGB color, int16_t count, int16_t time_on_ms = 200) {
 
 // Public
 
+void Core2Logger::begin() {
+  std::lock_guard<std::mutex> lck(mutex); 
+  ESP_LOGD(TAG, "Core2 logger begin");
+  M5.Lcd.setCursor(0, HEADER_HEIGHT);
+  printHeader();
+}
+
 void Core2Logger::loop() {
   unsigned long now = millis();
   /*
@@ -114,7 +129,10 @@ void Core2Logger::loop() {
   }
   */
   if (now > header_update_at_millis) {
-    printHeader();
+    {
+      std::lock_guard<std::mutex> lck(mutex); 
+      printHeader();
+    }
     if (header_update_at_millis == 0) {
       header_update_at_millis = now + header_update_interval_ms;
     } else {
@@ -133,7 +151,7 @@ void Core2Logger::success() {
   ESP_LOGI(TAG, "Success");
 }
 
-void Core2Logger::warning() { 
+void Core2Logger::warning() {
   //startLed(CRGB::Orange, 1, 400);
   ESP_LOGW(TAG, "Warning");
 }
@@ -141,11 +159,17 @@ void Core2Logger::warning() {
 // Protected
 
 void Core2Logger::log(esp_log_level_t level, const char *message) {
+  std::lock_guard<std::mutex> lck(mutex);
   if (level == ESP_LOG_ERROR) {
     //startLed(CRGB::Red, 3);
     ESP_LOGE(TAG, "CORE2: %s", message);
+    checkPage();
+    M5.Lcd.printf("ERROR: %s", message);
+    M5.Lcd.println();
   } else {
     //startLed(CRGB::Blue, 1);
     ESP_LOGI(TAG, "CORE2: %s", message);
+    checkPage();
+    M5.Lcd.println(message);
   }
 }
