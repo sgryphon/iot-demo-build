@@ -6,7 +6,13 @@
 #define ST(A) #A
 #define STR(A) ST(A)
 
-Core2Logger::Core2Logger() {}
+typedef enum {
+  NONE = 0,
+  PENDING = 1,
+  SUCCESS = 2,
+  WARNING = 3,
+  ERROR = 4
+} LoggerStatus;
 
 static const char *TAG = "Core2Logger";
 static const char* version = STR(PIO_VERSION);
@@ -15,6 +21,9 @@ static const int HEADER_HEIGHT = 16;
 std::mutex mutex;
 unsigned long header_update_at_millis = 0;
 unsigned long header_update_interval_ms = 500;
+LoggerStatus status = NONE;
+
+Core2Logger::Core2Logger() {}
 
 void checkPage() {
   if (M5.Lcd.getCursorY() > M5.Lcd.height()) {
@@ -52,18 +61,34 @@ void ledOn(unsigned long now) {
 void printHeader() {
   // Time = 8, IPv6 = 39
   // Date = 10, WiFi 3, IPv4 = 15, Version/MAC = 17
+  IPAddress ipv6Address = WiFi.globalIPv6();
+  bool hasGlobalIpv6 = ipv6Address != IN6ADDR_ANY;
+  if (!hasGlobalIpv6) {
+    ipv6Address = WiFi.localIPv6();
+  }
+
   uint16_t headerColor;
-  IPAddress globalAddress = WiFi.globalIPv6();
-  if (WiFi.isConnected()) {
-    if (globalAddress.type() == IPType::IPv6 && globalAddress != IN6ADDR_ANY) {
+  if(status == PENDING) {
+    headerColor = ORANGE;
+  } else if (status == SUCCESS) {
+    if (hasGlobalIpv6) {
       headerColor = DARKGREEN;
     } else {
       headerColor = BLUE;
     }
-  } else {
+  } else if(status == WARNING) {
     headerColor = ORANGE;
+  } else if(status == ERROR) {
+    headerColor = RED;
+  } else {
+    headerColor = DARKGREY;
   }
+
   m5::rtc_datetime_t now = M5.Rtc.getDateTime();
+  String ipv6 = ipv6Address.toString();
+  String ipv4 = WiFi.localIP().toString();
+  wl_status_t wifi_status = WiFi.status();
+
   int x = M5.Lcd.getCursorX();
   int y = M5.Lcd.getCursorY();
   M5.Lcd.fillRect(0, 0, 320, HEADER_HEIGHT, headerColor);
@@ -76,12 +101,11 @@ void printHeader() {
   M5.Lcd.printf("%04d-%02d-%02d", now.date.year, now.date.month, now.date.date);
   // WiFi Status
   M5.Lcd.setCursor(9 * 6, 0);
-  M5.Lcd.printf("(%2d)", WiFi.status());
+  M5.Lcd.printf("(%2d)", wifi_status);
   // Version 
   M5.Lcd.setCursor(11 * 6, 8); 
   M5.Lcd.printf("v%s", version);
   // IPv6
-  String ipv6 = globalAddress.toString();
   M5.Lcd.setCursor(53 * 6 - M5.Lcd.textWidth(ipv6), 0); 
   M5.Lcd.print(ipv6);
   // (or MAC)
@@ -90,7 +114,6 @@ void printHeader() {
   // M5.Lcd.print(mac.c_str());
   //M5.Lcd.setCursor((53-39)*6, 0);
   // IPv4
-  String ipv4 = WiFi.localIP().toString();
   M5.Lcd.setCursor(53*6 - M5.Lcd.textWidth(ipv4) - 6, 8);
   M5.Lcd.printf(" %s", ipv4.c_str());
 
@@ -143,16 +166,19 @@ void Core2Logger::loop() {
 
 void Core2Logger::pending() { 
   //startLed(CRGB::Yellow, -1);
+  status = PENDING;
   ESP_LOGI(TAG, "Pending");
 }
 
 void Core2Logger::success() { 
   //startLed(CRGB::Green, 2, 500);
+  status = SUCCESS;
   ESP_LOGI(TAG, "Success");
 }
 
 void Core2Logger::warning() {
   //startLed(CRGB::Orange, 1, 400);
+  status = WARNING;
   ESP_LOGW(TAG, "Warning");
 }
 
@@ -162,6 +188,7 @@ void Core2Logger::log(esp_log_level_t level, const char *message) {
   std::lock_guard<std::mutex> lck(mutex);
   if (level == ESP_LOG_ERROR) {
     //startLed(CRGB::Red, 3);
+    status = ERROR;
     ESP_LOGE(TAG, "CORE2: %s", message);
     checkPage();
     M5.Lcd.printf("ERROR: %s", message);

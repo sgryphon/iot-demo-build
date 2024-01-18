@@ -36,20 +36,20 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
     //WiFi.setHostname(AP_SSID);
     break;
   case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-    _logger->information("WiFi station connected");
+    _logger->information("WF STA connected");
     break;
   case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-    _logger->information("WiFi station IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+    _logger->information("WF STA IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
     ip6_address_type = esp_netif_ip6_get_addr_type(&info.got_ip6.ip6_info.ip);
     ESP_LOGD(TAG, "IPv6 address type %d", ip6_address_type);
     break;
   case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
-    _logger->information("WiFi AP IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+    _logger->information("WF AP IPv6 " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
     break;
   case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     delay(100);
     status_ = CONNECTED;
-    _logger->information("WiFi station connected IPv4 %s", WiFi.localIP().toString().c_str());
+    _logger->information("WF STA IPv4 %s", WiFi.localIP().toString().c_str());
     _logger->success();
     break;
   case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:

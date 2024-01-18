@@ -28,16 +28,13 @@ void testNetwork() {
   // localIP() is the local IPv4 address (as opposed to remote IPv4 address)
   // globalIPv6() is the first local IPv6 address of category global
   // localIPv6() is the local IPv6 address of category link-local
-  logger->information("Network: Global IPv6 %s, IPv4 %s, Link-Local IPv6 %s",
-    WiFi.globalIPv6().toString().c_str(), 
-    WiFi.localIP().toString().c_str(),
-    WiFi.localIPv6().toString().c_str()
-  );
-  logger->information("DNS %s, DNS2 %s, DNS3 %s",
-    WiFi.dnsIP(0).toString().c_str(),
-    WiFi.dnsIP(1).toString().c_str(),
-    WiFi.dnsIP(2).toString().c_str()
-  );
+  logger->information("Global IPv6 %s", WiFi.globalIPv6().toString().c_str());
+  logger->information("IPv4 %s", WiFi.localIP().toString().c_str());
+  logger->information("Link-Local IPv6 %s", WiFi.localIPv6().toString().c_str());
+
+  for (int dns_index = 0; dns_index < 2; ++dns_index) {
+    logger->information("DNS%d %s", dns_index, WiFi.dnsIP(dns_index).toString().c_str());
+  }
 
   if (scenario < 3) {
     String url;
@@ -66,7 +63,7 @@ void testNetwork() {
 
     String payload = http.getString();
     logger->information("response=<%s>", payload.c_str());
-    if (payload.indexOf(":") >= 0) {
+    if (payload.indexOf(":") >= 0 || payload.indexOf(".") >= 0) {
       logger->success();
     } else {
       logger->warning();
@@ -100,7 +97,7 @@ void testNetwork() {
 
     String payload = http.getString();
     logger->information("response=<%s>", payload.c_str());
-    if (payload.indexOf(":") >= 0) {
+    if (payload.indexOf(":") >= 0 || payload.indexOf(".") >= 0) {
       logger->success();
     } else {
       logger->warning();
