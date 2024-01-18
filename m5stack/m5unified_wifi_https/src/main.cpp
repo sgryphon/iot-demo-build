@@ -21,46 +21,92 @@ const char *wifi_password = STR(PIO_WIFI_PASSWORD);
 const char *wifi_ssid = STR(PIO_WIFI_SSID);
 
 void testNetwork() {
+  int scenario = (count - 1) % 4;
+  logger->information("Button %d, scenario %d, v%s", count, scenario, version);
+
   // Naming here is wonky:
   // localIP() is the local IPv4 address (as opposed to remote IPv4 address)
   // globalIPv6() is the first local IPv6 address of category global
   // localIPv6() is the local IPv6 address of category link-local
-  logger->information("Button %d, Global IPv6 %s, IPv4 %s, Link-Local IPv6 %s", count,
+  logger->information("Network: Global IPv6 %s, IPv4 %s, Link-Local IPv6 %s",
     WiFi.globalIPv6().toString().c_str(), 
     WiFi.localIP().toString().c_str(),
     WiFi.localIPv6().toString().c_str()
   );
+  logger->information("DNS %s, DNS2 %s, DNS3 %s",
+    WiFi.dnsIP(0).toString().c_str(),
+    WiFi.dnsIP(1).toString().c_str(),
+    WiFi.dnsIP(2).toString().c_str()
+  );
 
-  WiFiClientSecure *client = new WiFiClientSecure;
-  if (!client) {
-    logger->error("Unable to create secure client");
-    return;
-  }
-  client->setCACert((char *)root_ca_pem_start);
+  if (scenario < 3) {
+    String url;
+    if (scenario == 0) {
+      url = "http://v4v6.ipv6-test.com/api/myip.php";
+    } else if (scenario == 1) {
+      url = "http://v6.ipv6-test.com/api/myip.php";
+    } else {
+      url = "http://v4.ipv6-test.com/api/myip.php";
+    }
 
-  HTTPClient http;
-  bool success = http.begin(*client, "https://v4v6.ipv6-test.com/api/myip.php");
-  if (!success) {
-    logger->error("Unable to begin HTTP");
-    delete client;
-    return;
-  }
+    logger->information("URL: %s", url.c_str());
 
-  int httpCode = http.GET();
-  if (httpCode != HTTP_CODE_OK && httpCode != HTTP_CODE_MOVED_PERMANENTLY) {
-    logger->error("HTTP GET error %d: %s", httpCode, http.errorToString(httpCode).c_str());
-    delete client;
-    return;
-  }
+    HTTPClient http;
+    bool success = http.begin(url);
+    if (!success) {
+      logger->error("Unable to begin HTTP");
+      return;
+    }
 
-  String payload = http.getString();
-  logger->information("v4v6.ipv6-test.com=<%s>", payload.c_str());
-  if (payload.indexOf(":") >= 0) {
-    logger->success();
+    int httpCode = http.GET();
+    if (httpCode != HTTP_CODE_OK && httpCode != HTTP_CODE_MOVED_PERMANENTLY) {
+      logger->error("HTTP GET error %d: %s", httpCode, http.errorToString(httpCode).c_str());
+      return;
+    }
+
+    String payload = http.getString();
+    logger->information("response=<%s>", payload.c_str());
+    if (payload.indexOf(":") >= 0) {
+      logger->success();
+    } else {
+      logger->warning();
+    }
+
   } else {
-    logger->warning();
+    String url = "https://v4v6.ipv6-test.com/api/myip.php";
+    logger->information("TLS URL: %s", url.c_str());
+
+    WiFiClientSecure *client = new WiFiClientSecure;
+    if (!client) {
+      logger->error("Unable to create secure client");
+      return;
+    }
+    client->setCACert((char *)root_ca_pem_start);
+
+    HTTPClient http;
+    bool success = http.begin(*client, url);
+    if (!success) {
+      logger->error("Unable to begin HTTP");
+      delete client;
+      return;
+    }
+
+    int httpCode = http.GET();
+    if (httpCode != HTTP_CODE_OK && httpCode != HTTP_CODE_MOVED_PERMANENTLY) {
+      logger->error("HTTP GET error %d: %s", httpCode, http.errorToString(httpCode).c_str());
+      delete client;
+      return;
+    }
+
+    String payload = http.getString();
+    logger->information("response=<%s>", payload.c_str());
+    if (payload.indexOf(":") >= 0) {
+      logger->success();
+    } else {
+      logger->warning();
+    }
+    delete client;
   }
-  delete client;
 }
 
 void setup() {
