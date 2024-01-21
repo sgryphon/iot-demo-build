@@ -1,5 +1,5 @@
 #include "StartNetwork.h"
-#include <M5Core2.h>
+#include <M5Unified.h>
 #include <WiFi.h>
 #include "DemoConsole.h"
 #include "esp_log.h"
@@ -45,32 +45,32 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info){
         case ARDUINO_EVENT_WIFI_AP_START:
             //can set ap hostname here
             WiFi.softAPsetHostname(AP_SSID);
-            //enable ap ipv6 here
-            WiFi.softAPenableIpV6();
             break;
-
         case ARDUINO_EVENT_WIFI_STA_START:
             //set sta hostname here
             WiFi.setHostname(AP_SSID);
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-            //enable sta ipv6 here
-            // NOTE: Need a short delay (e.g. printing a message, or explicit delay)
-            ESP_LOGD(TAG, "WIFI_STA_CONNECTED: enabling IPv6");
+            ESP_LOGD(TAG, "WIFI_STA_CONNECTED");
             delay(100);
-            WiFi.enableIpV6();
 #ifdef START_NETWORK_MD5_LCD
-            DemoConsole.print("STA_CONNECTED, ** enable IPv6 **\n");
+            DemoConsole.print("STA_CONNECTED\n");
 #endif
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-            //char ipv6[40];
-            //snprintf(ipv6, sizeof(ipv6), IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
+#ifdef START_NETWORK_MD5_LCD
+            DemoConsole.print("STA local IPv6: ");
+            DemoConsole.print(WiFi.localIPv6());
+            DemoConsole.print("\n");
+            DemoConsole.print("STA global IPv6: ");
+            DemoConsole.print(WiFi.globalIPv6());
+            DemoConsole.print("\n");
+#endif
+            // Details from info event
             ESP_LOGD(TAG, "WIFI STA_GOT_IP6: " IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
 #ifdef START_NETWORK_MD5_LCD
             DemoConsole.print("STA IPv6: ");
             DemoConsole.writeMessage(IPV6STR, IPV62STR(info.got_ip6.ip6_info.ip));
-            //M5.Lcd.print(WiFi.localIPv6());
             DemoConsole.print("\n");
 #endif
             break;
@@ -101,9 +101,10 @@ void StartNetworkClass::begin(const char* ssid, const char* password)
   wifi_password = password;
   WiFi.disconnect(true);
   WiFi.onEvent(wifiOnEvent);
-  //WiFi.mode(WIFI_MODE_APSTA);
-  //WiFi.softAP(AP_SSID);
-  //WiFi.begin(STA_SSID, STA_PASS);
+  // WiFi.mode(WIFI_MODE_APSTA);
+  // WiFi.softAPenableIPv6();
+  // WiFi.softAP(AP_SSID);
+  WiFi.enableIPv6();
   WiFi.begin(wifi_ssid, wifi_password);
 };
 
@@ -114,34 +115,6 @@ const char * StartNetworkClass::eui64() {
   // 0<3>3467 fffe 9acdf0
   snprintf(eui64_buffer, sizeof(eui64_buffer), "%02x%02x%02xfffe%02x%02x%02x", mac[0] ^ 2, mac[1], mac[2], mac[3], mac[4], mac[5]);
   return eui64_buffer;
-}
-
-IPv6Address StartNetworkClass::globalIPv6(){
-	esp_ip6_addr_t addr;
-  if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-    return IPv6Address();
-  }
-  if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
-    return IPv6Address();
-  }
-  // Have global IPv6 address, so consider the network connected
-  wifi_connected = true;
-  return IPv6Address(addr.addr);
-}
-
-String StartNetworkClass::mainDnsIP(){
-	esp_netif_dns_info_t dns;
-  if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-    return "";
-  }
-  if(esp_netif_get_dns_info(get_esp_interface_netif(ESP_IF_WIFI_STA), ESP_NETIF_DNS_MAIN, &dns)) {
-    return "ERROR";
-  }
-  if(dns.ip.type == ESP_IPADDR_TYPE_V6) {
-    return IPv6Address(dns.ip.u_addr.ip6.addr).toString();
-  } else {
-    return IPAddress(dns.ip.u_addr.ip4.addr).toString();
-  }
 }
 
 bool StartNetworkClass::wifiConnected()

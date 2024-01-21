@@ -102,14 +102,14 @@ You then need to go to PlatformIO > Libraries and install the M5Core2 library fr
 Or from the CLI:
 
 ```shell
-pio pkg install --library M5Core2
+pio pkg install --library M5Unified
 ```
 
 You then need to create a `src/main.cpp` file (if using the IDE new project a file may already have been created) with a simple Hello World example:
 
 ```cpp
 #include <Arduino.h>
-#include <M5Core2.h>
+#include <M5Unified.h>
 
 void setup() {
   M5.begin();
@@ -135,6 +135,22 @@ pio run --target upload
 In Git you can see the changes to the libraries and configuration changes that you have made. Slightly more complicated than the Arduino IDE as there are ~5 project files (instead of one) and a few extra directories and instructions. This is to support different libraries per project, as well as multi-board targetting, and other features.
 
 ![M5Stack Core2 Hello](pics/m5core2-hello.jpg)
+
+#### Running with latest Arduino ESP32 alpha 3.0.0
+
+Configure the project to use the Arduino ESP32 alpha 3.0.0 by replacing the platform section in platform.ini with the following.
+
+Note that currently this requires a small patch to platform-espressif32 to work, and the reference below is to a platform pull request branch for this fix.
+
+```
+platform = https://github.com/sgryphon/platform-espressif32.git#sgryphon/add-esp32-arduino-libs
+platform_packages =
+    platformio/framework-arduinoespressif32 @ https://github.com/sgryphon/arduino-esp32.git#sgryphon/fix-9133-ledc-missing-include
+    platformio/framework-arduinoespressif32-libs @ https://github.com/espressif/esp32-arduino-libs.git#idf-release/v5.1
+```
+
+There is currently also an error in Arudino ESP32 which then fails compilation in the LEDC component due to a missing include. The platform package also points to a pull request branch with the required fix.
+
 
 ### Logging
 
