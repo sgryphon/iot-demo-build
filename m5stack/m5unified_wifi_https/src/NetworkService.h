@@ -1,12 +1,12 @@
-#ifndef NetworkManager_h
-#define NetworkManager_h
+#ifndef NetworkService_h
+#define NetworkService_h
 
 #include "EventLogger.h"
 
-class NetworkManager
+class NetworkService
 {
 public:
-  NetworkManager();
+  NetworkService();
   virtual void begin();
   virtual bool isConnected();
   virtual void loop();

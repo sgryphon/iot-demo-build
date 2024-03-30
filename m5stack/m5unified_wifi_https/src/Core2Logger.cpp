@@ -64,7 +64,7 @@ void printHeader() {
   IPAddress ipv6Address = WiFi.globalIPv6();
   bool hasGlobalIpv6 = ipv6Address != IN6ADDR_ANY;
   if (!hasGlobalIpv6) {
-    ipv6Address = WiFi.localIPv6();
+    ipv6Address = WiFi.linkLocalIPv6();
   }
 
   uint16_t headerColor;

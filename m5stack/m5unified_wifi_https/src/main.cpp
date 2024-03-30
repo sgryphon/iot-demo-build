@@ -1,7 +1,8 @@
 #include "Core2Logger.h"
-#include "WiFiNetworkManager.h"
+#include "WiFiNetworkService.h"
 
 #include <HTTPClient.h>
+#include <NetworkClientSecure.h>
 #include <WiFi.h>
 #include <M5Unified.h>
 
@@ -13,7 +14,7 @@ int16_t count = 0;
 //EventLogger *logger = new EventLogger();
 //EventLogger *logger = new AtomLogger();
 EventLogger *logger = new Core2Logger();
-WiFiNetworkManager *network = nullptr;
+WiFiNetworkService *network = nullptr;
 extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
 extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
 const char *version = STR(PIO_VERSION);
@@ -24,13 +25,10 @@ void testNetwork() {
   int scenario = (count - 1) % 5;
   logger->information("Button %d, scenario %d, v%s", count, scenario, version);
 
-  // Naming here is wonky:
-  // localIP() is the local IPv4 address (as opposed to remote IPv4 address)
-  // globalIPv6() is the first local IPv6 address of category global
-  // localIPv6() is the local IPv6 address of category link-local
   logger->information("Global IPv6 %s", WiFi.globalIPv6().toString().c_str());
   logger->information("IPv4 %s", WiFi.localIP().toString().c_str());
-  logger->information("Link-Local IPv6 %s", WiFi.localIPv6().toString(true).c_str());
+  logger->information("Link-Local IPv6 %s", WiFi.linkLocalIPv6().toString(true).c_str());
+  WiFi.STA.printTo(Serial);
 
   for (int dns_index = 0; dns_index < 2; ++dns_index) {
     logger->information("DNS%d %s", dns_index, WiFi.dnsIP(dns_index).toString().c_str());
@@ -73,7 +71,7 @@ void testNetwork() {
     String url = "https://v4v6.ipv6-test.com/api/myip.php";
     logger->information("TLS URL: %s", url.c_str());
 
-    WiFiClientSecure *client = new WiFiClientSecure;
+    NetworkClientSecure *client = new NetworkClientSecure;
     if (!client) {
       logger->error("Unable to create secure client");
       return;
@@ -112,7 +110,7 @@ void setup() {
   logger->begin();
   logger->information("M5 started, v%s", version);
 
-  WiFiNetworkManager *wiFiNetwork = new WiFiNetworkManager();
+  WiFiNetworkService *wiFiNetwork = new WiFiNetworkService();
   wiFiNetwork->setEventLogger(logger);
   wiFiNetwork->setCredentials(ap_password, wifi_ssid, wifi_password);
   network = wiFiNetwork;
