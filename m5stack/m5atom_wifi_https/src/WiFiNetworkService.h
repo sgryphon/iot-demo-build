@@ -1,14 +1,14 @@
-#ifndef WiFiNetworkManager_h
-#define WiFiNetworkManager_h
+#ifndef WiFiNetworkService_h
+#define WiFiNetworkService_h
 
-#include "NetworkManager.h"
+#include "NetworkService.h"
 
 #include <WiFi.h>
 
-class WiFiNetworkManager : public NetworkManager
+class WiFiNetworkService : public NetworkService
 {
 public:
-  WiFiNetworkManager();
+  WiFiNetworkService();
   virtual void begin();
   const char * eui64();
   IPv6Address globalIPv6();

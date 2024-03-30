@@ -1,4 +1,4 @@
-#include "WiFiNetworkManager.h"
+#include "WiFiNetworkService.h"
 
 #include <WiFi.h>
 #include <Arduino.h>
@@ -72,17 +72,17 @@ void wifiOnEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   }
 }
 
-WiFiNetworkManager::WiFiNetworkManager() {
+WiFiNetworkService::WiFiNetworkService() {
 }
 
-void WiFiNetworkManager::begin() {
+void WiFiNetworkService::begin() {
   _logger->information("Begin WiFi Network Manager, SSID: <%s>", ssid_);
   //ESP_LOGV(TAG, "WiFi password <%s>", password_);
   _logger->pending();
   WiFi.onEvent(wifiOnEvent);
 }
 
-const char * WiFiNetworkManager::eui64() {
+const char * WiFiNetworkService::eui64() {
   uint8_t mac[6];
   WiFi.macAddress(mac);
   // 01:34:67:9A:CD:F0
@@ -91,7 +91,7 @@ const char * WiFiNetworkManager::eui64() {
   return eui64_buffer;
 }
 
-IPv6Address WiFiNetworkManager::globalIPv6(){
+IPv6Address WiFiNetworkService::globalIPv6(){
 	esp_ip6_addr_t addr;
   if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
     return IPv6Address();
@@ -102,9 +102,9 @@ IPv6Address WiFiNetworkManager::globalIPv6(){
   return IPv6Address(addr.addr);
 }
 
-bool WiFiNetworkManager::isConnected() { return status_ == CONNECTED; }
+bool WiFiNetworkService::isConnected() { return status_ == CONNECTED; }
 
-void WiFiNetworkManager::loop() {
+void WiFiNetworkService::loop() {
   if (status_ == NOT_CONNECTED) {
     unsigned long now = millis();
     if (now > retry_at_millis) {
@@ -134,7 +134,7 @@ void WiFiNetworkManager::loop() {
   }
 }
 
-String WiFiNetworkManager::mainDnsIP(){
+String WiFiNetworkService::mainDnsIP(){
 	esp_netif_dns_info_t dns;
   if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
     return "";
@@ -149,12 +149,12 @@ String WiFiNetworkManager::mainDnsIP(){
   }
 }
 
-void WiFiNetworkManager::setCredentials(const char *ap_password, const char *ssid, const char *password) {
+void WiFiNetworkService::setCredentials(const char *ap_password, const char *ssid, const char *password) {
     ap_password_ = ap_password;
     ssid_ = ssid;
     password_ = password;
 }
 
-void WiFiNetworkManager::setEventLogger(EventLogger *eventLogger) {
+void WiFiNetworkService::setEventLogger(EventLogger *eventLogger) {
     _logger = eventLogger;
 }

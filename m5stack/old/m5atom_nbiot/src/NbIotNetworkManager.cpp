@@ -1,4 +1,4 @@
-#include "NbIotNetworkManager.h"
+#include "NbIotNetworkService.h"
 
 #include <TinyGsmClient.h>
 #include <Arduino.h>
@@ -37,10 +37,10 @@ void nbConnect(void) {
   _network_logger->success();
 }
 
-NbIotNetworkManager::NbIotNetworkManager() {
+NbIotNetworkService::NbIotNetworkService() {
 }
 
-void NbIotNetworkManager::begin() {
+void NbIotNetworkService::begin() {
   _network_logger->information("Begin NB-IoT Network Manager, APN: <%s>", _apn);
   _network_logger->pending();
 
@@ -49,19 +49,19 @@ void NbIotNetworkManager::begin() {
   nbConnect();
 }
 
-Client *NbIotNetworkManager::createClient() {
+Client *NbIotNetworkService::createClient() {
   TinyGsmClient *tcp_client = new TinyGsmClient(modem);
   return tcp_client;
   //return tcpClient;
 }
 
-Client *NbIotNetworkManager::createSecureClient(const char *rootCA) {
+Client *NbIotNetworkService::createSecureClient(const char *rootCA) {
   return nullptr;
 }
 
-bool NbIotNetworkManager::isConnected() { return _status == CONNECTED; }
+bool NbIotNetworkService::isConnected() { return _status == CONNECTED; }
 
-void NbIotNetworkManager::loop() {
+void NbIotNetworkService::loop() {
   if (_status == NOT_CONNECTED) {
     unsigned long now = millis();
     if (now > _retry_at_millis) {
@@ -70,10 +70,10 @@ void NbIotNetworkManager::loop() {
   }
 }
 
-void NbIotNetworkManager::setApn(const char *apn) {
+void NbIotNetworkService::setApn(const char *apn) {
   strcpy(_apn, apn);
 }
 
-void NbIotNetworkManager::setEventLogger(EventLogger *eventLogger) {
+void NbIotNetworkService::setEventLogger(EventLogger *eventLogger) {
     _network_logger = eventLogger;
 }

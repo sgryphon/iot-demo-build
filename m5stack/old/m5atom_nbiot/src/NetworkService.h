@@ -1,14 +1,14 @@
-#ifndef NetworkManager_h
-#define NetworkManager_h
+#ifndef NetworkService_h
+#define NetworkService_h
 
 #include "EventLogger.h"
 
 #include <Client.h>
 
-class NetworkManager
+class NetworkService
 {
 public:
-  NetworkManager();
+  NetworkService();
   virtual Client *createClient();
   virtual Client *createSecureClient(const char *rootCA);
   virtual void begin();
