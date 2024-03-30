@@ -97,7 +97,7 @@ git add .
 git commit -m "Initial PlatformIO M5Core2 empty project"
 ```
 
-You then need to go to PlatformIO > Libraries and install the M5Core2 library from M5Stack.
+You then need to go to PlatformIO > Libraries and install the M5Unified library from M5Stack.
 
 Or from the CLI:
 
@@ -144,13 +144,17 @@ Note that currently this requires a small patch to platform-espressif32 to work,
 
 ```
 platform = https://github.com/sgryphon/platform-espressif32.git#sgryphon/add-esp32-arduino-libs
-platform_packages =
-    platformio/framework-arduinoespressif32 @ https://github.com/sgryphon/arduino-esp32.git#sgryphon/fix-9133-ledc-missing-include
+platform_packages = 
+    platformio/framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32.git
     platformio/framework-arduinoespressif32-libs @ https://github.com/espressif/esp32-arduino-libs.git#idf-release/v5.1
 ```
 
-There is currently also an error in Arudino ESP32 which then fails compilation in the LEDC component due to a missing include. The platform package also points to a pull request branch with the required fix.
+You can also point to a custom branch of the arduino-esp32 project if needed:
 
+```
+platform_packages =
+    platformio/framework-arduinoespressif32 @ https://github.com/sgryphon/arduino-esp32.git#sgryphon/fix-9133-ledc-missing-include
+```
 
 ### Logging
 
@@ -195,9 +199,9 @@ Also of relevance: https://cpp4arduino.com/2020/02/07/how-to-format-strings-with
 
 ### Wifi
 
-`m5core2_wifi` has a WiFi example that includes IPv6.
+`m5unified_wifi_https` has a WiFi example that includes several scenarios, including IPv6.
 
-You need to set your wifi name and password as environment variables to run:
+You need to set your wifi name and password as environment variables to run. This allows you to test on different networks (e.g. dual-stack, IPv4-only, IPv6-only with NAT64, etc):
 
 ```
 export PIO_WIFI_SSID="YourWifiName"
@@ -207,7 +211,15 @@ export PIO_WIFI_PASSWORD="YourWifiPassword"
 pio device monitor --baud 115200
 ```
 
-Example output:
+The example shows a banner at the top with the time and date, version, and the IPv6 (public, if available) and IPv4 addresses. Each button press runs a different scenario, in sequence:
+
+* Scenario 0: HTTP to dual-stack destination
+* Scenario 1: HTTP to IPv6-only destination
+* Scenario 2: HTTP to IPv4-only destination
+* Scenario 3: HTTPS/TLS to dual-stack destination
+* Scenario 4: test the error handling works
+
+Example output (old):
 
 ![M5Stack Core2 WiFi testing of HTTPS, with IPv6 failure](pics/core2-wifi-screens.png)
 

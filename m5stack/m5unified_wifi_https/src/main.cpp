@@ -21,7 +21,7 @@ const char *wifi_password = STR(PIO_WIFI_PASSWORD);
 const char *wifi_ssid = STR(PIO_WIFI_SSID);
 
 void testNetwork() {
-  int scenario = (count - 1) % 4;
+  int scenario = (count - 1) % 5;
   logger->information("Button %d, scenario %d, v%s", count, scenario, version);
 
   // Naming here is wonky:
