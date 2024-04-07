@@ -542,23 +542,23 @@ ESP-IDF (5.1) @ d23b7a036125728d0c99842670a0522694623dbd
 
 * Base ESP-IDF
 * https://github.com/espressif/esp-idf/tree/release/v5.1
+* LWIP @ f7922143
 
 
 ESP32-ARDUINO-LIB-BUILDER @ e1e13da14fd631d36bd080fdf96b445b76d49d0e **merged**
 
 * https://github.com/espressif/esp32-arduino-lib-builder
 * git clone https://github.com/sgryphon/esp32-arduino-lib-builder.git
-
+* components/arduino branch is `idf-release/v5.1`
 
 ESP32-ARDUINO-LIBS @ 8245583fefbc58dc9cb40409957bc38646798c56 **pending**
 
-* https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-config
+* Custom: https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-config
 * Copy built libraries to here
-
 
 ARDUINO-ESP32 @ 3ac49e92f73c02c32811d566531472fde65a2104
 
-* https://github.com/sgryphon/arduino-esp32/tree/sgryphon/dns-ipv6-check-first-if-have-addr
+* Custom: https://github.com/sgryphon/arduino-esp32/tree/sgryphon/dns-ipv6-check-first-if-have-addr
 
 
 
@@ -568,33 +568,29 @@ ESP-LWIP @ fd387d8f279c0c845b0011335ce7ddbe0d27591d
 
 * https://github.com/sgryphon/esp-lwip/tree/sgryphon/dns-dynamic-sort-rfc6724
 
-
 ESP-IDF (5.1) @ e209ebc9b6350675f3db0c6be7cbb2a5dfce6bcc
 
 * References above ESP-LWIP branch
-* https://github.com/sgryphon/esp-idf/tree/sgryphon/fix-dns-sort-ipv6-only-network-5-1
-
+* https://github.com/sgryphon/esp-idf/tree/sgryphon/v5.1/fix-dns-sort-ipv6-only-network
 
 ESP32-ARDUINO-LIB-BUILDER @ c6c22f4339d3560175fe1acde3012e951737ed1c
 
 * https://github.com/sgryphon/esp32-arduino-lib-builder/tree/sgryphon/test-fix-lwip
-* Cloned, then checkout the fix branch
-* In tools/config.sh, hard code
-  * IDF_BRANCH="sgryphon/fix-dns-sort-ipv6-only-network-5-1"
-  * IDF_REPO="sgryphon/esp-idf"
+* Cloned, then checkout the fix branch:
+  * In configs/defconfig.common
+    * Enable CONFIG_LWIP_DNS_DYNAMIC_SORT=y
+  * In tools/config.sh, hard code
+    * IDF_BRANCH="sgryphon/fix-dns-sort-ipv6-only-network-5-1"
+    * IDF_REPO="sgryphon/esp-idf"
+    * AR_PR_TARGET_BRANCH="idf-release/v5.1"
 * Save changes, e.g. to sgryphon/test-fix-lwip
+* Add remotes to esp-idf and lwip, and get the LWIP fix branches (may need to build first to create repos)
 * Build from this (./build.sh)
 
-Notes:
-* Building normally first, then trying to change, ended up with BlueTooth error
-* Also build the config fix branch without the LWIP fix
+ESP32-ARDUINO-LIBS @ 8f1d171b39c334992a616f28fdeab6fa25eed442
 
-
-ESP32-ARDUINO-LIBS @ 
-
-* https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-lwip-and-config
+* Custom: https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-lwip-and-config
 * Copy built libraries to here
-
 
 ARDUINO-ESP32 @ dcc307665f56d4b92a773f5ef1cde0160bbfbaa5 **merged**
 
