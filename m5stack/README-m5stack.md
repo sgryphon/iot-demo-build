@@ -585,6 +585,7 @@ ESP32-ARDUINO-LIB-BUILDER @ c6c22f4339d3560175fe1acde3012e951737ed1c
     * AR_PR_TARGET_BRANCH="idf-release/v5.1"
 * Save changes, e.g. to sgryphon/test-fix-lwip
 * Add remotes to esp-idf and lwip, and get the LWIP fix branches (may need to build first to create repos)
+* Also need to ensure the ESP-IDF branch (above) contains a parseable version number, e.g. "v5.1", otherwise the build does not complete.
 * Build from this (./build.sh)
 
 ESP32-ARDUINO-LIBS @ 8f1d171b39c334992a616f28fdeab6fa25eed442
