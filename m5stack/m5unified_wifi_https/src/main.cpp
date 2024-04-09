@@ -21,31 +21,31 @@ const char *version = STR(PIO_VERSION);
 const char *wifi_password = STR(PIO_WIFI_PASSWORD);
 const char *wifi_ssid = STR(PIO_WIFI_SSID);
 
-void testNetwork() {
-  int scenario = (count - 1) % 5;
-  logger->information("Button %d, scenario %d, v%s", count, scenario, version);
+const String destinations[] = {
+  "http://v4v6.ipv6-test.com/api/myip.php",
+  "http://v6.ipv6-test.com/api/myip.php",
+  "http://v4.ipv6-test.com/api/myip.php",
+  "https://v4v6.ipv6-test.com/api/myip.php",
+  "https://v6.ipv6-test.com/api/myip.php",
+  "https://v4.ipv6-test.com/api/myip.php",
+};
+const int destinations_length = sizeof(destinations) / sizeof(destinations[0]);
 
+void testNetwork() {
+  int scenario = (count - 1) % (destinations_length + 1);
+  logger->information("Button %d, scenario %d, v%s", count, scenario, version);
   logger->information("Global IPv6 %s", WiFi.globalIPv6().toString().c_str());
   logger->information("IPv4 %s", WiFi.localIP().toString().c_str());
-  logger->information("Link-Local IPv6 %s", WiFi.linkLocalIPv6().toString(true).c_str());
   WiFi.STA.printTo(Serial);
 
   for (int dns_index = 0; dns_index < 2; ++dns_index) {
     logger->information("DNS%d %s", dns_index, WiFi.dnsIP(dns_index).toString().c_str());
   }
 
-  if (scenario < 3) {
-    String url;
-    if (scenario == 0) {
-      url = "http://v4v6.ipv6-test.com/api/myip.php";
-    } else if (scenario == 1) {
-      url = "http://v6.ipv6-test.com/api/myip.php";
-    } else {
-      url = "http://v4.ipv6-test.com/api/myip.php";
-    }
+  String url = destinations[scenario];
 
+  if (url.startsWith("http://")) {
     logger->information("URL: %s", url.c_str());
-
     HTTPClient http;
     bool success = http.begin(url);
     if (!success) {
@@ -67,8 +67,7 @@ void testNetwork() {
       logger->warning();
     }
 
-  } else {
-    String url = "https://v4v6.ipv6-test.com/api/myip.php";
+  } else { // HTTPS
     logger->information("TLS URL: %s", url.c_str());
 
     NetworkClientSecure *client = new NetworkClientSecure;
@@ -123,8 +122,9 @@ void loop() {
   network->loop();
   if (M5.BtnA.wasPressed()) {
     ++count;
-    if (count % 5 == 0) {
-      logger->error("Too many button presses");
+    int scenario = (count - 1) % (destinations_length + 1);
+    if (scenario == destinations_length) {
+      logger->error("Test error - max scenarios reached");
       return;
     }
     testNetwork();
