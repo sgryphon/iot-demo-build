@@ -608,3 +608,9 @@ ESP-IDF @ 83335fe61c24f237e11439584541e046e1459c92
 
 * References above ESP-LWIP branch
 * https://github.com/sgryphon/esp-idf/tree/sgryphon/fix-dns-sort-ipv6-only-network
+
+
+
+
+Tested with M5Stack Core 2, using the following PlatformIO configuration and the test app from https://github.com/sgryphon/iot-demo-build/tree/main/m5stack/m5unified_wifi_https
+
