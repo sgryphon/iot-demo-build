@@ -536,33 +536,7 @@ core2_azure_factory
 IPv6 fixes
 ==========
 
-(1) Check IPv6 first
-
-ESP-IDF (5.1) @ d23b7a036125728d0c99842670a0522694623dbd
-
-* Base ESP-IDF
-* https://github.com/espressif/esp-idf/tree/release/v5.1
-* LWIP @ f7922143
-
-
-ESP32-ARDUINO-LIB-BUILDER @ e1e13da14fd631d36bd080fdf96b445b76d49d0e **merged**
-
-* https://github.com/espressif/esp32-arduino-lib-builder
-* git clone https://github.com/sgryphon/esp32-arduino-lib-builder.git
-* components/arduino branch is `idf-release/v5.1`
-
-ESP32-ARDUINO-LIBS @ 8245583fefbc58dc9cb40409957bc38646798c56 **pending**
-
-* Custom: https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-config
-* Copy built libraries to here
-
-ARDUINO-ESP32 @ 3ac49e92f73c02c32811d566531472fde65a2104
-
-* Custom: https://github.com/sgryphon/arduino-esp32/tree/sgryphon/dns-ipv6-check-first-if-have-addr
-
-
-
-(2) LWIP fix
+## LWIP fix
 
 ESP-LWIP @ fd387d8f279c0c845b0011335ce7ddbe0d27591d
 
@@ -592,11 +566,6 @@ ESP32-ARDUINO-LIBS @ 8f1d171b39c334992a616f28fdeab6fa25eed442
 
 * Custom: https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-lwip-and-config
 * Copy built libraries to here
-
-ARDUINO-ESP32 @ dcc307665f56d4b92a773f5ef1cde0160bbfbaa5 **merged**
-
-* https://github.com/espressif/arduino-esp32
-* Change DNS to use getaddrinfo(), remove preferV6
 
 
 Related
