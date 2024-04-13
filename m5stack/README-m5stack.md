@@ -533,4 +533,53 @@ core2_nbiot_simfactory
 
 core2_azure_factory
 
+IPv6 fixes
+==========
+
+## LWIP fix
+
+ESP-LWIP @ fd387d8f279c0c845b0011335ce7ddbe0d27591d
+
+* https://github.com/sgryphon/esp-lwip/tree/sgryphon/dns-dynamic-sort-rfc6724
+
+ESP-IDF (5.1) @ e209ebc9b6350675f3db0c6be7cbb2a5dfce6bcc
+
+* References above ESP-LWIP branch
+* https://github.com/sgryphon/esp-idf/tree/sgryphon/v5.1/fix-dns-sort-ipv6-only-network
+
+ESP32-ARDUINO-LIB-BUILDER @ c6c22f4339d3560175fe1acde3012e951737ed1c
+
+* https://github.com/sgryphon/esp32-arduino-lib-builder/tree/sgryphon/test-fix-lwip
+* Cloned, then checkout the fix branch:
+  * In configs/defconfig.common
+    * Enable CONFIG_LWIP_DNS_DYNAMIC_SORT=y
+  * In tools/config.sh, hard code
+    * IDF_BRANCH="sgryphon/fix-dns-sort-ipv6-only-network-5-1"
+    * IDF_REPO="sgryphon/esp-idf"
+    * AR_PR_TARGET_BRANCH="idf-release/v5.1"
+* Save changes, e.g. to sgryphon/test-fix-lwip
+* Add remotes to esp-idf and lwip, and get the LWIP fix branches (may need to build first to create repos)
+* Also need to ensure the ESP-IDF branch (above) contains a parseable version number, e.g. "v5.1", otherwise the build does not complete.
+* Build from this (./build.sh)
+
+ESP32-ARDUINO-LIBS @ 8f1d171b39c334992a616f28fdeab6fa25eed442
+
+* Custom: https://github.com/sgryphon/esp32-arduino-libs/tree/sgryphon/test-fix-ipv6-lwip-and-config
+* Copy built libraries to here
+
+
+Related
+-------
+
+Alternative LWIP fix (on ESP-IDF main branch)
+
+ESP-IDF @ 83335fe61c24f237e11439584541e046e1459c92
+
+* References above ESP-LWIP branch
+* https://github.com/sgryphon/esp-idf/tree/sgryphon/fix-dns-sort-ipv6-only-network
+
+
+
+
+Tested with M5Stack Core 2, using the following PlatformIO configuration and the test app from https://github.com/sgryphon/iot-demo-build/tree/main/m5stack/m5unified_wifi_https
 

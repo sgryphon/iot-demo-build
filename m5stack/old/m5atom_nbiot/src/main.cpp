@@ -1,5 +1,5 @@
 #include "AtomLogger.h"
-#include "NbIotNetworkManager.h"
+#include "NbIotNetworkService.h"
 
 #include <M5Atom.h>
 #include <ArduinoHttpClient.h>
@@ -10,7 +10,7 @@
 int16_t _count = 0;
 EventLogger *_logger = new AtomLogger();
 const char *_nbiot_apn = STR(PIO_NBIOT_APN);
-NbIotNetworkManager *_network = nullptr;
+NbIotNetworkService *_network = nullptr;
 extern const uint8_t _root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
 extern const uint8_t _root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
 const char *_version = STR(PIO_VERSION);
@@ -67,7 +67,7 @@ void setup() {
   _logger->begin();
   _logger->information("Atom started, v%s", _version);
 
-  NbIotNetworkManager *nb_iot_network = new NbIotNetworkManager();
+  NbIotNetworkService *nb_iot_network = new NbIotNetworkService();
   nb_iot_network->setEventLogger(_logger);
   nb_iot_network->setApn(_nbiot_apn);
   _network = nb_iot_network;

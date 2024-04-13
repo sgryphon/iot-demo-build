@@ -1,7 +1,8 @@
 #include "Core2Logger.h"
-#include "WiFiNetworkManager.h"
+#include "WiFiNetworkService.h"
 
 #include <HTTPClient.h>
+#include <NetworkClientSecure.h>
 #include <WiFi.h>
 #include <M5Unified.h>
 
@@ -13,41 +14,38 @@ int16_t count = 0;
 //EventLogger *logger = new EventLogger();
 //EventLogger *logger = new AtomLogger();
 EventLogger *logger = new Core2Logger();
-WiFiNetworkManager *network = nullptr;
+WiFiNetworkService *network = nullptr;
 extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
 extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
 const char *version = STR(PIO_VERSION);
 const char *wifi_password = STR(PIO_WIFI_PASSWORD);
 const char *wifi_ssid = STR(PIO_WIFI_SSID);
 
-void testNetwork() {
-  int scenario = (count - 1) % 5;
-  logger->information("Button %d, scenario %d, v%s", count, scenario, version);
+const String destinations[] = {
+  "http://v4v6.ipv6-test.com/api/myip.php",
+  "http://v6.ipv6-test.com/api/myip.php",
+  "http://v4.ipv6-test.com/api/myip.php",
+  "https://v4v6.ipv6-test.com/api/myip.php",
+  "https://v6.ipv6-test.com/api/myip.php",
+  "https://v4.ipv6-test.com/api/myip.php",
+};
+const int destinations_length = sizeof(destinations) / sizeof(destinations[0]);
 
-  // Naming here is wonky:
-  // localIP() is the local IPv4 address (as opposed to remote IPv4 address)
-  // globalIPv6() is the first local IPv6 address of category global
-  // localIPv6() is the local IPv6 address of category link-local
+void testNetwork() {
+  int scenario = (count - 1) % (destinations_length + 1);
+  logger->information("Button %d, scenario %d, v%s", count, scenario, version);
   logger->information("Global IPv6 %s", WiFi.globalIPv6().toString().c_str());
   logger->information("IPv4 %s", WiFi.localIP().toString().c_str());
-  logger->information("Link-Local IPv6 %s", WiFi.localIPv6().toString(true).c_str());
+  WiFi.STA.printTo(Serial);
 
   for (int dns_index = 0; dns_index < 2; ++dns_index) {
     logger->information("DNS%d %s", dns_index, WiFi.dnsIP(dns_index).toString().c_str());
   }
 
-  if (scenario < 3) {
-    String url;
-    if (scenario == 0) {
-      url = "http://v4v6.ipv6-test.com/api/myip.php";
-    } else if (scenario == 1) {
-      url = "http://v6.ipv6-test.com/api/myip.php";
-    } else {
-      url = "http://v4.ipv6-test.com/api/myip.php";
-    }
+  String url = destinations[scenario];
 
+  if (url.startsWith("http://")) {
     logger->information("URL: %s", url.c_str());
-
     HTTPClient http;
     bool success = http.begin(url);
     if (!success) {
@@ -69,11 +67,10 @@ void testNetwork() {
       logger->warning();
     }
 
-  } else {
-    String url = "https://v4v6.ipv6-test.com/api/myip.php";
+  } else { // HTTPS
     logger->information("TLS URL: %s", url.c_str());
 
-    WiFiClientSecure *client = new WiFiClientSecure;
+    NetworkClientSecure *client = new NetworkClientSecure;
     if (!client) {
       logger->error("Unable to create secure client");
       return;
@@ -112,7 +109,7 @@ void setup() {
   logger->begin();
   logger->information("M5 started, v%s", version);
 
-  WiFiNetworkManager *wiFiNetwork = new WiFiNetworkManager();
+  WiFiNetworkService *wiFiNetwork = new WiFiNetworkService();
   wiFiNetwork->setEventLogger(logger);
   wiFiNetwork->setCredentials(ap_password, wifi_ssid, wifi_password);
   network = wiFiNetwork;
@@ -125,8 +122,9 @@ void loop() {
   network->loop();
   if (M5.BtnA.wasPressed()) {
     ++count;
-    if (count % 5 == 0) {
-      logger->error("Too many button presses");
+    int scenario = (count - 1) % (destinations_length + 1);
+    if (scenario == destinations_length) {
+      logger->error("Test error - max scenarios reached");
       return;
     }
     testNetwork();

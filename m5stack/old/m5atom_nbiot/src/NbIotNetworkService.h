@@ -1,7 +1,7 @@
-#ifndef NbIotNetworkManager_h
-#define NbIotNetworkManager_h
+#ifndef NbIotNetworkService_h
+#define NbIotNetworkService_h
 
-#include "NetworkManager.h"
+#include "NetworkService.h"
 
 #define TINY_GSM_MODEM_SIM7020
 
@@ -19,10 +19,10 @@
 #define ATOM_DTU_RS485_TX 23
 #define ATOM_DTU_RS485_RX 33
 
-class NbIotNetworkManager : public NetworkManager
+class NbIotNetworkService : public NetworkService
 {
 public:
-  NbIotNetworkManager();
+  NbIotNetworkService();
   virtual void begin();
   virtual Client *createClient();
   virtual Client *createSecureClient(const char *rootCA);

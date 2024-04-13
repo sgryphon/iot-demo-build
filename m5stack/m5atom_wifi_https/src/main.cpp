@@ -1,5 +1,5 @@
 #include "AtomLogger.h"
-#include "WiFiNetworkManager.h"
+#include "WiFiNetworkService.h"
 
 #include <HTTPClient.h>
 #include <WiFi.h>
@@ -12,7 +12,7 @@ const char *ap_password = STR(PIO_AP_PASSWORD);
 int16_t count = 0;
 //EventLogger *logger = new EventLogger();
 EventLogger *logger = new AtomLogger();
-WiFiNetworkManager *network = nullptr;
+WiFiNetworkService *network = nullptr;
 extern const uint8_t root_ca_pem_start[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_start");
 extern const uint8_t root_ca_pem_end[] asm("_binary_src_certs_USERTrust_RSA_Certification_Authority_pem_end");
 const char *version = STR(PIO_VERSION);
@@ -60,7 +60,7 @@ void setup() {
   logger->begin();
   logger->information("Atom started, v%s", version);
 
-  WiFiNetworkManager *wiFiNetwork = new WiFiNetworkManager();
+  WiFiNetworkService *wiFiNetwork = new WiFiNetworkService();
   wiFiNetwork->setEventLogger(logger);
   wiFiNetwork->setCredentials(ap_password, wifi_ssid, wifi_password);
   network = wiFiNetwork;
