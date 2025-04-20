@@ -84,3 +84,25 @@ $aclCommand = @{ node_id = $lightNode; attribute_path = $aclAttribute; value = $
 $aclCommand | ConvertTo-Json -Depth 10
 ./Send-MatterCommand.ps1 -Command write_attribute -CommandArgs $aclCommand -Verbose | ConvertTo-Json -Depth 10
 ```
+
+References
+----------
+
+### Matter Specifications
+
+The Matter Specifications details the ACL and binding behaviour, https://csa-iot.org/all-solutions/matter/
+
+The Matter Core Specification section 6.6 discusses the model for Access Control, and section 9.10 specifies the data format of the Access Control Cluster (31).
+
+The Binding relationship is described in section 9.4, and the Binding Cluster (30) detailed in 9.6.
+
+Note that the Access Control Cluster is always on the root Endpoint 0, while the Binding Cluster applies to the On/Off Switch control Endpoint.
+
+The Matter Device Library Specification details the behaviour of controls in Chapter 6, including the On/Off Light Switch client (0x0103) and Generic Switch server (0x000F) device types, and the encouragement of manufacturers to implement both controls and actuators. Actuators (power relays for switches) are described in Chapter 5, including the On/Off Plug-in Unit device type (0x010A).
+
+Lights, which are the target servers for switch bindings, are described in Chapter 4, including the basic On/Off Light (0x0100) device type.
+
+### Silicon Labs Example
+
+Silicon Labs example, with the two steps (1) update ACL of the light, then (2) update the binding of the switch:
+https://docs.silabs.com/d/matter-thread-getting-started/0.1/03-light-switch-step-by-step-example#controlling-the-light-mad
