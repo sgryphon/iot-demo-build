@@ -47,9 +47,9 @@ $acl | ConvertTo-Json -Depth 10
 
 # Update the ACL by adding a new entry
 # WARNING: Make sure you keep the existing Admin ACL, otherwise you will lose access
-$newAcl = $acl + @{ "1" = 3; "2" = 2; "3" = @( $switchNode ); "4" = $null }
-$newAcl | ConvertTo-Json -Depth 10
+$newAcl = $acl + @{ "1" = 3; "2" = 2; "3" = @( $switchNode ); "4" = @( @{ "1" = $lightEndpoint } ) }
 $aclCommand = @{ node_id = $lightNode; attribute_path = $aclAttribute; value = $newAcl }
+$aclCommand | ConvertTo-Json -Depth 10
 ./Send-MatterCommand.ps1 -Command write_attribute -CommandArgs $aclCommand -Verbose | ConvertTo-Json -Depth 10
 
 # NOTE: You may get a status 135 (0x87 CONSTRAINT_ERROR) response, but it seems to work anyway
@@ -80,7 +80,7 @@ $acl = $aclResponse.result."0/31/0"
 $acl | ConvertTo-Json -Depth 10
 
 $newAcl = $acl | Where-Object { $_."1" -ne 3 }
-$newAcl | ConvertTo-Json -Depth 10
 $aclCommand = @{ node_id = $lightNode; attribute_path = $aclAttribute; value = $newAcl }
+$aclCommand | ConvertTo-Json -Depth 10
 ./Send-MatterCommand.ps1 -Command write_attribute -CommandArgs $aclCommand -Verbose | ConvertTo-Json -Depth 10
 ```
