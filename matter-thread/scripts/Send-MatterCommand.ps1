@@ -76,7 +76,7 @@ param (
 
   # The Python Matter Server to connect to, usually "ws://<server-name>:5580/ws"
   [Alias("s")]
-  [string] $ServerUri = "ws://pi1.lan:5580/ws",
+  [string] $ServerUri = "ws://pi1-lan:5580/ws",
 
   # General timeout (for connect, send, close, etc)
   [int] $TimeoutMilliseconds = 5000,
@@ -106,13 +106,19 @@ $webSocket = New-Object System.Net.WebSockets.ClientWebSocket
 $ct = New-Object System.Threading.CancellationToken
 
 $connection = $webSocket.ConnectAsync($ServerUri, $ct)
-
 while (-not $connection.IsCompleted)
 {
   Start-Sleep -Milliseconds $timeoutStepMilliseconds
   $timeoutCounter += $timeoutStepMilliseconds
   Write-Progress -Activity "Sending Command $Command" -Status "Connecting $ServerUri $timeoutCounter ms"
   if ($timeoutCounter -gt $TimeoutMilliseconds) { throw "Waiting for ConnectAsync timed out" }
+}
+
+if ($connection.Status -eq 'Faulted')
+{
+  Write-Error $connection.Exception.ToString()
+  throw $connection.Exception
+  exit
 }
 
 # Receive connect response:
