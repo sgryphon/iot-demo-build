@@ -1,0 +1,5 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      COPILOT_AGENT_FIREWALL_ALLOW_LIST_ADDITIONS: "api.registry.nm1.platformio.org,api.registry.platformio.org,collector.platformio.org,dl.espressif.com"
