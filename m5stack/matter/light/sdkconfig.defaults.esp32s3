@@ -1,0 +1,7 @@
+# ESP32-S3 specific configuration for M5Stack Core S3
+CONFIG_IDF_TARGET="esp32s3"
+
+# Core S3 has 16MB flash and 8MB PSRAM
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y

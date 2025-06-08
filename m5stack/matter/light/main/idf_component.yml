@@ -1,0 +1,6 @@
+dependencies:
+  esp_matter:
+    git: https://github.com/espressif/esp-matter.git
+    version: main
+  idf:
+    version: ">=5.1.0"

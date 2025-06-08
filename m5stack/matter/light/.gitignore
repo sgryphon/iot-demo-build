@@ -1,0 +1,16 @@
+# ESP-IDF build artifacts
+build/
+sdkconfig
+sdkconfig.old
+.vscode/
+dependencies.lock
+managed_components/
+
+# Platform IO files (reference only)
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# General
+*.tmp
+*.log
